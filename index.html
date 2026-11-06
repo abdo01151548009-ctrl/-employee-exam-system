@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Employee Exam System</title>
+<style>
+:root{
+  --bg:#f4f6f9; --surface:#fff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+  --brand:#2563eb; --brand-d:#1d4ed8; --ok:#16a34a; --bad:#dc2626; --warn:#d97706;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1420; --surface:#171d2b; --text:#e5e7eb; --muted:#9aa4b2; --border:#2a3242; }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:230px;background:var(--surface);border-left:1px solid var(--border);padding:16px;flex-shrink:0}
+.sidebar h2{font-size:16px;color:var(--brand)}
+.sidebar .user{font-size:13px;color:var(--muted);margin-bottom:14px}
+.nav a{display:block;padding:9px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px;margin-bottom:3px}
+.nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+.main{flex:1;padding:20px;max-width:1100px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{font-size:26px;font-weight:700;color:var(--brand)}
+.stat-label{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid var(--border);text-align:right}
+th{color:var(--muted);font-weight:600}
+.btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px}
+.btn:hover{background:var(--brand-d)}
+.btn.sec{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+.btn.danger{background:var(--bad)}
+.badge{padding:2px 8px;border-radius:999px;font-size:11px}
+.badge.ok{background:#dcfce7;color:#166534}
+.badge.bad{background:#fee2e2;color:#991b1b}
+.badge.warn{background:#fef3c7;color:#92400e}
+label{font-size:12px;color:var(--muted);display:block;margin:8px 0 3px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>div{flex:1;min-width:150px}
+h1{font-size:20px;margin:0 0 14px}
+.qopt{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.timer{font-size:18px;font-weight:700;color:var(--bad);background:var(--surface);padding:6px 14px;border-radius:8px;border:1px solid var(--border)}
+.login{max-width:380px;margin:60px auto;text-align:center}
+.qnav button{width:34px;height:34px;border-radius:6px;border:1px solid var(--border);background:var(--surface);margin:2px;color:var(--text)}
+.qnav button.answered{background:#dbeafe}
+.qnav button.current{outline:2px solid var(--brand)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBiJaBC-gIoBKOqXnXybOCf_pKiKyB6-EA",
+  authDomain: "employee-exam-system.firebaseapp.com",
+  projectId: "employee-exam-system",
+  storageBucket: "employee-exam-system.firebasestorage.app",
+  messagingSenderId: "524658380745",
+  appId: "1:524658380745:web:06145dff2b431c56bba218"
+};
+firebase.initializeApp(firebaseConfig);
+
+let db=null;
+let state={ session:null, view:'login', examAttempt:null };
+
+async function initCaps(){
+  try{ db = firebase.firestore(); }catch(e){ db=null; console.error(e); }
+}
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+async function col(name){ return db ? db.collection(name) : null; }
+
+async function listAll(name){
+  if(!db) return [];
+  try{
+    const c = db.collection(name);
+    const res = await c.get();
+    return res.docs ? res.docs.map(d=>({id:d.id,...(d.data()||{})})) : [];
+  }catch(e){ console.error(e); return []; }
+}
+async function setDoc(name,id,data){
+  if(!db){ alert('تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة وحاول مرة أخرى.'); return false; }
+  try{ await db.collection(name).doc(id).set(data); return true; }
+  catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:'غير معروف')); return false; }
+}
+async function delDoc(name,id){ if(!db) return; try{ await db.collection(name).doc(id).delete(); }catch(e){console.error(e);} }
+
+// ---------- render shell ----------
+function render(){
+  const root=document.getElementById('root');
+  if(!state.session){ root.innerHTML=loginView(); attachLogin(); return; }
+  root.innerHTML = shell();
+  routeRender();
+}
+
+function shell(){
+  const s=state.session;
+  const adminLinks=[
+    ['dashboard','لوحة التحكم'],['create-exam','إنشاء اختبار'],['questions','بنك الأسئلة'],
+    ['employees','الموظفون'],['assign','إسناد الاختبارات'],['results','النتائج'],['settings','الإعدادات']
+  ];
+  const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة']];
+  const links = s.role==='admin'?adminLinks:empLinks;
+  return `<div class="app">
+    <div class="sidebar">
+      <h2>Employee Exam System</h2>
+      <div class="user">${s.role==='admin'?'مدير النظام':s.name}</div>
+      <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${l[1]}</a>`).join('')}
+      <a href="#logout" style="color:var(--bad)">تسجيل الخروج</a></div>
+    </div>
+    <div class="main" id="main"></div>
+  </div>`;
+}
+
+function loginView(){
+  return `<div class="login card">
+    <h1>تسجيل الدخول</h1>
+    <label>دخول كمدير — كلمة المرور</label>
+    <input id="adminPass" type="password" style="width:100%" placeholder="كلمة المرور">
+    <button class="btn" id="asAdmin" style="width:100%;margin-top:8px">دخول كمدير</button>
+    <p id="adminErr" style="color:var(--bad);font-size:12px"></p>
+    <hr style="margin:16px 0;border-color:var(--border)">
+    <label>دخول كموظف — Employee ID أو البريد الإلكتروني</label>
+    <input id="empLogin" style="width:100%" placeholder="EMP001 أو name@company.com">
+    <button class="btn" id="asEmp" style="width:100%;margin-top:8px">دخول</button>
+    <p id="loginErr" style="color:var(--bad);font-size:12px"></p>
+  </div>`;
+}
+
+const DEFAULT_ADMIN_PASSWORD='8520';
+async function getAdminPassword(){
+  if(!db) return DEFAULT_ADMIN_PASSWORD;
+  try{
+    const doc = await db.collection('settings').doc('admin').get();
+    if(!doc || !doc.exists) return DEFAULT_ADMIN_PASSWORD;
+    const data = doc.data();
+    return (data && data.password) ? data.password : DEFAULT_ADMIN_PASSWORD;
+  }catch(e){ return DEFAULT_ADMIN_PASSWORD; }
+}
+function attachLogin(){
+  document.getElementById('asAdmin').onclick=async ()=>{
+    const btn=document.getElementById('asAdmin'); btn.disabled=true;
+    const p=document.getElementById('adminPass').value;
+    const current=await getAdminPassword();
+    btn.disabled=false;
+    if(p!==current){ document.getElementById('adminErr').textContent='كلمة المرور غير صحيحة.'; return; }
+    state.session={role:'admin'}; state.view='dashboard'; render();
+  };
+  document.getElementById('adminPass').onkeydown=(e)=>{ if(e.key==='Enter') document.getElementById('asAdmin').click(); };
+  document.getElementById('asEmp').onclick=async ()=>{
+    const v=document.getElementById('empLogin').value.trim();
+    if(!v){ document.getElementById('loginErr').textContent='أدخل Employee ID أو البريد الإلكتروني.'; return; }
+    const emps = await listAll('employees');
+    const emp = emps.find(e=>e.empId===v || e.email===v);
+    if(emp){ state.session={role:'employee',...emp}; state.view='emp-home'; render(); }
+    else document.getElementById('loginErr').textContent='لم يتم العثور على الموظف. تأكد من البيانات أو اطلب من المدير إضافتك.';
+  };
+}
+
+window.addEventListener('hashchange', ()=>{
+  const v=(location.hash||'#').slice(1);
+  if(v==='logout'){ state.session=null; state.view='login'; location.hash=''; render(); return; }
+  if(v) state.view=v;
+  render();
+});
+
+async function routeRender(){
+  const main=document.getElementById('main');
+  main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
+  const v=state.view;
+  if(v==='dashboard') main.innerHTML=await dashboardView();
+  else if(v==='create-exam'){ main.innerHTML=await createExamView(); attachCreateExam(); }
+  else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
+  else if(v==='employees'){ main.innerHTML=await employeesView(); attachEmployees(); }
+  else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
+  else if(v==='results'){ main.innerHTML=await resultsView(); }
+  else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
+  else if(v==='emp-home'){ main.innerHTML=await empHomeView(); attachEmpHome(); }
+  else if(v==='emp-results'){ main.innerHTML=await empResultsView(); }
+  else if(v==='take-exam'){ main.innerHTML=await takeExamView(); attachTakeExam(); }
+  else main.innerHTML=await dashboardView();
+}
+
+// ---------- ADMIN: dashboard ----------
+async function dashboardView(){
+  const [emps,exams,results] = await Promise.all([listAll('employees'),listAll('exams'),listAll('results')]);
+  const completed=results.length;
+  const avg = completed? Math.round(results.reduce((a,r)=>a+(r.percent||0),0)/completed):0;
+  const passRate = completed? Math.round(results.filter(r=>r.passed).length/completed*100):0;
+  const assignments = await listAll('assignments');
+  const pending = assignments.filter(a=>!results.some(r=>r.examId===a.examId && r.employeeId===a.employeeId)).length;
+  return `<h1>لوحة التحكم</h1>
+  <div class="grid">
+    <div class="card"><div class="stat">${emps.length}</div><div class="stat-label">إجمالي الموظفين</div></div>
+    <div class="card"><div class="stat">${exams.length}</div><div class="stat-label">إجمالي الاختبارات</div></div>
+    <div class="card"><div class="stat">${completed}</div><div class="stat-label">اختبارات مكتملة</div></div>
+    <div class="card"><div class="stat">${pending}</div><div class="stat-label">اختبارات معلقة</div></div>
+    <div class="card"><div class="stat">${avg}%</div><div class="stat-label">متوسط الدرجات</div></div>
+    <div class="card"><div class="stat">${passRate}%</div><div class="stat-label">نسبة النجاح</div></div>
+  </div>
+  <div class="card"><h3>آخر النتائج</h3>${resultsTable(results.slice(-8).reverse(),emps,exams)}</div>`;
+}
+
+function resultsTable(results,emps,exams){
+  if(!results.length) return '<p style="color:var(--muted)">لا توجد نتائج بعد.</p>';
+  return `<table><tr><th>الموظف</th><th>الاختبار</th><th>النسبة</th><th>الحالة</th></tr>
+  ${results.map(r=>{
+    const e=emps.find(x=>x.id===r.employeeId); const ex=exams.find(x=>x.id===r.examId);
+    return `<tr><td>${e?e.name:'-'}</td><td>${ex?ex.name:'-'}</td><td>${r.percent}%</td>
+    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح':'راسب'}</span></td></tr>`;
+  }).join('')}</table>`;
+}
+
+// ---------- ADMIN: question bank ----------
+async function questionsView(){
+  const qs = await listAll('questions');
+  return `<h1>بنك الأسئلة</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>نص السؤال</label><input id="qText" style="width:100%"></div>
+      <div><label>النوع</label><select id="qType" style="width:100%">
+        <option value="mcq">اختيار من متعدد</option><option value="tf">صح / خطأ</option>
+        <option value="multi">اختيار متعدد</option><option value="short">إجابة قصيرة</option>
+      </select></div>
+      <div><label>التصنيف</label><input id="qCat" style="width:100%"></div>
+      <div><label>الدرجة</label><input id="qPoints" type="number" value="1" style="width:100%"></div>
+    </div>
+    <div id="qOptsWrap"></div>
+    <label>شرح الإجابة (اختياري)</label><input id="qExpl" style="width:100%">
+    <button class="btn" id="addQ" style="margin-top:10px">إضافة السؤال</button>
+  </div>
+  <div class="card"><h3>كل الأسئلة (${qs.length})</h3>
+  <input id="qSearch" placeholder="بحث..." style="width:100%;margin-bottom:8px">
+  <div id="qList">${renderQList(qs)}</div></div>`;
+}
+function renderQList(qs){
+  if(!qs.length) return '<p style="color:var(--muted)">لا توجد أسئلة.</p>';
+  return `<table><tr><th>السؤال</th><th>النوع</th><th>التصنيف</th><th>الدرجة</th><th></th></tr>
+  ${qs.map(q=>`<tr><td>${q.text}</td><td>${typeLabel(q.type)}</td><td>${q.category||'-'}</td><td>${q.points}</td>
+  <td><button class="btn danger" data-del="${q.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table>`;
+}
+function typeLabel(t){ return {mcq:'اختيار واحد',tf:'صح/خطأ',multi:'اختيار متعدد',short:'إجابة قصيرة'}[t]||t; }
+
+function optsEditor(type){
+  if(type==='tf') return `<label>الإجابة الصحيحة</label><select id="qCorrectTF"><option value="true">صح</option><option value="false">خطأ</option></select>`;
+  if(type==='short') return `<label>الإجابة الصحيحة (نص)</label><input id="qShortAns" style="width:100%">`;
+  // mcq / multi
+  let html='<label>الاختيارات (علّم الصحيح)</label>';
+  for(let i=0;i<4;i++){
+    html+=`<div class="qopt"><input type="${type==='multi'?'checkbox':'radio'}" name="qc" value="${i}">
+    <input data-opt="${i}" placeholder="اختيار ${i+1}" style="flex:1"></div>`;
+  }
+  return html;
+}
+
+function attachQuestions(){
+  const typeSel=document.getElementById('qType');
+  const wrap=document.getElementById('qOptsWrap');
+  const refresh=()=>wrap.innerHTML=optsEditor(typeSel.value);
+  typeSel.onchange=refresh; refresh();
+  document.getElementById('addQ').onclick=async ()=>{
+    const type=typeSel.value, text=document.getElementById('qText').value.trim();
+    if(!text) return alert('أدخل نص السؤال');
+    let options=[], correct=null;
+    if(type==='tf'){ correct=document.getElementById('qCorrectTF').value==='true'; }
+    else if(type==='short'){ correct=document.getElementById('qShortAns').value.trim(); }
+    else {
+      const opts=[...wrap.querySelectorAll('[data-opt]')].map(i=>i.value.trim());
+      options=opts;
+      if(type==='mcq'){ const r=wrap.querySelector('input[name=qc]:checked'); correct=r?parseInt(r.value):null; }
+      else { correct=[...wrap.querySelectorAll('input[name=qc]:checked')].map(c=>parseInt(c.value)); }
+    }
+    const q={text,type,options,correct,points:parseFloat(document.getElementById('qPoints').value)||1,
+      category:document.getElementById('qCat').value.trim(),explanation:document.getElementById('qExpl').value.trim()};
+    await setDoc('questions',uid(),q);
+    state.view='questions'; routeRender();
+  };
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ await delDoc('questions',b.dataset.del); state.view='questions'; routeRender(); });
+  document.getElementById('qSearch').oninput=async (e)=>{
+    const qs=await listAll('questions');
+    const f=qs.filter(q=>q.text.includes(e.target.value)||((q.category||'').includes(e.target.value)));
+    document.getElementById('qList').innerHTML=renderQList(f);
+  };
+}
+
+// ---------- ADMIN: create exam ----------
+async function createExamView(){
+  const qs = await listAll('questions');
+  return `<h1>إنشاء اختبار جديد</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>اسم الاختبار</label><input id="eName" style="width:100%"></div>
+      <div><label>القسم / الفريق</label><input id="eDept" style="width:100%"></div>
+    </div>
+    <label>الوصف</label><input id="eDesc" style="width:100%">
+    <div class="row">
+      <div><label>المدة (دقائق)</label><input id="eDur" type="number" value="30" style="width:100%"></div>
+      <div><label>درجة النجاح %</label><input id="ePass" type="number" value="60" style="width:100%"></div>
+      <div><label>عدد المحاولات</label><input id="eAttempts" type="number" value="1" style="width:100%"></div>
+    </div>
+    <div class="row">
+      <div><label>تاريخ البداية</label><input id="eStart" type="date" style="width:100%"></div>
+      <div><label>تاريخ النهاية</label><input id="eEnd" type="date" style="width:100%"></div>
+    </div>
+    <div class="row">
+      <div><label><input type="checkbox" id="eRandomQ"> ترتيب عشوائي للأسئلة</label></div>
+      <div><label><input type="checkbox" id="eRandomA"> ترتيب عشوائي للاختيارات</label></div>
+      <div><label><input type="checkbox" id="eShowResult" checked> إظهار النتيجة للموظف</label></div>
+      <div><label><input type="checkbox" id="eShowAns"> إظهار الإجابات الصحيحة</label></div>
+    </div>
+    <h3>اختر الأسئلة (${qs.length} متاح)</h3>
+    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
+    ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickQ" value="${q.id}"><span>${q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">أضف أسئلة من بنك الأسئلة أولًا.</p>'}
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn sec" id="saveDraft">حفظ كمسودة</button>
+      <button class="btn" id="saveActive">حفظ وتفعيل</button>
+    </div>
+  </div>`;
+}
+function attachCreateExam(){
+  const save=async(active)=>{
+    const name=document.getElementById('eName').value.trim();
+    if(!name) return alert('أدخل اسم الاختبار');
+    const questionIds=[...document.querySelectorAll('.pickQ:checked')].map(c=>c.value);
+    const exam={
+      name, dept:document.getElementById('eDept').value.trim(), desc:document.getElementById('eDesc').value.trim(),
+      duration:parseInt(document.getElementById('eDur').value)||30, passScore:parseInt(document.getElementById('ePass').value)||60,
+      attempts:parseInt(document.getElementById('eAttempts').value)||1,
+      startDate:document.getElementById('eStart').value, endDate:document.getElementById('eEnd').value,
+      randomQ:document.getElementById('eRandomQ').checked, randomA:document.getElementById('eRandomA').checked,
+      showResult:document.getElementById('eShowResult').checked, showAnswers:document.getElementById('eShowAns').checked,
+      questionIds, active, draft:!active, createdAt:Date.now()
+    };
+    await setDoc('exams',uid(),exam);
+    alert('تم الحفظ'); state.view='dashboard'; location.hash='dashboard'; routeRender();
+  };
+  document.getElementById('saveDraft').onclick=()=>save(false);
+  document.getElementById('saveActive').onclick=()=>save(true);
+}
+
+// ---------- ADMIN: employees ----------
+async function employeesView(){
+  const emps = await listAll('employees');
+  return `<h1>الموظفون</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>الاسم</label><input id="pName" style="width:100%"></div>
+      <div><label>Employee ID</label><input id="pEmpId" style="width:100%"></div>
+      <div><label>البريد الإلكتروني</label><input id="pEmail" style="width:100%"></div>
+      <div><label>القسم</label><input id="pDept" style="width:100%"></div>
+      <div><label>الفريق</label><input id="pTeam" style="width:100%"></div>
+      <div><label>الوظيفة</label><input id="pPos" style="width:100%"></div>
+    </div>
+    <button class="btn" id="addEmp" style="margin-top:8px">إضافة موظف</button>
+  </div>
+  <div class="card"><h3>قائمة الموظفين (${emps.length})</h3>
+  <input id="eSearch" placeholder="بحث بالاسم أو القسم..." style="width:100%;margin-bottom:8px">
+  <div id="empList">${renderEmpList(emps)}</div></div>`;
+}
+function renderEmpList(emps){
+  if(!emps.length) return '<p style="color:var(--muted)">لا يوجد موظفون.</p>';
+  return `<table><tr><th>الاسم</th><th>ID</th><th>القسم</th><th>الفريق</th><th>الحالة</th><th></th></tr>
+  ${emps.map(e=>`<tr><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td>
+  <td><span class="badge ok">${e.status||'نشط'}</span></td>
+  <td><button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table>`;
+}
+function attachEmployees(){
+  document.getElementById('addEmp').onclick=async ()=>{
+    const name=document.getElementById('pName').value.trim(), empId=document.getElementById('pEmpId').value.trim();
+    if(!name||!empId){ alert('أدخل الاسم و Employee ID (الحقلان مطلوبان).'); return; }
+    const existing = await listAll('employees');
+    if(existing.some(e=>e.empId===empId)){ alert('يوجد موظف آخر بنفس Employee ID بالفعل. استخدم رقمًا مختلفًا.'); return; }
+    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent='جارٍ الحفظ...';
+    const ok = await setDoc('employees',uid(),{name,empId,email:document.getElementById('pEmail').value.trim(),
+      dept:document.getElementById('pDept').value.trim(),team:document.getElementById('pTeam').value.trim(),
+      position:document.getElementById('pPos').value.trim(),status:'نشط'});
+    btn.disabled=false; btn.textContent='إضافة موظف';
+    if(ok){ state.view='employees'; routeRender(); }
+  };
+  document.querySelectorAll('[data-delemp]').forEach(b=>b.onclick=async()=>{ await delDoc('employees',b.dataset.delemp); state.view='employees'; routeRender(); });
+  document.getElementById('eSearch').oninput=async(e)=>{
+    const emps=await listAll('employees');
+    const f=emps.filter(x=>x.name.includes(e.target.value)||(x.dept||'').includes(e.target.value));
+    document.getElementById('empList').innerHTML=renderEmpList(f);
+  };
+}
+
+// ---------- ADMIN: assign ----------
+async function assignView(){
+  const [exams,emps,assignments] = await Promise.all([listAll('exams'),listAll('employees'),listAll('assignments')]);
+  return `<h1>إسناد الاختبارات</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>الاختبار</label><select id="aExam">${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
+      <div><label>الموظف (أو اتركه للكل)</label><select id="aEmp"><option value="">-- كل الموظفين --</option>${emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div><label>آخر موعد (Deadline)</label><input id="aDeadline" type="date" style="width:100%"></div>
+    </div>
+    <button class="btn" id="doAssign" style="margin-top:8px">إسناد</button>
+  </div>
+  <div class="card"><h3>الإسنادات الحالية</h3>
+  <table><tr><th>الاختبار</th><th>الموظف</th><th>الموعد النهائي</th><th>الحالة</th></tr>
+  ${assignments.map(a=>{
+    const ex=exams.find(x=>x.id===a.examId), em=emps.find(x=>x.id===a.employeeId);
+    return `<tr><td>${ex?ex.name:'-'}</td><td>${em?em.name:'-'}</td><td>${a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
+  }).join('') || '<tr><td colspan=4 style="color:var(--muted)">لا توجد إسنادات بعد.</td></tr>'}
+  </table></div>`;
+}
+function attachAssign(){
+  document.getElementById('doAssign').onclick=async()=>{
+    const examId=document.getElementById('aExam').value, empId=document.getElementById('aEmp').value;
+    const deadline=document.getElementById('aDeadline').value;
+    if(!examId) return alert('اختر اختبارًا');
+    const emps = empId? [empId] : (await listAll('employees')).map(e=>e.id);
+    for(const id of emps) await setDoc('assignments',uid(),{examId,employeeId:id,deadline});
+    state.view='assign'; routeRender();
+  };
+}
+
+// ---------- ADMIN: results ----------
+async function resultsView(){
+  const [results,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+  return `<h1>النتائج</h1>
+  <div class="card">
+  <button class="btn sec" id="exportCsv">تصدير CSV</button>
+  <div style="margin-top:10px">${resultsTable(results.reverse(),emps,exams)}</div>
+  </div>`;
+}
+document.addEventListener('click',async (e)=>{
+  if(e.target.id==='exportCsv'){
+    const [results,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+    let csv='Employee,Exam,Score,Percent,Status\n';
+    results.forEach(r=>{ const em=emps.find(x=>x.id===r.employeeId),ex=exams.find(x=>x.id===r.examId);
+      csv+=`${em?em.name:''},${ex?ex.name:''},${r.score},${r.percent}%,${r.passed?'Pass':'Fail'}\n`; });
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='results.csv'; a.click(); URL.revokeObjectURL(url);
+  }
+});
+
+// ---------- ADMIN: settings ----------
+function settingsView(){
+  return `<h1>الإعدادات</h1>
+  <div class="card">
+    <h3>تغيير كلمة مرور المدير</h3>
+    <label>كلمة المرور الحالية</label>
+    <input id="oldPass" type="password" style="width:100%">
+    <label>كلمة المرور الجديدة</label>
+    <input id="newPass1" type="password" style="width:100%">
+    <label>تأكيد كلمة المرور الجديدة</label>
+    <input id="newPass2" type="password" style="width:100%">
+    <button class="btn" id="changePassBtn" style="margin-top:10px">تحديث كلمة المرور</button>
+    <p id="passMsg" style="font-size:13px;margin-top:8px"></p>
+  </div>`;
+}
+function attachSettings(){
+  document.getElementById('changePassBtn').onclick=async ()=>{
+    const msg=document.getElementById('passMsg');
+    msg.style.color='var(--bad)'; msg.textContent='';
+    const oldP=document.getElementById('oldPass').value;
+    const n1=document.getElementById('newPass1').value;
+    const n2=document.getElementById('newPass2').value;
+    const current=await getAdminPassword();
+    if(oldP!==current){ msg.textContent='كلمة المرور القديمة غير صحيحة.'; return; }
+    if(!n1 || n1.length<4){ msg.textContent='كلمة المرور الجديدة يجب ألا تقل عن 4 خانات.'; return; }
+    if(n1!==n2){ msg.textContent='كلمة المرور الجديدة وتأكيدها غير متطابقين.'; return; }
+    const ok = await setDoc('settings','admin',{password:n1});
+    if(ok){ msg.style.color='var(--ok)'; msg.textContent='تم تحديث كلمة المرور بنجاح.';
+      document.getElementById('oldPass').value=''; document.getElementById('newPass1').value=''; document.getElementById('newPass2').value=''; }
+  };
+}
+
+// ---------- EMPLOYEE: home ----------
+async function empHomeView(){
+  const s=state.session;
+  const [assignments,results,exams]=await Promise.all([listAll('assignments'),listAll('results'),listAll('exams')]);
+  const mine=assignments.filter(a=>a.employeeId===s.id);
+  const now=Date.now();
+  const rows=mine.map(a=>{
+    const ex=exams.find(x=>x.id===a.examId); if(!ex) return null;
+    const myResults=results.filter(r=>r.examId===ex.id && r.employeeId===s.id);
+    const done=myResults.length>=(ex.attempts||1);
+    const late = a.deadline && new Date(a.deadline).getTime()<now && !done;
+    return {ex,a,done,late,attemptsUsed:myResults.length};
+  }).filter(Boolean);
+  return `<h1>مرحبًا، ${s.name}</h1>
+  <div class="card"><h3>الاختبارات المسندة إليك</h3>
+  <table><tr><th>الاختبار</th><th>الموعد النهائي</th><th>الحالة</th><th></th></tr>
+  ${rows.map(r=>`<tr><td>${r.ex.name}</td><td>${r.a.deadline||'-'}</td>
+    <td>${r.done?'<span class="badge ok">مكتمل</span>':r.late?'<span class="badge bad">متأخر</span>':'<span class="badge warn">قيد الانتظار</span>'}</td>
+    <td>${!r.done?`<button class="btn" data-start="${r.ex.id}" style="padding:5px 10px">بدء الاختبار</button>`:''}</td></tr>`).join('') || '<tr><td colspan=4 style="color:var(--muted)">لا توجد اختبارات مسندة.</td></tr>'}
+  </table></div>`;
+}
+function attachEmpHome(){
+  document.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{
+    state.examAttempt={examId:b.dataset.start, answers:{}, idx:0, startTime:Date.now()};
+    state.view='take-exam'; location.hash='take-exam'; routeRender();
+  });
+}
+
+async function empResultsView(){
+  const s=state.session;
+  const [results,exams]=await Promise.all([listAll('results'),listAll('exams')]);
+  const mine=results.filter(r=>r.employeeId===s.id);
+  return `<h1>نتائجي السابقة</h1><div class="card">
+  <table><tr><th>الاختبار</th><th>الدرجة</th><th>النسبة</th><th>الحالة</th><th>محاولة</th></tr>
+  ${mine.map(r=>{const ex=exams.find(x=>x.id===r.examId);
+    return `<tr><td>${ex?ex.name:'-'}</td><td>${r.score}</td><td>${r.percent}%</td>
+    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح':'راسب'}</span></td><td>${r.attemptNum}</td></tr>`;
+  }).join('') || '<tr><td colspan=5 style="color:var(--muted)">لا توجد نتائج بعد.</td></tr>'}
+  </table></div>`;
+}
+
+// ---------- EMPLOYEE: take exam ----------
+let timerInterval=null;
+async function takeExamView(){
+  const exams=await listAll('exams'); const exam=exams.find(e=>e.id===state.examAttempt.examId);
+  if(!exam) return '<p>الاختبار غير موجود.</p>';
+  const allQs=await listAll('questions');
+  let qs = exam.questionIds.map(id=>allQs.find(q=>q.id===id)).filter(Boolean);
+  if(!state.examAttempt.order){
+    let order=qs.map((_,i)=>i);
+    if(exam.randomQ) order.sort(()=>Math.random()-0.5);
+    state.examAttempt.order=order;
+    state.examAttempt.endAt=Date.now()+exam.duration*60000;
+  }
+  state.examAttempt.qs=qs;
+  const order=state.examAttempt.order;
+  const i=state.examAttempt.idx;
+  const q=qs[order[i]];
+  const answers=state.examAttempt.answers;
+  return `<h1>${exam.name}</h1>
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+    <div>السؤال ${i+1} من ${qs.length}</div><div class="timer" id="timerBox">--:--</div>
+  </div>
+  <div class="card">
+    <p style="font-size:15px">${q.text}</p>
+    <div id="answerArea">${answerInput(q,answers[q.id])}</div>
+  </div>
+  <div class="card">
+    <button class="btn sec" id="prevQ" ${i===0?'disabled':''}>السابق</button>
+    <button class="btn sec" id="nextQ" ${i===qs.length-1?'disabled':''}>التالي</button>
+    <button class="btn" id="submitExam" style="float:left">تسليم الاختبار</button>
+  </div>
+  <div class="card qnav">${order.map((oi,pos)=>`<button class="${answers[qs[oi].id]!==undefined?'answered':''} ${pos===i?'current':''}" data-jump="${pos}">${pos+1}</button>`).join('')}</div>`;
+}
+function answerInput(q,val){
+  if(q.type==='mcq'||q.type==='tf'){
+    const opts = q.type==='tf'? ['صح','خطأ'] : q.options;
+    return opts.map((o,idx)=>{
+      const v=q.type==='tf'? (idx===0?'true':'false') : idx;
+      return `<div class="qopt"><input type="radio" name="ans" value="${v}" ${String(val)===String(v)?'checked':''}><span>${o}</span></div>`;
+    }).join('');
+  }
+  if(q.type==='multi'){
+    return q.options.map((o,idx)=>`<div class="qopt"><input type="checkbox" name="ansM" value="${idx}" ${Array.isArray(val)&&val.includes(idx)?'checked':''}><span>${o}</span></div>`).join('');
+  }
+  return `<input id="ansShort" style="width:100%" value="${val||''}">`;
+}
+function saveCurrentAnswer(){
+  const ea=state.examAttempt; const q=ea.qs[ea.order[ea.idx]];
+  if(q.type==='mcq'||q.type==='tf'){ const r=document.querySelector('input[name=ans]:checked'); if(r) ea.answers[q.id]= q.type==='tf'? r.value==='true' : parseInt(r.value); }
+  else if(q.type==='multi'){ const cs=[...document.querySelectorAll('input[name=ansM]:checked')].map(c=>parseInt(c.value)); if(cs.length) ea.answers[q.id]=cs; }
+  else { const el=document.getElementById('ansShort'); if(el) ea.answers[q.id]=el.value; }
+}
+function attachTakeExam(){
+  const ea=state.examAttempt;
+  clearInterval(timerInterval);
+  const tick=()=>{
+    const left=ea.endAt-Date.now();
+    const box=document.getElementById('timerBox'); if(!box) return;
+    if(left<=0){ clearInterval(timerInterval); finishExam(); return; }
+    const m=Math.floor(left/60000), s2=Math.floor((left%60000)/1000);
+    box.textContent=`${m}:${s2.toString().padStart(2,'0')}`;
+  };
+  tick(); timerInterval=setInterval(tick,1000);
+  document.getElementById('prevQ').onclick=()=>{ saveCurrentAnswer(); ea.idx--; state.view='take-exam'; routeRender(); };
+  document.getElementById('nextQ').onclick=()=>{ saveCurrentAnswer(); ea.idx++; state.view='take-exam'; routeRender(); };
+  document.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{ saveCurrentAnswer(); ea.idx=parseInt(b.dataset.jump); state.view='take-exam'; routeRender(); });
+  document.getElementById('submitExam').onclick=()=>{ saveCurrentAnswer(); if(confirm('هل أنت متأكد من تسليم الاختبار؟')) finishExam(); };
+}
+async function finishExam(){
+  clearInterval(timerInterval);
+  const ea=state.examAttempt; const exams=await listAll('exams'); const exam=exams.find(e=>e.id===ea.examId);
+  let score=0,total=0;
+  ea.qs.forEach(q=>{
+    total+=q.points; const a=ea.answers[q.id];
+    if(q.type==='mcq'){ if(a===q.correct) score+=q.points; }
+    else if(q.type==='tf'){ if(a===q.correct) score+=q.points; }
+    else if(q.type==='multi'){ if(Array.isArray(a)&&Array.isArray(q.correct)&&a.length===q.correct.length&&a.every(v=>q.correct.includes(v))) score+=q.points; }
+    else if(q.type==='short'){ if((a||'').trim().toLowerCase()===((q.correct||'').trim().toLowerCase())) score+=q.points; }
+  });
+  const percent = total? Math.round(score/total*100):0;
+  const passed = percent>=exam.passScore;
+  const prevResults=(await listAll('results')).filter(r=>r.examId===exam.id && r.employeeId===state.session.id);
+  await setDoc('results',uid(),{examId:exam.id,employeeId:state.session.id,score,percent,passed,
+    startTime:ea.startTime,endTime:Date.now(),durationSec:Math.round((Date.now()-ea.startTime)/1000),
+    attemptNum:prevResults.length+1, answers:ea.answers});
+  state.examAttempt=null;
+  alert(exam.showResult? `انتهى الاختبار. النتيجة: ${percent}% - ${passed?'ناجح':'راسب'}` : 'تم تسليم الاختبار بنجاح.');
+  state.view='emp-home'; location.hash='emp-home'; routeRender();
+}
+
+// ---------- boot ----------
+(async function(){ await initCaps(); render(); })();
+</script>
+</body>
+</html>
