@@ -26,6 +26,8 @@ input,select,textarea{font-family:inherit;background:var(--surface);color:var(--
 .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
 .main{flex:1;padding:20px;max-width:1100px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.card table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+.card table tr{display:table-row}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .stat{font-size:26px;font-weight:700;color:var(--brand)}
 .stat-label{font-size:12px;color:var(--muted)}
@@ -43,6 +45,35 @@ th{color:var(--muted);font-weight:600}
 label{font-size:12px;color:var(--muted);display:block;margin:8px 0 3px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row>div{flex:1;min-width:150px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.menuBtn{display:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:16px;color:var(--text)}
+.topbar{display:none}
+@media (max-width:760px){
+  .app{flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);
+    border-bottom:1px solid var(--border);padding:10px 14px;position:sticky;top:0;z-index:20;
+    padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  .topbar h2{font-size:15px;margin:0;color:var(--brand)}
+  .menuBtn{display:block}
+  .sidebar{position:fixed;inset:0;z-index:30;width:100%;height:100%;transform:translateX(100%);
+    transition:transform .2s ease;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar .closeBtn{display:block;background:transparent;border:none;font-size:20px;color:var(--text);
+    position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px}
+  .nav a{font-size:16px;padding:12px 10px}
+  .main{padding:12px;max-width:100%}
+  h1{font-size:17px}
+  .grid{grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}
+  .stat{font-size:20px}
+  .card{padding:12px}
+  table{font-size:12px}
+  th,td{padding:6px}
+  .row>div{min-width:100%}
+  .login{margin:30px auto;max-width:100%;padding:20px}
+  .qnav button{width:30px;height:30px;margin:2px}
+  .timer{font-size:15px;padding:5px 10px}
+}
+.sidebar .closeBtn{display:none}
 h1{font-size:20px;margin:0 0 14px}
 .qopt{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .timer{font-size:18px;font-weight:700;color:var(--bad);background:var(--surface);padding:6px 14px;border-radius:8px;border:1px solid var(--border)}
@@ -98,6 +129,7 @@ function render(){
   const root=document.getElementById('root');
   if(!state.session){ root.innerHTML=loginView(); attachLogin(); return; }
   root.innerHTML = shell();
+  attachShellNav();
   routeRender();
 }
 
@@ -110,7 +142,13 @@ function shell(){
   const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة']];
   const links = s.role==='admin'?adminLinks:empLinks;
   return `<div class="app">
-    <div class="sidebar">
+    <div class="topbar">
+      <button class="menuBtn" id="openMenu">☰</button>
+      <h2>Employee Exam System</h2>
+      <span style="width:38px"></span>
+    </div>
+    <div class="sidebar" id="sidebar">
+      <button class="closeBtn" id="closeMenu">✕</button>
       <h2>Employee Exam System</h2>
       <div class="user">${s.role==='admin'?'مدير النظام':s.name}</div>
       <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${l[1]}</a>`).join('')}
@@ -118,6 +156,13 @@ function shell(){
     </div>
     <div class="main" id="main"></div>
   </div>`;
+}
+function attachShellNav(){
+  const sb=document.getElementById('sidebar');
+  const open=document.getElementById('openMenu'), close=document.getElementById('closeMenu');
+  if(open) open.onclick=()=>sb.classList.add('open');
+  if(close) close.onclick=()=>sb.classList.remove('open');
+  sb.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>sb.classList.remove('open')));
 }
 
 function loginView(){
