@@ -690,6 +690,12 @@ function settingsView(){
     <input id="newPass2" type="password" style="width:100%">
     <button class="btn" id="changePassBtn" style="margin-top:10px">تحديث كلمة المرور</button>
     <p id="passMsg" style="font-size:13px;margin-top:8px"></p>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--bad)">منطقة الخطر</h3>
+    <p style="color:var(--muted);font-size:13px">حذف جميع الاختبارات، الإسنادات، النتائج، والمراسلات نهائيًا. <strong>بنك الأسئلة وبيانات الموظفين لن يتأثرا.</strong> هذا الإجراء لا يمكن التراجع عنه.</p>
+    <button class="btn danger" id="wipeDataBtn">حذف كل البيانات (عدا بنك الأسئلة وبيانات الموظفين)</button>
+    <p id="wipeMsg" style="font-size:13px;margin-top:8px"></p>
   </div>`;
 }
 function attachSettings(){
@@ -706,6 +712,19 @@ function attachSettings(){
     const ok = await setDoc('settings','admin',{password:n1});
     if(ok){ msg.style.color='var(--ok)'; msg.textContent='تم تحديث كلمة المرور بنجاح.';
       document.getElementById('oldPass').value=''; document.getElementById('newPass1').value=''; document.getElementById('newPass2').value=''; }
+  };
+  document.getElementById('wipeDataBtn').onclick=async ()=>{
+    const wmsg=document.getElementById('wipeMsg');
+    if(!confirm('هل أنت متأكد من حذف كل الاختبارات والإسنادات والنتائج والمراسلات؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    const typed=prompt('اكتب كلمة "حذف" للتأكيد النهائي:');
+    if(typed!=='حذف'){ wmsg.style.color='var(--bad)'; wmsg.textContent='تم إلغاء العملية.'; return; }
+    const btn=document.getElementById('wipeDataBtn'); btn.disabled=true; btn.textContent='جارٍ الحذف...';
+    for(const col of ['exams','assignments','results','messages']){
+      const docs=await listAll(col);
+      for(const d of docs) await delDoc(col,d.id);
+    }
+    btn.disabled=false; btn.textContent='حذف كل البيانات (عدا بنك الأسئلة وبيانات الموظفين)';
+    wmsg.style.color='var(--ok)'; wmsg.textContent='تم حذف كل البيانات بنجاح، وبقي بنك الأسئلة وبيانات الموظفين كما هي.';
   };
 }
 
