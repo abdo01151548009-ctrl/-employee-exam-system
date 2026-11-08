@@ -119,7 +119,7 @@ async function listAll(name){
 }
 async function setDoc(name,id,data){
   if(!db){ alert('تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة وحاول مرة أخرى.'); return false; }
-  try{ await db.collection(name).doc(id).set(data); return true; }
+  try{ await db.collection(name).doc(id).set(data,{merge:true}); return true; }
   catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:'غير معروف')); return false; }
 }
 async function delDoc(name,id){ if(!db) return; try{ await db.collection(name).doc(id).delete(); }catch(e){console.error(e);} }
@@ -137,7 +137,8 @@ function shell(){
   const s=state.session;
   const adminLinks=[
     ['dashboard','لوحة التحكم'],['create-exam','إنشاء اختبار'],['questions','بنك الأسئلة'],
-    ['employees','الموظفون'],['assign','إسناد الاختبارات'],['results','النتائج'],['settings','الإعدادات']
+    ['employees','الموظفون'],['assign','إسناد الاختبارات'],['results','النتائج'],['wrong-answers','الإجابات'],
+    ['review-exams','تعديل الاختبار'],['settings','الإعدادات']
   ];
   const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة']];
   const links = s.role==='admin'?adminLinks:empLinks;
@@ -227,6 +228,8 @@ async function routeRender(){
   else if(v==='employees'){ main.innerHTML=await employeesView(); attachEmployees(); }
   else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
   else if(v==='results'){ main.innerHTML=await resultsView(); }
+  else if(v==='wrong-answers'){ main.innerHTML=await wrongAnswersView(); attachWrongAnswers(); }
+  else if(v==='review-exams'){ main.innerHTML=await reviewExamsView(); attachReviewExams(); }
   else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
   else if(v==='emp-home'){ main.innerHTML=await empHomeView(); attachEmpHome(); }
   else if(v==='emp-results'){ main.innerHTML=await empResultsView(); }
@@ -468,6 +471,161 @@ function attachAssign(){
     for(const id of emps) await setDoc('assignments',uid(),{examId,employeeId:id,deadline});
     state.view='assign'; routeRender();
   };
+}
+
+// ---------- ADMIN: wrong answers ----------
+function formatAnswerText(q,val){
+  if(val===undefined||val===null||val==='') return '<span style="color:var(--muted)">لم يُجب</span>';
+  if(q.type==='mcq') return (q.options&&q.options[val]!==undefined)? q.options[val] : String(val);
+  if(q.type==='tf') return val===true?'صح':'خطأ';
+  if(q.type==='multi') return Array.isArray(val)? val.map(i=>(q.options&&q.options[i]!==undefined)?q.options[i]:i).join('، ') : String(val);
+  return String(val);
+}
+function formatCorrectText(q){
+  if(q.type==='mcq') return (q.options&&q.options[q.correct]!==undefined)? q.options[q.correct] : String(q.correct);
+  if(q.type==='tf') return q.correct===true?'صح':'خطأ';
+  if(q.type==='multi') return Array.isArray(q.correct)? q.correct.map(i=>(q.options&&q.options[i]!==undefined)?q.options[i]:i).join('، ') : String(q.correct);
+  return String(q.correct);
+}
+function isAnswerWrong(q,val){
+  if(val===undefined||val===null||val==='') return false; // unanswered: not counted as "answered incorrectly"
+  if(q.type==='mcq') return val!==q.correct;
+  if(q.type==='tf') return val!==q.correct;
+  if(q.type==='multi'){
+    if(!Array.isArray(val)||!Array.isArray(q.correct)) return true;
+    return !(val.length===q.correct.length && val.every(v=>q.correct.includes(v)));
+  }
+  if(q.type==='short') return (String(val).trim().toLowerCase())!==(String(q.correct||'').trim().toLowerCase());
+  return false;
+}
+async function buildWrongAnswerRows(){
+  const [results,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const rows=[];
+  results.forEach(r=>{
+    const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+    if(!exam) return;
+    (exam.questionIds||[]).forEach(qid=>{
+      const q=questions.find(x=>x.id===qid); if(!q) return;
+      const val=r.answers?r.answers[q.id]:undefined;
+      if(isAnswerWrong(q,val)){
+        rows.push({
+          employeeName: emp?emp.name:'(موظف محذوف)',
+          empId: emp?emp.empId:'-',
+          examName: exam.name,
+          questionText: q.text,
+          employeeAnswer: formatAnswerText(q,val),
+          correctAnswer: formatCorrectText(q),
+          when: r.endTime || r.startTime || 0
+        });
+      }
+    });
+  });
+  rows.sort((a,b)=>b.when-a.when);
+  return rows;
+}
+function renderWrongAnswerTable(rows){
+  if(!rows.length) return '<p style="color:var(--muted)">لا توجد إجابات خاطئة مسجّلة حتى الآن.</p>';
+  return `<div class="table-wrap"><table><tr><th>الموظف</th><th>Employee ID</th><th>الاختبار</th><th>السؤال</th><th>إجابة الموظف</th><th>الإجابة الصحيحة</th><th>التاريخ</th></tr>
+  ${rows.map(r=>`<tr><td>${r.employeeName}</td><td>${r.empId}</td><td>${r.examName}</td><td>${r.questionText}</td>
+  <td style="color:var(--bad)">${r.employeeAnswer}</td><td style="color:var(--ok)">${r.correctAnswer}</td>
+  <td>${r.when?new Date(r.when).toLocaleString('ar-EG'):'-'}</td></tr>`).join('')}</table></div>`;
+}
+async function wrongAnswersView(){
+  const rows=await buildWrongAnswerRows();
+  return `<h1>الإجابات الخاطئة</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">كل الأسئلة التي أجاب عليها الموظفون إجابة خاطئة بعد انتهاء اختباراتهم، مع توضيح من أجاب وبأي إجابة.</p>
+    <div class="row">
+      <div><input id="waSearch" placeholder="بحث باسم الموظف أو اسم الاختبار..." style="width:100%"></div>
+      <div><button class="btn sec" id="waExport">تصدير CSV</button></div>
+    </div>
+    <div id="waList" style="margin-top:10px">${renderWrongAnswerTable(rows)}</div>
+  </div>`;
+}
+function attachWrongAnswers(){
+  document.getElementById('waSearch').oninput=async (e)=>{
+    const rows=await buildWrongAnswerRows();
+    const term=e.target.value.trim();
+    const f=term? rows.filter(r=>r.employeeName.includes(term)||r.examName.includes(term)) : rows;
+    document.getElementById('waList').innerHTML=renderWrongAnswerTable(f);
+  };
+  document.getElementById('waExport').onclick=async ()=>{
+    const rows=await buildWrongAnswerRows();
+    let csv='Employee,Employee ID,Exam,Question,Employee Answer,Correct Answer,Date\n';
+    rows.forEach(r=>{
+      const esc=(s)=>'"'+String(s).replace(/<[^>]+>/g,'').replace(/"/g,'""')+'"';
+      csv+=`${esc(r.employeeName)},${esc(r.empId)},${esc(r.examName)},${esc(r.questionText)},${esc(r.employeeAnswer)},${esc(r.correctAnswer)},${esc(r.when?new Date(r.when).toLocaleString('ar-EG'):'-')}\n`;
+    });
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='wrong-answers.csv'; a.click(); URL.revokeObjectURL(url);
+  };
+}
+
+// ---------- ADMIN: review exams ----------
+let reviewSelected=null;
+function reviewBadge(r){
+  if(r.reviewStatus==='accepted') return '<span class="badge ok">مقبول (مراجعة يدوية)</span>';
+  if(r.reviewStatus==='rejected') return '<span class="badge bad">غير مقبول (مراجعة يدوية)</span>';
+  return `<span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح تلقائيًا':'راسب تلقائيًا'} - لم تتم المراجعة</span>`;
+}
+async function reviewExamsView(){
+  const [results,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const sorted=[...results].sort((a,b)=>(b.endTime||0)-(a.endTime||0));
+  const rowsHtml = sorted.map(r=>{
+    const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+    return `<tr>
+      <td>${emp?emp.name:'(موظف محذوف)'}</td>
+      <td>${exam?exam.name:'(اختبار محذوف)'}</td>
+      <td>${r.percent}%</td>
+      <td>${reviewBadge(r)}</td>
+      <td>${r.when_display||(r.endTime?new Date(r.endTime).toLocaleString('ar-EG'):'-')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sec" data-view="${r.id}" style="padding:4px 8px">عرض الإجابات</button>
+        <button class="btn" data-accept="${r.id}" style="padding:4px 8px;background:var(--ok)">قبول</button>
+        <button class="btn danger" data-reject="${r.id}" style="padding:4px 8px">رفض</button>
+      </td>
+    </tr>`;
+  }).join('');
+  let detailHtml='';
+  if(reviewSelected){
+    const r=results.find(x=>x.id===reviewSelected);
+    if(r){
+      const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+      const qRows=(exam?exam.questionIds:[]||[]).map(qid=>{
+        const q=questions.find(x=>x.id===qid); if(!q) return '';
+        const val=r.answers?r.answers[q.id]:undefined;
+        const wrong=isAnswerWrong(q,val);
+        return `<tr><td>${q.text}</td>
+          <td style="color:${wrong?'var(--bad)':'var(--ok)'}">${formatAnswerText(q,val)}</td>
+          <td style="color:var(--ok)">${formatCorrectText(q)}</td></tr>`;
+      }).join('');
+      detailHtml=`<div class="card">
+        <h3>تفاصيل إجابات: ${emp?emp.name:'-'} — ${exam?exam.name:'-'}</h3>
+        <p style="color:var(--muted);font-size:13px">الدرجة: ${r.score} — النسبة: ${r.percent}% — ${reviewBadge(r)}</p>
+        <div class="table-wrap"><table><tr><th>السؤال</th><th>إجابة الموظف</th><th>الإجابة الصحيحة</th></tr>${qRows}</table></div>
+        <button class="btn sec" id="closeDetail" style="margin-top:10px">إغلاق التفاصيل</button>
+      </div>`;
+    }
+  }
+  return `<h1>تعديل الاختبار — مراجعة الاختبارات المجاب عليها</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">كل الاختبارات التي أنهاها الموظفون. يمكنك عرض إجابات كل اختبار بالتفصيل، ثم تحديد يدويًا هل هو مقبول أم غير مقبول (يتجاوز التصحيح التلقائي).</p>
+    <div class="table-wrap"><table><tr><th>الموظف</th><th>الاختبار</th><th>النسبة</th><th>الحالة</th><th>تاريخ التسليم</th><th>إجراء</th></tr>
+    ${rowsHtml || '<tr><td colspan=6 style="color:var(--muted)">لا توجد اختبارات مجاب عليها بعد.</td></tr>'}</table></div>
+  </div>
+  ${detailHtml}`;
+}
+function attachReviewExams(){
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{ reviewSelected=b.dataset.view; state.view='review-exams'; routeRender(); });
+  const closeBtn=document.getElementById('closeDetail'); if(closeBtn) closeBtn.onclick=()=>{ reviewSelected=null; state.view='review-exams'; routeRender(); };
+  document.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{
+    await setDoc('results',b.dataset.accept,{reviewStatus:'accepted',reviewedAt:Date.now()});
+    state.view='review-exams'; routeRender();
+  });
+  document.querySelectorAll('[data-reject]').forEach(b=>b.onclick=async()=>{
+    await setDoc('results',b.dataset.reject,{reviewStatus:'rejected',reviewedAt:Date.now()});
+    state.view='review-exams'; routeRender();
+  });
 }
 
 // ---------- ADMIN: results ----------
