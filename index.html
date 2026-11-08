@@ -149,9 +149,9 @@ function shell(){
   const adminLinks=[
     ['dashboard','لوحة التحكم'],['create-exam','إنشاء اختبار'],['questions','بنك الأسئلة'],
     ['employees','الموظفون'],['assign','إسناد الاختبارات'],['results','النتائج'],['wrong-answers','الإجابات'],
-    ['review-exams','تعديل الاختبار'],['messages','مراسلات'],['settings','الإعدادات']
+    ['review-exams','تعديل الاختبار'],['messages','مراسلات'],['suggestions','اقتراحات الأسئلة'],['settings','الإعدادات']
   ];
-  const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة'],['emp-messages','مراسلات']];
+  const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة'],['emp-messages','مراسلات'],['suggest-question','اقترح سؤال']];
   const links = s.role==='admin'?adminLinks:empLinks;
   return `<div class="app">
     <div class="topbar">
@@ -244,6 +244,8 @@ async function routeRender(){
   else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
   else if(v==='messages'){ main.innerHTML=await messagesView(); attachMessages(); }
   else if(v==='emp-messages'){ main.innerHTML=await empMessagesView(); attachEmpMessages(); }
+  else if(v==='suggestions'){ main.innerHTML=await suggestionsView(); attachSuggestionsAdmin(); }
+  else if(v==='suggest-question'){ main.innerHTML=await suggestQuestionView(); attachSuggestQuestion(); }
   else if(v==='emp-home'){ main.innerHTML=await empHomeView(); attachEmpHome(); }
   else if(v==='emp-results'){ main.innerHTML=await empResultsView(); }
   else if(v==='take-exam'){ main.innerHTML=await takeExamView(); attachTakeExam(); }
@@ -778,6 +780,103 @@ function attachMessages(){
     const box=document.getElementById('seen-'+b.dataset.toggleseen);
     box.style.display = box.style.display==='none'?'block':'none';
   });
+}
+
+// ---------- ADMIN: question suggestions ----------
+function suggestionStatusBadge(s){
+  if(s.addedToBank) return '<span class="badge ok">تمت الإضافة لبنك الأسئلة</span>';
+  if(s.status==='replied') return '<span class="badge warn">تم الرد</span>';
+  return '<span class="badge bad">بانتظار الرد</span>';
+}
+async function suggestionsView(){
+  const [suggestions,emps]=await Promise.all([listAll('suggestions'),listAll('employees')]);
+  const sorted=[...suggestions].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const html=sorted.map(s=>{
+    const emp=emps.find(e=>e.id===s.employeeId);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+        <strong>${emp?emp.name:'(موظف محذوف)'}</strong>
+        <small style="color:var(--muted)">${s.createdAt?new Date(s.createdAt).toLocaleString('ar-EG'):''}</small>
+      </div>
+      <p style="margin:8px 0">${s.text}</p>
+      <p style="font-size:12px;color:var(--muted)">النوع: ${typeLabel(s.type)} ${s.type!=='short'?'— الإجابة المقترحة: '+formatCorrectText(s):''}</p>
+      <p>${suggestionStatusBadge(s)}</p>
+      ${s.reply?`<p style="font-size:13px;background:var(--bg);padding:8px;border-radius:8px"><strong>ردّك:</strong> ${s.reply}</p>`:''}
+      <label>الرد على الموظف</label>
+      <textarea class="replyBox" data-replyfor="${s.id}" rows="2" style="width:100%">${s.reply||''}</textarea>
+      <div style="margin-top:8px">
+        <button class="btn sec" data-sendreply="${s.id}" style="padding:5px 12px">إرسال الرد</button>
+        ${!s.addedToBank?`<button class="btn" data-addbank="${s.id}" style="padding:5px 12px">أضف السؤال إلى بنك الأسئلة</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  return `<h1>اقتراحات الأسئلة</h1>${html || '<p style="color:var(--muted)">لا توجد اقتراحات أسئلة من الموظفين حتى الآن.</p>'}`;
+}
+function attachSuggestionsAdmin(){
+  document.querySelectorAll('[data-sendreply]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.sendreply;
+    const box=document.querySelector(`.replyBox[data-replyfor="${id}"]`);
+    const reply=box.value.trim();
+    if(!reply){ alert('اكتب نص الرد أولًا.'); return; }
+    await setDoc('suggestions',id,{reply,status:'replied',repliedAt:Date.now()});
+    state.view='suggestions'; routeRender();
+  });
+  document.querySelectorAll('[data-addbank]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.addbank;
+    const all=await listAll('suggestions');
+    const s=all.find(x=>x.id===id); if(!s) return;
+    await setDoc('questions',uid(),{text:s.text,type:s.type,options:s.options||[],correct:s.correct,
+      points:s.points||1,category:'اقتراح موظف',explanation:''});
+    await setDoc('suggestions',id,{addedToBank:true});
+    alert('تمت إضافة السؤال إلى بنك الأسئلة.');
+    state.view='suggestions'; routeRender();
+  });
+}
+
+// ---------- EMPLOYEE: suggest a question ----------
+async function suggestQuestionView(){
+  const s=state.session;
+  const all=await listAll('suggestions');
+  const mine=all.filter(x=>x.employeeId===s.id).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const listHtml=mine.map(x=>`<div class="card">
+    <p style="margin:0 0 6px">${x.text}</p>
+    <p>${suggestionStatusBadge(x)}</p>
+    ${x.reply?`<p style="font-size:13px;background:var(--bg);padding:8px;border-radius:8px;margin-top:6px"><strong>رد المدير:</strong> ${x.reply}</p>`:''}
+  </div>`).join('');
+  return `<h1>اقترح سؤال</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">اقترح سؤالًا جديدًا ليراجعه المدير ويضيفه إلى بنك الأسئلة إن رغب، وسيصلك رد منه.</p>
+    <label>نص السؤال</label><input id="sqText" style="width:100%">
+    <label>النوع</label><select id="sqType" style="width:100%">
+      <option value="mcq">اختيار من متعدد</option><option value="tf">صح / خطأ</option>
+      <option value="multi">اختيار متعدد</option><option value="short">إجابة قصيرة</option>
+    </select>
+    <div id="sqOptsWrap"></div>
+    <button class="btn" id="sendSuggestion" style="margin-top:10px">إرسال الاقتراح</button>
+  </div>
+  <h3>اقتراحاتي السابقة</h3>
+  ${listHtml || '<p style="color:var(--muted)">لم ترسل أي اقتراحات بعد.</p>'}`;
+}
+function attachSuggestQuestion(){
+  const typeSel=document.getElementById('sqType');
+  const wrap=document.getElementById('sqOptsWrap');
+  const refresh=()=>wrap.innerHTML=optsEditor(typeSel.value);
+  typeSel.onchange=refresh; refresh();
+  document.getElementById('sendSuggestion').onclick=async ()=>{
+    const type=typeSel.value, text=document.getElementById('sqText').value.trim();
+    if(!text){ alert('أدخل نص السؤال.'); return; }
+    let options=[], correct=null;
+    if(type==='tf'){ const el=document.getElementById('qCorrectTF'); correct=el?el.value==='true':true; }
+    else if(type==='short'){ const el=document.getElementById('qShortAns'); correct=el?el.value.trim():''; }
+    else{
+      options=[...wrap.querySelectorAll('[data-opt]')].map(i=>i.value.trim());
+      if(type==='mcq'){ const r=wrap.querySelector('input[name=qc]:checked'); correct=r?parseInt(r.value):null; }
+      else{ correct=[...wrap.querySelectorAll('input[name=qc]:checked')].map(c=>parseInt(c.value)); }
+    }
+    await setDoc('suggestions',uid(),{employeeId:state.session.id,text,type,options,correct,points:1,
+      createdAt:Date.now(),status:'pending',addedToBank:false,reply:''});
+    state.view='suggest-question'; routeRender();
+  };
 }
 
 // ---------- EMPLOYEE: messages ----------
