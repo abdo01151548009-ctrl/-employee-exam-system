@@ -123,6 +123,17 @@ async function setDoc(name,id,data){
   catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:'غير معروف')); return false; }
 }
 async function delDoc(name,id){ if(!db) return; try{ await db.collection(name).doc(id).delete(); }catch(e){console.error(e);} }
+async function bulkDeleteSelected(collectionName,chkClass){
+  const ids=[...document.querySelectorAll('.'+chkClass+':checked')].map(c=>c.value);
+  if(!ids.length){ alert('اختر عنصرًا واحدًا على الأقل للحذف.'); return; }
+  if(!confirm(`هل أنت متأكد من حذف ${ids.length} عنصر؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+  for(const id of ids) await delDoc(collectionName,id);
+  routeRender();
+}
+function attachSelectAll(allId,chkClass){
+  const allBox=document.getElementById(allId); if(!allBox) return;
+  allBox.onchange=()=>{ document.querySelectorAll('.'+chkClass).forEach(c=>c.checked=allBox.checked); };
+}
 
 // ---------- render shell ----------
 function render(){
@@ -227,7 +238,7 @@ async function routeRender(){
   else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
   else if(v==='employees'){ main.innerHTML=await employeesView(); attachEmployees(); }
   else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
-  else if(v==='results'){ main.innerHTML=await resultsView(); }
+  else if(v==='results'){ main.innerHTML=await resultsView(); attachResults(); }
   else if(v==='wrong-answers'){ main.innerHTML=await wrongAnswersView(); attachWrongAnswers(); }
   else if(v==='review-exams'){ main.innerHTML=await reviewExamsView(); attachReviewExams(); }
   else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
@@ -257,14 +268,14 @@ async function dashboardView(){
   <div class="card"><h3>آخر النتائج</h3>${resultsTable(results.slice(-8).reverse(),emps,exams)}</div>`;
 }
 
-function resultsTable(results,emps,exams){
+function resultsTable(results,emps,exams,withChk){
   if(!results.length) return '<p style="color:var(--muted)">لا توجد نتائج بعد.</p>';
-  return `<table><tr><th>الموظف</th><th>الاختبار</th><th>النسبة</th><th>الحالة</th></tr>
+  return `<div class="table-wrap"><table><tr>${withChk?'<th><input type="checkbox" id="resSelectAll"></th>':''}<th>الموظف</th><th>الاختبار</th><th>النسبة</th><th>الحالة</th></tr>
   ${results.map(r=>{
     const e=emps.find(x=>x.id===r.employeeId); const ex=exams.find(x=>x.id===r.examId);
-    return `<tr><td>${e?e.name:'-'}</td><td>${ex?ex.name:'-'}</td><td>${r.percent}%</td>
+    return `<tr>${withChk?`<td><input type="checkbox" class="resChk" value="${r.id}"></td>`:''}<td>${e?e.name:'-'}</td><td>${ex?ex.name:'-'}</td><td>${r.percent}%</td>
     <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح':'راسب'}</span></td></tr>`;
-  }).join('')}</table>`;
+  }).join('')}</table></div>`;
 }
 
 // ---------- ADMIN: question bank ----------
@@ -287,13 +298,14 @@ async function questionsView(){
   </div>
   <div class="card"><h3>كل الأسئلة (${qs.length})</h3>
   <input id="qSearch" placeholder="بحث..." style="width:100%;margin-bottom:8px">
+  <button class="btn danger" id="qBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
   <div id="qList">${renderQList(qs)}</div></div>`;
 }
 function renderQList(qs){
   if(!qs.length) return '<p style="color:var(--muted)">لا توجد أسئلة.</p>';
-  return `<table><tr><th>السؤال</th><th>النوع</th><th>التصنيف</th><th>الدرجة</th><th></th></tr>
-  ${qs.map(q=>`<tr><td>${q.text}</td><td>${typeLabel(q.type)}</td><td>${q.category||'-'}</td><td>${q.points}</td>
-  <td><button class="btn danger" data-del="${q.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table>`;
+  return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="qSelectAll"></th><th>السؤال</th><th>النوع</th><th>التصنيف</th><th>الدرجة</th><th></th></tr>
+  ${qs.map(q=>`<tr><td><input type="checkbox" class="qChk" value="${q.id}"></td><td>${q.text}</td><td>${typeLabel(q.type)}</td><td>${q.category||'-'}</td><td>${q.points}</td>
+  <td><button class="btn danger" data-del="${q.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table></div>`;
 }
 function typeLabel(t){ return {mcq:'اختيار واحد',tf:'صح/خطأ',multi:'اختيار متعدد',short:'إجابة قصيرة'}[t]||t; }
 
@@ -336,7 +348,10 @@ function attachQuestions(){
     const qs=await listAll('questions');
     const f=qs.filter(q=>q.text.includes(e.target.value)||((q.category||'').includes(e.target.value)));
     document.getElementById('qList').innerHTML=renderQList(f);
+    attachSelectAll('qSelectAll','qChk');
   };
+  document.getElementById('qBulkDelete').onclick=()=>bulkDeleteSelected('questions','qChk');
+  attachSelectAll('qSelectAll','qChk');
 }
 
 // ---------- ADMIN: create exam ----------
@@ -412,14 +427,15 @@ async function employeesView(){
   </div>
   <div class="card"><h3>قائمة الموظفين (${emps.length})</h3>
   <input id="eSearch" placeholder="بحث بالاسم أو القسم..." style="width:100%;margin-bottom:8px">
+  <button class="btn danger" id="empBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
   <div id="empList">${renderEmpList(emps)}</div></div>`;
 }
 function renderEmpList(emps){
   if(!emps.length) return '<p style="color:var(--muted)">لا يوجد موظفون.</p>';
-  return `<table><tr><th>الاسم</th><th>ID</th><th>القسم</th><th>الفريق</th><th>الحالة</th><th></th></tr>
-  ${emps.map(e=>`<tr><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td>
+  return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="empSelectAll"></th><th>الاسم</th><th>ID</th><th>القسم</th><th>الفريق</th><th>الحالة</th><th></th></tr>
+  ${emps.map(e=>`<tr><td><input type="checkbox" class="empChk" value="${e.id}"></td><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td>
   <td><span class="badge ok">${e.status||'نشط'}</span></td>
-  <td><button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table>`;
+  <td><button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table></div>`;
 }
 function attachEmployees(){
   document.getElementById('addEmp').onclick=async ()=>{
@@ -439,7 +455,10 @@ function attachEmployees(){
     const emps=await listAll('employees');
     const f=emps.filter(x=>x.name.includes(e.target.value)||(x.dept||'').includes(e.target.value));
     document.getElementById('empList').innerHTML=renderEmpList(f);
+    attachSelectAll('empSelectAll','empChk');
   };
+  document.getElementById('empBulkDelete').onclick=()=>bulkDeleteSelected('employees','empChk');
+  attachSelectAll('empSelectAll','empChk');
 }
 
 // ---------- ADMIN: assign ----------
@@ -455,12 +474,13 @@ async function assignView(){
     <button class="btn" id="doAssign" style="margin-top:8px">إسناد</button>
   </div>
   <div class="card"><h3>الإسنادات الحالية</h3>
-  <table><tr><th>الاختبار</th><th>الموظف</th><th>الموعد النهائي</th><th>الحالة</th></tr>
+  <button class="btn danger" id="aBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
+  <div class="table-wrap"><table><tr><th><input type="checkbox" id="aSelectAll"></th><th>الاختبار</th><th>الموظف</th><th>الموعد النهائي</th><th>الحالة</th></tr>
   ${assignments.map(a=>{
     const ex=exams.find(x=>x.id===a.examId), em=emps.find(x=>x.id===a.employeeId);
-    return `<tr><td>${ex?ex.name:'-'}</td><td>${em?em.name:'-'}</td><td>${a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
-  }).join('') || '<tr><td colspan=4 style="color:var(--muted)">لا توجد إسنادات بعد.</td></tr>'}
-  </table></div>`;
+    return `<tr><td><input type="checkbox" class="aChk" value="${a.id}"></td><td>${ex?ex.name:'-'}</td><td>${em?em.name:'-'}</td><td>${a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
+  }).join('') || '<tr><td colspan=5 style="color:var(--muted)">لا توجد إسنادات بعد.</td></tr>'}
+  </table></div></div>`;
 }
 function attachAssign(){
   document.getElementById('doAssign').onclick=async()=>{
@@ -471,6 +491,8 @@ function attachAssign(){
     for(const id of emps) await setDoc('assignments',uid(),{examId,employeeId:id,deadline});
     state.view='assign'; routeRender();
   };
+  const aBulk=document.getElementById('aBulkDelete'); if(aBulk) aBulk.onclick=()=>bulkDeleteSelected('assignments','aChk');
+  attachSelectAll('aSelectAll','aChk');
 }
 
 // ---------- ADMIN: wrong answers ----------
@@ -634,8 +656,13 @@ async function resultsView(){
   return `<h1>النتائج</h1>
   <div class="card">
   <button class="btn sec" id="exportCsv">تصدير CSV</button>
-  <div style="margin-top:10px">${resultsTable(results.reverse(),emps,exams)}</div>
+  <button class="btn danger" id="resBulkDelete">حذف المحدد</button>
+  <div style="margin-top:10px">${resultsTable(results.reverse(),emps,exams,true)}</div>
   </div>`;
+}
+function attachResults(){
+  const b=document.getElementById('resBulkDelete'); if(b) b.onclick=()=>bulkDeleteSelected('results','resChk');
+  attachSelectAll('resSelectAll','resChk');
 }
 document.addEventListener('click',async (e)=>{
   if(e.target.id==='exportCsv'){
