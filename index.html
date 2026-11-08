@@ -149,9 +149,9 @@ function shell(){
   const adminLinks=[
     ['dashboard','لوحة التحكم'],['create-exam','إنشاء اختبار'],['questions','بنك الأسئلة'],
     ['employees','الموظفون'],['assign','إسناد الاختبارات'],['results','النتائج'],['wrong-answers','الإجابات'],
-    ['review-exams','تعديل الاختبار'],['settings','الإعدادات']
+    ['review-exams','تعديل الاختبار'],['messages','مراسلات'],['settings','الإعدادات']
   ];
-  const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة']];
+  const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة'],['emp-messages','مراسلات']];
   const links = s.role==='admin'?adminLinks:empLinks;
   return `<div class="app">
     <div class="topbar">
@@ -242,6 +242,8 @@ async function routeRender(){
   else if(v==='wrong-answers'){ main.innerHTML=await wrongAnswersView(); attachWrongAnswers(); }
   else if(v==='review-exams'){ main.innerHTML=await reviewExamsView(); attachReviewExams(); }
   else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
+  else if(v==='messages'){ main.innerHTML=await messagesView(); attachMessages(); }
+  else if(v==='emp-messages'){ main.innerHTML=await empMessagesView(); attachEmpMessages(); }
   else if(v==='emp-home'){ main.innerHTML=await empHomeView(); attachEmpHome(); }
   else if(v==='emp-results'){ main.innerHTML=await empResultsView(); }
   else if(v==='take-exam'){ main.innerHTML=await takeExamView(); attachTakeExam(); }
@@ -705,6 +707,84 @@ function attachSettings(){
     if(ok){ msg.style.color='var(--ok)'; msg.textContent='تم تحديث كلمة المرور بنجاح.';
       document.getElementById('oldPass').value=''; document.getElementById('newPass1').value=''; document.getElementById('newPass2').value=''; }
   };
+}
+
+// ---------- ADMIN: messages ----------
+async function messagesView(){
+  const [emps,exams,messages]=await Promise.all([listAll('employees'),listAll('exams'),listAll('messages')]);
+  const sorted=[...messages].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const msgHtml = sorted.map(m=>{
+    const recipients = m.toEmployeeId==='all' ? emps : emps.filter(e=>e.id===m.toEmployeeId);
+    const seenCount = recipients.filter(e=>m.seenBy && m.seenBy[e.id]).length;
+    const seenListHtml = recipients.map(e=>{
+      const seenAt=m.seenBy && m.seenBy[e.id];
+      return `<tr><td>${e.name}</td><td>${seenAt? '<span class="badge ok">شاهدها في '+new Date(seenAt).toLocaleString('ar-EG')+'</span>' : '<span class="badge warn">لم تُشاهد بعد</span>'}</td></tr>`;
+    }).join('');
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+        <strong>${m.subject}</strong>
+        <small style="color:var(--muted)">${m.createdAt?new Date(m.createdAt).toLocaleString('ar-EG'):''}</small>
+      </div>
+      <p style="margin:8px 0">${m.body}</p>
+      <p style="font-size:12px;color:var(--muted)">إلى: ${m.toEmployeeId==='all'?'كل الموظفين':(recipients[0]?recipients[0].name:'(موظف محذوف)')} — شاهدها ${seenCount} من ${recipients.length}</p>
+      <button class="btn sec" data-toggleseen="${m.id}" style="padding:4px 10px">رآيه</button>
+      <div class="table-wrap" id="seen-${m.id}" style="display:none;margin-top:8px"><table><tr><th>الموظف</th><th>الحالة</th></tr>${seenListHtml}</table></div>
+    </div>`;
+  }).join('');
+  return `<h1>مراسلات</h1>
+  <div class="card">
+    <h3>إرسال إرشادات للموظفين</h3>
+    <div class="row">
+      <div><label>المرسل إليه</label><select id="mTo"><option value="all">-- كل الموظفين --</option>${emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div><label>مرتبط باختبار (اختياري)</label><select id="mExam"><option value="">-- بدون --</option>${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
+    </div>
+    <label>عنوان الرسالة</label><input id="mSubject" style="width:100%">
+    <label>نص الإرشادات</label><textarea id="mBody" rows="4" style="width:100%"></textarea>
+    <button class="btn" id="sendMsg" style="margin-top:8px">إرسال</button>
+  </div>
+  <h3>الرسائل المرسلة</h3>
+  ${msgHtml || '<p style="color:var(--muted)">لا توجد رسائل مرسلة بعد.</p>'}`;
+}
+function attachMessages(){
+  document.getElementById('sendMsg').onclick=async ()=>{
+    const subject=document.getElementById('mSubject').value.trim();
+    const body=document.getElementById('mBody').value.trim();
+    if(!subject||!body){ alert('أدخل عنوان الرسالة ونصها.'); return; }
+    const toEmployeeId=document.getElementById('mTo').value;
+    const examId=document.getElementById('mExam').value;
+    await setDoc('messages',uid(),{toEmployeeId,examId:examId||null,subject,body,createdAt:Date.now(),seenBy:{}});
+    state.view='messages'; routeRender();
+  };
+  document.querySelectorAll('[data-toggleseen]').forEach(b=>b.onclick=()=>{
+    const box=document.getElementById('seen-'+b.dataset.toggleseen);
+    box.style.display = box.style.display==='none'?'block':'none';
+  });
+}
+
+// ---------- EMPLOYEE: messages ----------
+async function empMessagesView(){
+  const s=state.session;
+  const messages=await listAll('messages');
+  const mine=messages.filter(m=>m.toEmployeeId===s.id||m.toEmployeeId==='all').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const html=mine.map(m=>{
+    const seenAt=m.seenBy && m.seenBy[s.id];
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+        <strong>${m.subject}</strong>
+        <small style="color:var(--muted)">${m.createdAt?new Date(m.createdAt).toLocaleString('ar-EG'):''}</small>
+      </div>
+      <p style="margin:8px 0">${m.body}</p>
+      ${seenAt? `<span class="badge ok">تمت المشاهدة في ${new Date(seenAt).toLocaleString('ar-EG')}</span>` : `<button class="btn sec" data-seen="${m.id}" style="padding:5px 12px">رأيته</button>`}
+    </div>`;
+  }).join('');
+  return `<h1>مراسلات</h1>${html || '<p style="color:var(--muted)">لا توجد رسائل لك حتى الآن.</p>'}`;
+}
+function attachEmpMessages(){
+  document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=async()=>{
+    const empId=state.session.id;
+    await setDoc('messages',b.dataset.seen,{['seenBy.'+empId]:Date.now()});
+    state.view='emp-messages'; routeRender();
+  });
 }
 
 // ---------- EMPLOYEE: home ----------
