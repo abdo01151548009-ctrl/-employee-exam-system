@@ -807,6 +807,7 @@ async function suggestionsView(){
       <div style="margin-top:8px">
         <button class="btn sec" data-sendreply="${s.id}" style="padding:5px 12px">إرسال الرد</button>
         ${!s.addedToBank?`<button class="btn" data-addbank="${s.id}" style="padding:5px 12px">أضف السؤال إلى بنك الأسئلة</button>`:''}
+        <button class="btn danger" data-delsug="${s.id}" style="padding:5px 12px">حذف الاقتراح</button>
       </div>
     </div>`;
   }).join('');
@@ -831,6 +832,11 @@ function attachSuggestionsAdmin(){
     alert('تمت إضافة السؤال إلى بنك الأسئلة.');
     state.view='suggestions'; routeRender();
   });
+  document.querySelectorAll('[data-delsug]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('هل تريد حذف هذا الاقتراح نهائيًا؟')) return;
+    await delDoc('suggestions',b.dataset.delsug);
+    state.view='suggestions'; routeRender();
+  });
 }
 
 // ---------- EMPLOYEE: suggest a question ----------
@@ -842,6 +848,7 @@ async function suggestQuestionView(){
     <p style="margin:0 0 6px">${x.text}</p>
     <p>${suggestionStatusBadge(x)}</p>
     ${x.reply?`<p style="font-size:13px;background:var(--bg);padding:8px;border-radius:8px;margin-top:6px"><strong>رد المدير:</strong> ${x.reply}</p>`:''}
+    <button class="btn danger" data-delmysug="${x.id}" style="padding:5px 12px;margin-top:8px">حذف الاقتراح</button>
   </div>`).join('');
   return `<h1>اقترح سؤال</h1>
   <div class="card">
@@ -877,6 +884,11 @@ function attachSuggestQuestion(){
       createdAt:Date.now(),status:'pending',addedToBank:false,reply:''});
     state.view='suggest-question'; routeRender();
   };
+  document.querySelectorAll('[data-delmysug]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('هل تريد حذف هذا الاقتراح نهائيًا؟')) return;
+    await delDoc('suggestions',b.dataset.delmysug);
+    state.view='suggest-question'; routeRender();
+  });
 }
 
 // ---------- EMPLOYEE: messages ----------
