@@ -100,6 +100,36 @@ firebase.initializeApp(firebaseConfig);
 
 let db=null;
 let state={ session:null, view:'login', examAttempt:null };
+let lang='ar';
+try{ const saved=localStorage.getItem('eesLang'); if(saved==='ar'||saved==='en') lang=saved; }catch(e){}
+const DICT={
+  ar:{
+    nav_dashboard:'لوحة التحكم', nav_create_exam:'إنشاء اختبار', nav_questions:'بنك الأسئلة', nav_employees:'الموظفون',
+    nav_team:'الفريق', nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات', nav_review:'تعديل الاختبار',
+    nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
+    nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
+    admin_label:'مدير النظام', logout:'تسجيل الخروج', toggle_lang:'English',
+    login_title:'تسجيل الدخول', admin_pass_label:'دخول كمدير — كلمة المرور', admin_login_btn:'دخول كمدير',
+    emp_login_label:'دخول كموظف — Employee ID أو البريد الإلكتروني', emp_login_btn:'دخول',
+    save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل'
+  },
+  en:{
+    nav_dashboard:'Dashboard', nav_create_exam:'Create Exam', nav_questions:'Question Bank', nav_employees:'Employees',
+    nav_team:'Team', nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Review Exams',
+    nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
+    nav_my_exams:'My Exams', nav_my_results:'My Results', nav_my_profile:'Edit My Profile', nav_suggest_question:'Suggest a Question',
+    admin_label:'Admin', logout:'Log out', toggle_lang:'العربية',
+    login_title:'Sign In', admin_pass_label:'Admin Login — Password', admin_login_btn:'Login as Admin',
+    emp_login_label:'Employee Login — Employee ID or Email', emp_login_btn:'Login',
+    save:'Save', cancel:'Cancel', delete:'Delete', add:'Add', search_ph:'Search...', send:'Send', edit:'Edit'
+  }
+};
+function T(key){ return (DICT[lang] && DICT[lang][key]) || (DICT.ar[key]) || key; }
+function applyLangToDocument(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
+  try{ localStorage.setItem('eesLang',lang); }catch(e){}
+}
 
 async function initCaps(){
   try{ db = firebase.firestore(); }catch(e){ db=null; console.error(e); }
@@ -147,24 +177,25 @@ function render(){
 function shell(){
   const s=state.session;
   const adminLinks=[
-    ['dashboard','لوحة التحكم'],['create-exam','إنشاء اختبار'],['questions','بنك الأسئلة'],
-    ['employees','الموظفون'],['assign','إسناد الاختبارات'],['results','النتائج'],['wrong-answers','الإجابات'],
-    ['review-exams','تعديل الاختبار'],['messages','مراسلات'],['suggestions','اقتراحات الأسئلة'],['settings','الإعدادات']
+    ['dashboard',T('nav_dashboard')],['create-exam',T('nav_create_exam')],['questions',T('nav_questions')],
+    ['employees',T('nav_employees')],['team',T('nav_team')],['assign',T('nav_assign')],['results',T('nav_results')],['wrong-answers',T('nav_wrong')],
+    ['review-exams',T('nav_review')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
   ];
-  const empLinks=[['emp-home','اختباراتي'],['emp-results','نتائجي السابقة'],['emp-messages','مراسلات'],['suggest-question','اقترح سؤال']];
+  const empLinks=[['emp-home',T('nav_my_exams')],['emp-results',T('nav_my_results')],['emp-profile',T('nav_my_profile')],['emp-messages',T('nav_messages')],['suggest-question',T('nav_suggest_question')]];
   const links = s.role==='admin'?adminLinks:empLinks;
   return `<div class="app">
     <div class="topbar">
       <button class="menuBtn" id="openMenu">☰</button>
       <h2>Employee Exam System</h2>
-      <span style="width:38px"></span>
+      <button class="menuBtn" id="langBtnTop">${lang==='ar'?'EN':'AR'}</button>
     </div>
     <div class="sidebar" id="sidebar">
       <button class="closeBtn" id="closeMenu">✕</button>
       <h2>Employee Exam System</h2>
-      <div class="user">${s.role==='admin'?'مدير النظام':s.name}</div>
+      <div class="user">${s.role==='admin'?T('admin_label'):s.name}</div>
       <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${l[1]}</a>`).join('')}
-      <a href="#logout" style="color:var(--bad)">تسجيل الخروج</a></div>
+      <a href="#" id="langBtnSide" style="color:var(--brand)">${T('toggle_lang')}</a>
+      <a href="#logout" style="color:var(--bad)">${T('logout')}</a></div>
     </div>
     <div class="main" id="main"></div>
   </div>`;
@@ -175,19 +206,23 @@ function attachShellNav(){
   if(open) open.onclick=()=>sb.classList.add('open');
   if(close) close.onclick=()=>sb.classList.remove('open');
   sb.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>sb.classList.remove('open')));
+  const toggleLang=(e)=>{ if(e) e.preventDefault(); lang = lang==='ar'?'en':'ar'; applyLangToDocument(); render(); };
+  const lb1=document.getElementById('langBtnTop'); if(lb1) lb1.onclick=toggleLang;
+  const lb2=document.getElementById('langBtnSide'); if(lb2) lb2.onclick=toggleLang;
 }
 
 function loginView(){
   return `<div class="login card">
-    <h1>تسجيل الدخول</h1>
-    <label>دخول كمدير — كلمة المرور</label>
-    <input id="adminPass" type="password" style="width:100%" placeholder="كلمة المرور">
-    <button class="btn" id="asAdmin" style="width:100%;margin-top:8px">دخول كمدير</button>
+    <div style="text-align:left;margin-bottom:8px"><button class="btn sec" id="langBtnLogin" style="padding:5px 14px">${T('toggle_lang')}</button></div>
+    <h1>${T('login_title')}</h1>
+    <label>${T('admin_pass_label')}</label>
+    <input id="adminPass" type="password" style="width:100%" placeholder="••••••">
+    <button class="btn" id="asAdmin" style="width:100%;margin-top:8px">${T('admin_login_btn')}</button>
     <p id="adminErr" style="color:var(--bad);font-size:12px"></p>
     <hr style="margin:16px 0;border-color:var(--border)">
-    <label>دخول كموظف — Employee ID أو البريد الإلكتروني</label>
-    <input id="empLogin" style="width:100%" placeholder="EMP001 أو name@company.com">
-    <button class="btn" id="asEmp" style="width:100%;margin-top:8px">دخول</button>
+    <label>${T('emp_login_label')}</label>
+    <input id="empLogin" style="width:100%" placeholder="EMP001 / name@company.com">
+    <button class="btn" id="asEmp" style="width:100%;margin-top:8px">${T('emp_login_btn')}</button>
     <p id="loginErr" style="color:var(--bad);font-size:12px"></p>
   </div>`;
 }
@@ -203,6 +238,7 @@ async function getAdminPassword(){
   }catch(e){ return DEFAULT_ADMIN_PASSWORD; }
 }
 function attachLogin(){
+  const lb=document.getElementById('langBtnLogin'); if(lb) lb.onclick=()=>{ lang=lang==='ar'?'en':'ar'; applyLangToDocument(); render(); };
   document.getElementById('asAdmin').onclick=async ()=>{
     const btn=document.getElementById('asAdmin'); btn.disabled=true;
     const p=document.getElementById('adminPass').value;
@@ -237,6 +273,7 @@ async function routeRender(){
   else if(v==='create-exam'){ main.innerHTML=await createExamView(); attachCreateExam(); }
   else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
   else if(v==='employees'){ main.innerHTML=await employeesView(); attachEmployees(); }
+  else if(v==='team'){ main.innerHTML=await teamView(); attachTeam(); }
   else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
   else if(v==='results'){ main.innerHTML=await resultsView(); attachResults(); }
   else if(v==='wrong-answers'){ main.innerHTML=await wrongAnswersView(); attachWrongAnswers(); }
@@ -246,6 +283,7 @@ async function routeRender(){
   else if(v==='emp-messages'){ main.innerHTML=await empMessagesView(); attachEmpMessages(); }
   else if(v==='suggestions'){ main.innerHTML=await suggestionsView(); attachSuggestionsAdmin(); }
   else if(v==='suggest-question'){ main.innerHTML=await suggestQuestionView(); attachSuggestQuestion(); }
+  else if(v==='emp-profile'){ main.innerHTML=await empProfileView(); attachEmpProfile(); }
   else if(v==='emp-home'){ main.innerHTML=await empHomeView(); attachEmpHome(); }
   else if(v==='emp-results'){ main.innerHTML=await empResultsView(); }
   else if(v==='take-exam'){ main.innerHTML=await takeExamView(); attachTakeExam(); }
@@ -416,7 +454,7 @@ function attachCreateExam(){
 
 // ---------- ADMIN: employees ----------
 async function employeesView(){
-  const emps = await listAll('employees');
+  const [emps,leaders] = await Promise.all([listAll('employees'),listAll('teamLeaders')]);
   return `<h1>الموظفون</h1>
   <div class="card">
     <div class="row">
@@ -426,20 +464,25 @@ async function employeesView(){
       <div><label>القسم</label><input id="pDept" style="width:100%"></div>
       <div><label>الفريق</label><input id="pTeam" style="width:100%"></div>
       <div><label>الوظيفة</label><input id="pPos" style="width:100%"></div>
+      <div><label>قائد الفريق (Team Leader)</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${leaders.map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select></div>
     </div>
     <button class="btn" id="addEmp" style="margin-top:8px">إضافة موظف</button>
   </div>
   <div class="card"><h3>قائمة الموظفين (${emps.length})</h3>
   <input id="eSearch" placeholder="بحث بالاسم أو القسم..." style="width:100%;margin-bottom:8px">
   <button class="btn danger" id="empBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
-  <div id="empList">${renderEmpList(emps)}</div></div>`;
+  <div id="empList">${renderEmpList(emps,leaders)}</div></div>`;
 }
-function renderEmpList(emps){
+function renderEmpList(emps,leaders){
+  leaders=leaders||[];
   if(!emps.length) return '<p style="color:var(--muted)">لا يوجد موظفون.</p>';
-  return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="empSelectAll"></th><th>الاسم</th><th>ID</th><th>القسم</th><th>الفريق</th><th>الحالة</th><th></th></tr>
-  ${emps.map(e=>`<tr><td><input type="checkbox" class="empChk" value="${e.id}"></td><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td>
+  return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="empSelectAll"></th><th>الاسم</th><th>ID</th><th>القسم</th><th>الفريق</th><th>قائد الفريق</th><th>الحالة</th><th></th></tr>
+  ${emps.map(e=>{
+    const ld=leaders.find(l=>l.id===e.teamLeaderId);
+    return `<tr><td><input type="checkbox" class="empChk" value="${e.id}"></td><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td><td>${ld?ld.name:'-'}</td>
   <td><span class="badge ok">${e.status||'نشط'}</span></td>
-  <td><button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table></div>`;
+  <td><button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px">حذف</button></td></tr>`;
+  }).join('')}</table></div>`;
 }
 function attachEmployees(){
   document.getElementById('addEmp').onclick=async ()=>{
@@ -450,49 +493,119 @@ function attachEmployees(){
     const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent='جارٍ الحفظ...';
     const ok = await setDoc('employees',uid(),{name,empId,email:document.getElementById('pEmail').value.trim(),
       dept:document.getElementById('pDept').value.trim(),team:document.getElementById('pTeam').value.trim(),
-      position:document.getElementById('pPos').value.trim(),status:'نشط'});
+      position:document.getElementById('pPos').value.trim(),status:'نشط',
+      teamLeaderId:document.getElementById('pLeader').value||null});
     btn.disabled=false; btn.textContent='إضافة موظف';
     if(ok){ state.view='employees'; routeRender(); }
   };
   document.querySelectorAll('[data-delemp]').forEach(b=>b.onclick=async()=>{ await delDoc('employees',b.dataset.delemp); state.view='employees'; routeRender(); });
   document.getElementById('eSearch').oninput=async(e)=>{
-    const emps=await listAll('employees');
+    const [emps,leaders]=await Promise.all([listAll('employees'),listAll('teamLeaders')]);
     const f=emps.filter(x=>x.name.includes(e.target.value)||(x.dept||'').includes(e.target.value));
-    document.getElementById('empList').innerHTML=renderEmpList(f);
+    document.getElementById('empList').innerHTML=renderEmpList(f,leaders);
     attachSelectAll('empSelectAll','empChk');
   };
   document.getElementById('empBulkDelete').onclick=()=>bulkDeleteSelected('employees','empChk');
   attachSelectAll('empSelectAll','empChk');
 }
 
+// ---------- ADMIN: team (team leaders) ----------
+async function teamView(){
+  const [leaders,emps]=await Promise.all([listAll('teamLeaders'),listAll('employees')]);
+  const leaderCards=leaders.map(ld=>{
+    const members=emps.filter(e=>e.teamLeaderId===ld.id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>${ld.name}</strong>
+        <div><span style="color:var(--muted);font-size:12px">${members.length} عضو</span>
+        <button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-right:8px">حذف القائد</button></div>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin:8px 0">حدّد الموظفين التابعين لهذا القائد:</p>
+      <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
+      ${emps.map(e=>`<div class="qopt"><input type="checkbox" class="teamChk-${ld.id}" value="${e.id}" ${e.teamLeaderId===ld.id?'checked':''}><span>${e.name} ${e.dept?'('+e.dept+')':''}</span></div>`).join('') || '<p style="color:var(--muted)">لا يوجد موظفون.</p>'}
+      </div>
+      <button class="btn" data-savemembers="${ld.id}" style="margin-top:8px">حفظ أعضاء الفريق</button>
+    </div>`;
+  }).join('');
+  return `<h1>الفريق</h1>
+  <div class="card">
+    <h3>إضافة قائد فريق (Team Leader)</h3>
+    <div class="row">
+      <div><input id="tlName" placeholder="اسم قائد الفريق" style="width:100%"></div>
+      <div><button class="btn" id="addLeader" style="width:100%">إضافة قائد فريق</button></div>
+    </div>
+  </div>
+  ${leaderCards || '<p style="color:var(--muted)">لا يوجد قادة فرق بعد. أضف قائدًا أولًا.</p>'}`;
+}
+function attachTeam(){
+  document.getElementById('addLeader').onclick=async()=>{
+    const name=document.getElementById('tlName').value.trim();
+    if(!name){ alert('أدخل اسم قائد الفريق.'); return; }
+    await setDoc('teamLeaders',uid(),{name,createdAt:Date.now()});
+    state.view='team'; routeRender();
+  };
+  document.querySelectorAll('[data-delleader]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('حذف قائد الفريق؟ لن يتم حذف الموظفين، فقط ارتباطهم بهذا القائد سيبقى كما هو.')) return;
+    await delDoc('teamLeaders',b.dataset.delleader);
+    state.view='team'; routeRender();
+  });
+  document.querySelectorAll('[data-savemembers]').forEach(b=>b.onclick=async()=>{
+    const ldId=b.dataset.savemembers;
+    const checked=[...document.querySelectorAll('.teamChk-'+ldId+':checked')].map(c=>c.value);
+    const emps=await listAll('employees');
+    for(const e of emps){
+      const shouldBelong=checked.includes(e.id);
+      const currentlyBelongs=e.teamLeaderId===ldId;
+      if(shouldBelong && !currentlyBelongs) await setDoc('employees',e.id,{teamLeaderId:ldId});
+      else if(!shouldBelong && currentlyBelongs) await setDoc('employees',e.id,{teamLeaderId:null});
+    }
+    alert('تم حفظ أعضاء الفريق.');
+    state.view='team'; routeRender();
+  });
+}
+
 // ---------- ADMIN: assign ----------
 async function assignView(){
-  const [exams,emps,assignments] = await Promise.all([listAll('exams'),listAll('employees'),listAll('assignments')]);
+  const [exams,emps,assignments,leaders] = await Promise.all([listAll('exams'),listAll('employees'),listAll('assignments'),listAll('teamLeaders')]);
+  const depts=[...new Set(emps.map(e=>e.dept).filter(Boolean))];
   return `<h1>إسناد الاختبارات</h1>
   <div class="card">
     <div class="row">
       <div><label>الاختبار</label><select id="aExam">${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
-      <div><label>الموظف (أو اتركه للكل)</label><select id="aEmp"><option value="">-- كل الموظفين --</option>${emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div><label>الموظف (محدد)</label><select id="aEmp"><option value="">-- بدون تحديد موظف --</option>${emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div><label>القسم</label><select id="aDept"><option value="">-- كل الأقسام --</option>${depts.map(d=>`<option value="${d}">${d}</option>`).join('')}</select></div>
+      <div><label>الفريق (قائد الفريق)</label><select id="aTeam"><option value="">-- كل الفرق --</option>${leaders.map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select></div>
       <div><label>آخر موعد (Deadline)</label><input id="aDeadline" type="date" style="width:100%"></div>
     </div>
+    <p style="color:var(--muted);font-size:12px">إن اخترت موظفًا محددًا سيُسند له فقط. غير ذلك، يمكنك تضييق الإسناد بالقسم و/أو الفريق، أو تركهما فارغين لإسناد الاختبار لكل الموظفين.</p>
     <button class="btn" id="doAssign" style="margin-top:8px">إسناد</button>
   </div>
   <div class="card"><h3>الإسنادات الحالية</h3>
   <button class="btn danger" id="aBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
-  <div class="table-wrap"><table><tr><th><input type="checkbox" id="aSelectAll"></th><th>الاختبار</th><th>الموظف</th><th>الموعد النهائي</th><th>الحالة</th></tr>
+  <div class="table-wrap"><table><tr><th><input type="checkbox" id="aSelectAll"></th><th>الاختبار</th><th>الموظف</th><th>القسم</th><th>الفريق</th><th>الموعد النهائي</th><th>الحالة</th></tr>
   ${assignments.map(a=>{
     const ex=exams.find(x=>x.id===a.examId), em=emps.find(x=>x.id===a.employeeId);
-    return `<tr><td><input type="checkbox" class="aChk" value="${a.id}"></td><td>${ex?ex.name:'-'}</td><td>${em?em.name:'-'}</td><td>${a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
-  }).join('') || '<tr><td colspan=5 style="color:var(--muted)">لا توجد إسنادات بعد.</td></tr>'}
+    const ld=em?leaders.find(l=>l.id===em.teamLeaderId):null;
+    return `<tr><td><input type="checkbox" class="aChk" value="${a.id}"></td><td>${ex?ex.name:'-'}</td><td>${em?em.name:'-'}</td><td>${em?(em.dept||'-'):'-'}</td><td>${ld?ld.name:'-'}</td><td>${a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
+  }).join('') || '<tr><td colspan=7 style="color:var(--muted)">لا توجد إسنادات بعد.</td></tr>'}
   </table></div></div>`;
 }
 function attachAssign(){
   document.getElementById('doAssign').onclick=async()=>{
     const examId=document.getElementById('aExam').value, empId=document.getElementById('aEmp').value;
+    const deptVal=document.getElementById('aDept').value, teamVal=document.getElementById('aTeam').value;
     const deadline=document.getElementById('aDeadline').value;
     if(!examId) return alert('اختر اختبارًا');
-    const emps = empId? [empId] : (await listAll('employees')).map(e=>e.id);
-    for(const id of emps) await setDoc('assignments',uid(),{examId,employeeId:id,deadline});
+    let targetIds;
+    if(empId){ targetIds=[empId]; }
+    else{
+      let all=await listAll('employees');
+      if(deptVal) all=all.filter(e=>e.dept===deptVal);
+      if(teamVal) all=all.filter(e=>e.teamLeaderId===teamVal);
+      targetIds=all.map(e=>e.id);
+    }
+    if(!targetIds.length){ alert('لا يوجد موظفون مطابقون لهذا الاختيار.'); return; }
+    for(const id of targetIds) await setDoc('assignments',uid(),{examId,employeeId:id,deadline});
     state.view='assign'; routeRender();
   };
   const aBulk=document.getElementById('aBulkDelete'); if(aBulk) aBulk.onclick=()=>bulkDeleteSelected('assignments','aChk');
@@ -917,6 +1030,36 @@ function attachEmpMessages(){
   });
 }
 
+// ---------- EMPLOYEE: edit my profile ----------
+async function empProfileView(){
+  const s=state.session;
+  return `<h1>${T('nav_my_profile')}</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>الاسم</label><input id="epName" style="width:100%" value="${s.name||''}"></div>
+      <div><label>البريد الإلكتروني</label><input id="epEmail" style="width:100%" value="${s.email||''}"></div>
+    </div>
+    <div class="row">
+      <div><label>القسم</label><input id="epDept" style="width:100%" value="${s.dept||''}"></div>
+      <div><label>الوظيفة</label><input id="epPos" style="width:100%" value="${s.position||''}"></div>
+    </div>
+    <p style="color:var(--muted);font-size:12px">Employee ID: ${s.empId} (ثابت، لا يمكن تعديله)</p>
+    <button class="btn" id="saveProfile" style="margin-top:8px">${T('save')}</button>
+    <p id="profileMsg" style="font-size:13px;margin-top:8px"></p>
+  </div>`;
+}
+function attachEmpProfile(){
+  document.getElementById('saveProfile').onclick=async ()=>{
+    const msg=document.getElementById('profileMsg');
+    const name=document.getElementById('epName').value.trim();
+    if(!name){ msg.style.color='var(--bad)'; msg.textContent='الاسم مطلوب.'; return; }
+    const updated={name,email:document.getElementById('epEmail').value.trim(),
+      dept:document.getElementById('epDept').value.trim(),position:document.getElementById('epPos').value.trim()};
+    const ok=await setDoc('employees',state.session.id,updated);
+    if(ok){ state.session={...state.session,...updated}; msg.style.color='var(--ok)'; msg.textContent='تم حفظ بياناتك بنجاح.'; setTimeout(render,1200); }
+  };
+}
+
 // ---------- EMPLOYEE: home ----------
 async function empHomeView(){
   const s=state.session;
@@ -1049,7 +1192,7 @@ async function finishExam(){
 }
 
 // ---------- boot ----------
-(async function(){ await initCaps(); render(); })();
+(async function(){ applyLangToDocument(); await initCaps(); render(); })();
 </script>
 </body>
 </html>
