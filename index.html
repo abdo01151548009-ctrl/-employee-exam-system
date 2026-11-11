@@ -452,8 +452,10 @@ function attachCreateExam(){
 }
 
 // ---------- ADMIN: employees & teams (Merged) ----------
+let editingEmployeeId=null;
 async function employeesTeamsView(){
   const [emps, leaders] = await Promise.all([listAll('employees'), listAll('teamLeaders')]);
+  const editingEmp = editingEmployeeId ? emps.find(e=>e.id===editingEmployeeId) : null;
   
   const leaderCards = leaders.map(ld=>{
     const members = emps.filter(e=>e.teamLeaderId===ld.id);
@@ -474,17 +476,18 @@ async function employeesTeamsView(){
   return `<h1>الموظفون والفرق</h1>
   
   <div class="card">
-    <h3>إضافة موظف جديد</h3>
+    <h3 id="empFormTitle">${editingEmployeeId?'تعديل بيانات الموظف':'إضافة موظف جديد'}</h3>
     <div class="row">
-      <div><label>الاسم</label><input id="pName" style="width:100%"></div>
-      <div><label>Employee ID</label><input id="pEmpId" style="width:100%"></div>
-      <div><label>البريد الإلكتروني</label><input id="pEmail" style="width:100%"></div>
-      <div><label>القسم</label><input id="pDept" style="width:100%"></div>
-      <div><label>الفريق</label><input id="pTeam" style="width:100%"></div>
-      <div><label>الوظيفة</label><input id="pPos" style="width:100%"></div>
-      <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${leaders.map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select></div>
+      <div><label>الاسم</label><input id="pName" style="width:100%" value="${editingEmp?editingEmp.name||'':''}"></div>
+      <div><label>Employee ID</label><input id="pEmpId" style="width:100%" value="${editingEmp?editingEmp.empId||'':''}"></div>
+      <div><label>البريد الإلكتروني</label><input id="pEmail" style="width:100%" value="${editingEmp?editingEmp.email||'':''}"></div>
+      <div><label>القسم</label><input id="pDept" style="width:100%" value="${editingEmp?editingEmp.dept||'':''}"></div>
+      <div><label>الفريق</label><input id="pTeam" style="width:100%" value="${editingEmp?editingEmp.team||'':''}"></div>
+      <div><label>الوظيفة</label><input id="pPos" style="width:100%" value="${editingEmp?editingEmp.position||'':''}"></div>
+      <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${leaders.map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
     </div>
-    <button class="btn" id="addEmp" style="margin-top:8px">إضافة موظف</button>
+    <button class="btn" id="addEmp" style="margin-top:8px">${editingEmployeeId?'حفظ التعديلات':'إضافة موظف'}</button>
+    ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-right:6px">إلغاء التعديل</button>':''}
   </div>
 
   <div class="card">
@@ -512,7 +515,8 @@ function renderEmpList(emps,leaders){
     const ld=leaders.find(l=>l.id===e.teamLeaderId);
     return `<tr><td><input type="checkbox" class="empChk" value="${e.id}"></td><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td><td>${ld?ld.name:'-'}</td>
   <td><span class="badge ok">${e.status||'نشط'}</span></td>
-  <td><button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px">حذف</button></td></tr>`;
+  <td style="white-space:nowrap"><button class="btn sec" data-editemp="${e.id}" style="padding:4px 10px">تعديل</button>
+  <button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px;margin-right:4px">حذف</button></td></tr>`;
   }).join('')}</table></div>`;
 }
 
@@ -521,15 +525,26 @@ function attachEmployeesTeams(){
     const name=document.getElementById('pName').value.trim(), empId=document.getElementById('pEmpId').value.trim();
     if(!name||!empId){ alert('أدخل الاسم و Employee ID (الحقلان مطلوبان).'); return; }
     const existing = await listAll('employees');
-    if(existing.some(e=>e.empId===empId)){ alert('يوجد موظف آخر بنفس Employee ID بالفعل.'); return; }
-    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent='جارٍ الحفظ...';
-    const ok = await setDoc('employees',uid(),{name,empId,email:document.getElementById('pEmail').value.trim(),
+    const dupExists = existing.some(e=>e.empId===empId && e.id!==editingEmployeeId);
+    if(dupExists){ alert('يوجد موظف آخر بنفس Employee ID بالفعل.'); return; }
+    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent=editingEmployeeId?'جارٍ الحفظ...':'جارٍ الحفظ...';
+    const data={name,empId,email:document.getElementById('pEmail').value.trim(),
       dept:document.getElementById('pDept').value.trim(),team:document.getElementById('pTeam').value.trim(),
-      position:document.getElementById('pPos').value.trim(),status:'نشط',
-      teamLeaderId:document.getElementById('pLeader').value||null});
-    btn.disabled=false; btn.textContent='إضافة موظف';
-    if(ok){ state.view='employees-teams'; routeRender(); }
+      position:document.getElementById('pPos').value.trim(),
+      teamLeaderId:document.getElementById('pLeader').value||null};
+    if(!editingEmployeeId) data.status='نشط';
+    const targetId = editingEmployeeId || uid();
+    const ok = await setDoc('employees',targetId,data);
+    btn.disabled=false; btn.textContent=editingEmployeeId?'حفظ التعديلات':'إضافة موظف';
+    if(ok){ editingEmployeeId=null; state.view='employees-teams'; routeRender(); }
   };
+  const cancelBtn=document.getElementById('cancelEditEmp');
+  if(cancelBtn) cancelBtn.onclick=()=>{ editingEmployeeId=null; state.view='employees-teams'; routeRender(); };
+  document.querySelectorAll('[data-editemp]').forEach(b=>b.onclick=()=>{
+    editingEmployeeId=b.dataset.editemp;
+    state.view='employees-teams'; routeRender();
+    setTimeout(()=>document.getElementById('empFormTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  });
 
   document.getElementById('addLeader').onclick=async()=>{
     const name=document.getElementById('tlName').value.trim();
