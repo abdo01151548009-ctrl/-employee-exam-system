@@ -104,8 +104,8 @@ let lang='ar';
 try{ const saved=localStorage.getItem('eesLang'); if(saved==='ar'||saved==='en') lang=saved; }catch(e){}
 const DICT={
   ar:{
-    nav_dashboard:'لوحة التحكم', nav_create_exam:'إنشاء اختبار', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
-    nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'تعديل الاختبارات',
+    nav_dashboard:'لوحة التحكم', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
+    nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'إدارة الاختبارات',
     nav_review_results:'مراجعة الإجابات', nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
     nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
     admin_label:'مدير النظام', logout:'تسجيل الخروج', toggle_lang:'English',
@@ -114,8 +114,8 @@ const DICT={
     save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل'
   },
   en:{
-    nav_dashboard:'Dashboard', nav_create_exam:'Create Exam', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
-    nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Edit Exams',
+    nav_dashboard:'Dashboard', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
+    nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Manage Exams',
     nav_review_results:'Review Answers', nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
     nav_my_exams:'My Exams', nav_my_results:'My Results', nav_my_profile:'Edit My Profile', nav_suggest_question:'Suggest a Question',
     admin_label:'Admin', logout:'Log out', toggle_lang:'العربية',
@@ -177,7 +177,7 @@ function render(){
 function shell(){
   const s=state.session;
   const adminLinks=[
-    ['dashboard',T('nav_dashboard')],['create-exam',T('nav_create_exam')],['questions',T('nav_questions')],
+    ['dashboard',T('nav_dashboard')],['questions',T('nav_questions')],
     ['employees-teams',T('nav_employees_teams')],['assign',T('nav_assign')],['results',T('nav_results')],['wrong-answers',T('nav_wrong')],
     ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
   ];
@@ -270,7 +270,6 @@ async function routeRender(){
   main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
   const v=state.view;
   if(v==='dashboard') main.innerHTML=await dashboardView();
-  else if(v==='create-exam'){ main.innerHTML=await createExamView(); attachCreateExam(); }
   else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
   else if(v==='employees-teams'){ main.innerHTML=await employeesTeamsView(); attachEmployeesTeams(); }
   else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
@@ -396,61 +395,6 @@ function attachQuestions(){
 }
 
 // ---------- ADMIN: create exam ----------
-async function createExamView(){
-  const qs = await listAll('questions');
-  return `<h1>إنشاء اختبار جديد</h1>
-  <div class="card">
-    <div class="row">
-      <div><label>اسم الاختبار</label><input id="eName" style="width:100%"></div>
-      <div><label>القسم / الفريق</label><input id="eDept" style="width:100%"></div>
-    </div>
-    <label>الوصف</label><input id="eDesc" style="width:100%">
-    <div class="row">
-      <div><label>المدة (دقائق)</label><input id="eDur" type="number" value="30" style="width:100%"></div>
-      <div><label>درجة النجاح %</label><input id="ePass" type="number" value="60" style="width:100%"></div>
-      <div><label>عدد المحاولات</label><input id="eAttempts" type="number" value="1" style="width:100%"></div>
-    </div>
-    <div class="row">
-      <div><label>تاريخ البداية</label><input id="eStart" type="date" style="width:100%"></div>
-      <div><label>تاريخ النهاية</label><input id="eEnd" type="date" style="width:100%"></div>
-    </div>
-    <div class="row">
-      <div><label><input type="checkbox" id="eRandomQ"> ترتيب عشوائي للأسئلة</label></div>
-      <div><label><input type="checkbox" id="eRandomA"> ترتيب عشوائي للاختيارات</label></div>
-      <div><label><input type="checkbox" id="eShowResult" checked> إظهار النتيجة للموظف</label></div>
-      <div><label><input type="checkbox" id="eShowAns"> إظهار الإجابات الصحيحة</label></div>
-    </div>
-    <h3>اختر الأسئلة (${qs.length} متاح)</h3>
-    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
-    ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickQ" value="${q.id}"><span>${q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">أضف أسئلة من بنك الأسئلة أولًا.</p>'}
-    </div>
-    <div style="margin-top:12px">
-      <button class="btn sec" id="saveDraft">حفظ كمسودة</button>
-      <button class="btn" id="saveActive">حفظ وتفعيل</button>
-    </div>
-  </div>`;
-}
-function attachCreateExam(){
-  const save=async(active)=>{
-    const name=document.getElementById('eName').value.trim();
-    if(!name) return alert('أدخل اسم الاختبار');
-    const questionIds=[...document.querySelectorAll('.pickQ:checked')].map(c=>c.value);
-    const exam={
-      name, dept:document.getElementById('eDept').value.trim(), desc:document.getElementById('eDesc').value.trim(),
-      duration:parseInt(document.getElementById('eDur').value)||30, passScore:parseInt(document.getElementById('ePass').value)||60,
-      attempts:parseInt(document.getElementById('eAttempts').value)||1,
-      startDate:document.getElementById('eStart').value, endDate:document.getElementById('eEnd').value,
-      randomQ:document.getElementById('eRandomQ').checked, randomA:document.getElementById('eRandomA').checked,
-      showResult:document.getElementById('eShowResult').checked, showAnswers:document.getElementById('eShowAns').checked,
-      questionIds, active, draft:!active, createdAt:Date.now()
-    };
-    await setDoc('exams',uid(),exam);
-    alert('تم الحفظ'); state.view='dashboard'; location.hash='dashboard'; routeRender();
-  };
-  document.getElementById('saveDraft').onclick=()=>save(false);
-  document.getElementById('saveActive').onclick=()=>save(true);
-}
-
 // ---------- ADMIN: employees & teams (Merged) ----------
 let editingEmployeeId=null;
 async function employeesTeamsView(){
@@ -824,15 +768,16 @@ function attachWrongAnswers(){
   };
 }
 
-// ---------- ADMIN: review/edit exams ----------
+// ---------- ADMIN: create/edit/manage exams (merged) ----------
 async function reviewExamsView(){
   const [exams, qs] = await Promise.all([listAll('exams'), listAll('questions')]);
 
   if (state.editingExamId) {
-    const exam = exams.find(e => e.id === state.editingExamId);
+    const isNew = state.editingExamId==='NEW';
+    const exam = isNew ? {} : exams.find(e => e.id === state.editingExamId);
     if (!exam) { state.editingExamId = null; return reviewExamsView(); }
     const selectedQs = exam.questionIds || [];
-    return `<h1>تعديل الاختبار: ${exam.name}</h1>
+    return `<h1>${isNew?'إنشاء اختبار جديد':'تعديل الاختبار: '+exam.name}</h1>
     <div class="card">
       <div class="row">
         <div><label>اسم الاختبار</label><input id="editEName" style="width:100%" value="${exam.name||''}"></div>
@@ -856,10 +801,15 @@ async function reviewExamsView(){
       </div>
       <h3>اختر الأسئلة (${qs.length} متاح)</h3>
       <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
-      ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickEditQ" value="${q.id}" ${selectedQs.includes(q.id)?'checked':''}><span>${q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">لا توجد أسئلة متاحة.</p>'}
+      ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickEditQ" value="${q.id}" ${selectedQs.includes(q.id)?'checked':''}><span>${q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">أضف أسئلة من بنك الأسئلة أولًا.</p>'}
       </div>
-      <div style="margin-top:12px;display:flex;gap:10px">
-        <button class="btn" id="saveExamEdit">حفظ التغييرات</button>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        ${isNew?`
+          <button class="btn sec" id="saveExamDraft">حفظ كمسودة</button>
+          <button class="btn" id="saveExamActive">حفظ وتفعيل</button>
+        `:`
+          <button class="btn" id="saveExamEdit">حفظ التغييرات</button>
+        `}
         <button class="btn sec" id="cancelExamEdit">إلغاء</button>
       </div>
     </div>`;
@@ -878,9 +828,10 @@ async function reviewExamsView(){
     </td>
   </tr>`).join('');
 
-  return `<h1>تعديل وإدارة الاختبارات</h1>
+  return `<h1>إدارة الاختبارات</h1>
   <div class="card">
-    <p style="color:var(--muted);font-size:13px">يمكنك هنا تعديل بيانت الاختبارات والأسئلة التابعة لها أو تفعيلها/إيقافها وحذفها.</p>
+    <p style="color:var(--muted);font-size:13px">أنشئ اختبارات جديدة، وعدّل بيانات الاختبارات الحالية والأسئلة التابعة لها، أو فعّلها/أوقفها واحذفها — كل ذلك من هنا.</p>
+    <button class="btn" id="newExamBtn" style="margin-bottom:12px">+ إنشاء اختبار جديد</button>
     <div class="table-wrap"><table>
       <tr><th>اسم الاختبار</th><th>القسم</th><th>المدة</th><th>عدد الأسئلة</th><th>الحالة</th><th>الإجراءات</th></tr>
       ${rows || '<tr><td colspan="6" style="color:var(--muted)">لا توجد اختبارات منشأة بعد.</td></tr>'}
@@ -891,28 +842,46 @@ async function reviewExamsView(){
 function attachReviewExams(){
   if (state.editingExamId) {
     document.getElementById('cancelExamEdit').onclick=()=>{ state.editingExamId=null; state.view='review-exams'; routeRender(); };
-    document.getElementById('saveExamEdit').onclick=async ()=>{
+    const isNew = state.editingExamId==='NEW';
+    const gather=()=>{
       const name=document.getElementById('editEName').value.trim();
-      if(!name) return alert('أدخل اسم الاختبار');
       const questionIds=[...document.querySelectorAll('.pickEditQ:checked')].map(c=>c.value);
-      const updated={
-        name, dept:document.getElementById('editEDept').value.trim(), desc:document.getElementById('editEDesc').value.trim(),
-        duration:parseInt(document.getElementById('editEDur').value)||30, passScore:parseInt(document.getElementById('editEPass').value)||60,
-        attempts:parseInt(document.getElementById('editEAttempts').value)||1,
-        startDate:document.getElementById('editEStart').value, endDate:document.getElementById('editEEnd').value,
-        randomQ:document.getElementById('editERandomQ').checked, randomA:document.getElementById('editERandomA').checked,
-        showResult:document.getElementById('editEShowResult').checked, showAnswers:document.getElementById('editEShowAns').checked,
-        questionIds
+      return { ok: !!name, name,
+        data:{
+          name, dept:document.getElementById('editEDept').value.trim(), desc:document.getElementById('editEDesc').value.trim(),
+          duration:parseInt(document.getElementById('editEDur').value)||30, passScore:parseInt(document.getElementById('editEPass').value)||60,
+          attempts:parseInt(document.getElementById('editEAttempts').value)||1,
+          startDate:document.getElementById('editEStart').value, endDate:document.getElementById('editEEnd').value,
+          randomQ:document.getElementById('editERandomQ').checked, randomA:document.getElementById('editERandomA').checked,
+          showResult:document.getElementById('editEShowResult').checked, showAnswers:document.getElementById('editEShowAns').checked,
+          questionIds
+        }
       };
-      await setDoc('exams',state.editingExamId,updated);
-      alert('تم تحديث الاختبار بنجاح');
-      state.editingExamId=null;
-      state.view='review-exams';
-      routeRender();
     };
+    if(isNew){
+      const saveNew=async(active)=>{
+        const g=gather();
+        if(!g.ok) return alert('أدخل اسم الاختبار');
+        await setDoc('exams',uid(),{...g.data, active, draft:!active, createdAt:Date.now()});
+        alert('تم إنشاء الاختبار بنجاح');
+        state.editingExamId=null; state.view='review-exams'; routeRender();
+      };
+      document.getElementById('saveExamDraft').onclick=()=>saveNew(false);
+      document.getElementById('saveExamActive').onclick=()=>saveNew(true);
+    } else {
+      document.getElementById('saveExamEdit').onclick=async ()=>{
+        const g=gather();
+        if(!g.ok) return alert('أدخل اسم الاختبار');
+        await setDoc('exams',state.editingExamId,g.data);
+        alert('تم تحديث الاختبار بنجاح');
+        state.editingExamId=null; state.view='review-exams'; routeRender();
+      };
+    }
     return;
   }
 
+  const newBtn=document.getElementById('newExamBtn');
+  if(newBtn) newBtn.onclick=()=>{ state.editingExamId='NEW'; state.view='review-exams'; routeRender(); };
   document.querySelectorAll('[data-editexam]').forEach(b=>b.onclick=()=>{
     state.editingExamId=b.dataset.editexam;
     state.view='review-exams';
