@@ -110,7 +110,7 @@ const DICT={
     nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
     admin_label:'مدير النظام', logout:'تسجيل الخروج', toggle_lang:'English',
     login_title:'تسجيل الدخول', admin_pass_label:'دخول كمدير — كلمة المرور', admin_login_btn:'دخول كمدير',
-    emp_login_label:'دخول كموظف — Employee ID أو البريد الإلكتروني', emp_login_btn:'دخول',
+    emp_login_label:'دخول كموظف — HR ID', emp_login_btn:'دخول',
     save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل'
   },
   en:{
@@ -221,7 +221,7 @@ function loginView(){
     <p id="adminErr" style="color:var(--bad);font-size:12px"></p>
     <hr style="margin:16px 0;border-color:var(--border)">
     <label>${T('emp_login_label')}</label>
-    <input id="empLogin" style="width:100%" placeholder="EMP001 / name@company.com">
+    <input id="empLogin" style="width:100%" placeholder="EMP001">
     <button class="btn" id="asEmp" style="width:100%;margin-top:8px">${T('emp_login_btn')}</button>
     <p id="loginErr" style="color:var(--bad);font-size:12px"></p>
   </div>`;
