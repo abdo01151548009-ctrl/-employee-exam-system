@@ -104,8 +104,8 @@ let lang='ar';
 try{ const saved=localStorage.getItem('eesLang'); if(saved==='ar'||saved==='en') lang=saved; }catch(e){}
 const DICT={
   ar:{
-    nav_dashboard:'لوحة التحكم', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
-    nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'إدارة الاختبارات',
+    nav_dashboard:'لوحة التحكم', nav_create_exam:'إنشاء اختبار', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
+    nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'تعديل الاختبارات',
     nav_review_results:'مراجعة الإجابات', nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
     nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
     admin_label:'مدير النظام', logout:'تسجيل الخروج', toggle_lang:'English',
@@ -114,8 +114,8 @@ const DICT={
     save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل'
   },
   en:{
-    nav_dashboard:'Dashboard', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
-    nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Manage Exams',
+    nav_dashboard:'Dashboard', nav_create_exam:'Create Exam', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
+    nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Edit Exams',
     nav_review_results:'Review Answers', nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
     nav_my_exams:'My Exams', nav_my_results:'My Results', nav_my_profile:'Edit My Profile', nav_suggest_question:'Suggest a Question',
     admin_label:'Admin', logout:'Log out', toggle_lang:'العربية',
@@ -177,7 +177,7 @@ function render(){
 function shell(){
   const s=state.session;
   const adminLinks=[
-    ['dashboard',T('nav_dashboard')],['questions',T('nav_questions')],
+    ['dashboard',T('nav_dashboard')],['create-exam',T('nav_create_exam')],['questions',T('nav_questions')],
     ['employees-teams',T('nav_employees_teams')],['assign',T('nav_assign')],['results',T('nav_results')],['wrong-answers',T('nav_wrong')],
     ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
   ];
@@ -193,7 +193,7 @@ function shell(){
       <button class="closeBtn" id="closeMenu">✕</button>
       <h2>Employee Exam System</h2>
       <div class="user">${s.role==='admin'?T('admin_label'):s.name}</div>
-      <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="state.view===l[0]?'active':''">{l[1]}</a>`).join('')}
+      <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${l[1]}</a>`).join('')}
       <a href="#" id="langBtnSide" style="color:var(--brand)">${T('toggle_lang')}</a>
       <a href="#logout" style="color:var(--bad)">${T('logout')}</a></div>
     </div>
@@ -270,6 +270,7 @@ async function routeRender(){
   main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
   const v=state.view;
   if(v==='dashboard') main.innerHTML=await dashboardView();
+  else if(v==='create-exam'){ main.innerHTML=await createExamView(); attachCreateExam(); }
   else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
   else if(v==='employees-teams'){ main.innerHTML=await employeesTeamsView(); attachEmployeesTeams(); }
   else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
@@ -314,8 +315,8 @@ function resultsTable(results,emps,exams,withChk){
   return `<div class="table-wrap"><table><tr>${withChk?'<th><input type="checkbox" id="resSelectAll"></th>':''}<th>الموظف</th><th>الاختبار</th><th>النسبة</th><th>الحالة</th></tr>
   ${results.map(r=>{
     const e=emps.find(x=>x.id===r.employeeId); const ex=exams.find(x=>x.id===r.examId);
-    return `<tr>${withChk?`<td><input type="checkbox" class="resChk" value="${r.id}"></td>`:''}<td>e?e.name:'-'</td><td>{ex?ex.name:'-'}</td><td>${r.percent}%</td>
-    <td><span class="badge r.passed?'ok':'bad'">{r.passed?'ناجح':'راسب'}</span></td></tr>`;
+    return `<tr>${withChk?`<td><input type="checkbox" class="resChk" value="${r.id}"></td>`:''}<td>${e?e.name:'-'}</td><td>${ex?ex.name:'-'}</td><td>${r.percent}%</td>
+    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح':'راسب'}</span></td></tr>`;
   }).join('')}</table></div>`;
 }
 
@@ -345,7 +346,7 @@ async function questionsView(){
 function renderQList(qs){
   if(!qs.length) return '<p style="color:var(--muted)">لا توجد أسئلة.</p>';
   return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="qSelectAll"></th><th>السؤال</th><th>النوع</th><th>التصنيف</th><th>الدرجة</th><th></th></tr>
-  ${qs.map(q=>`<tr><td><input type="checkbox" class="qChk" value="${q.id}"></td><td>q.text</td><td>{typeLabel(q.type)}</td><td>q.category||'-'</td><td>{q.points}</td>
+  ${qs.map(q=>`<tr><td><input type="checkbox" class="qChk" value="${q.id}"></td><td>${q.text}</td><td>${typeLabel(q.type)}</td><td>${q.category||'-'}</td><td>${q.points}</td>
   <td><button class="btn danger" data-del="${q.id}" style="padding:4px 10px">حذف</button></td></tr>`).join('')}</table></div>`;
 }
 function typeLabel(t){ return {mcq:'اختيار واحد',tf:'صح/خطأ',multi:'اختيار متعدد',short:'إجابة قصيرة'}[t]||t; }
@@ -355,7 +356,7 @@ function optsEditor(type){
   if(type==='short') return `<label>الإجابة الصحيحة (نص)</label><input id="qShortAns" style="width:100%">`;
   let html='<label>الاختيارات (علّم الصحيح)</label>';
   for(let i=0;i<4;i++){
-    html+=`<div class="qopt"><input type="type==='multi'?'checkbox':'radio'"name="qc"value="{i}">
+    html+=`<div class="qopt"><input type="${type==='multi'?'checkbox':'radio'}" name="qc" value="${i}">
     <input data-opt="${i}" placeholder="اختيار ${i+1}" style="flex:1"></div>`;
   }
   return html;
@@ -395,11 +396,64 @@ function attachQuestions(){
 }
 
 // ---------- ADMIN: create exam ----------
+async function createExamView(){
+  const qs = await listAll('questions');
+  return `<h1>إنشاء اختبار جديد</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>اسم الاختبار</label><input id="eName" style="width:100%"></div>
+      <div><label>القسم / الفريق</label><input id="eDept" style="width:100%"></div>
+    </div>
+    <label>الوصف</label><input id="eDesc" style="width:100%">
+    <div class="row">
+      <div><label>المدة (دقائق)</label><input id="eDur" type="number" value="30" style="width:100%"></div>
+      <div><label>درجة النجاح %</label><input id="ePass" type="number" value="60" style="width:100%"></div>
+      <div><label>عدد المحاولات</label><input id="eAttempts" type="number" value="1" style="width:100%"></div>
+    </div>
+    <div class="row">
+      <div><label>تاريخ البداية</label><input id="eStart" type="date" style="width:100%"></div>
+      <div><label>تاريخ النهاية</label><input id="eEnd" type="date" style="width:100%"></div>
+    </div>
+    <div class="row">
+      <div><label><input type="checkbox" id="eRandomQ"> ترتيب عشوائي للأسئلة</label></div>
+      <div><label><input type="checkbox" id="eRandomA"> ترتيب عشوائي للاختيارات</label></div>
+      <div><label><input type="checkbox" id="eShowResult" checked> إظهار النتيجة للموظف</label></div>
+      <div><label><input type="checkbox" id="eShowAns"> إظهار الإجابات الصحيحة</label></div>
+    </div>
+    <h3>اختر الأسئلة (${qs.length} متاح)</h3>
+    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
+    ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickQ" value="${q.id}"><span>${q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">أضف أسئلة من بنك الأسئلة أولًا.</p>'}
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn sec" id="saveDraft">حفظ كمسودة</button>
+      <button class="btn" id="saveActive">حفظ وتفعيل</button>
+    </div>
+  </div>`;
+}
+function attachCreateExam(){
+  const save=async(active)=>{
+    const name=document.getElementById('eName').value.trim();
+    if(!name) return alert('أدخل اسم الاختبار');
+    const questionIds=[...document.querySelectorAll('.pickQ:checked')].map(c=>c.value);
+    const exam={
+      name, dept:document.getElementById('eDept').value.trim(), desc:document.getElementById('eDesc').value.trim(),
+      duration:parseInt(document.getElementById('eDur').value)||30, passScore:parseInt(document.getElementById('ePass').value)||60,
+      attempts:parseInt(document.getElementById('eAttempts').value)||1,
+      startDate:document.getElementById('eStart').value, endDate:document.getElementById('eEnd').value,
+      randomQ:document.getElementById('eRandomQ').checked, randomA:document.getElementById('eRandomA').checked,
+      showResult:document.getElementById('eShowResult').checked, showAnswers:document.getElementById('eShowAns').checked,
+      questionIds, active, draft:!active, createdAt:Date.now()
+    };
+    await setDoc('exams',uid(),exam);
+    alert('تم الحفظ'); state.view='dashboard'; location.hash='dashboard'; routeRender();
+  };
+  document.getElementById('saveDraft').onclick=()=>save(false);
+  document.getElementById('saveActive').onclick=()=>save(true);
+}
+
 // ---------- ADMIN: employees & teams (Merged) ----------
-let editingEmployeeId=null;
 async function employeesTeamsView(){
   const [emps, leaders] = await Promise.all([listAll('employees'), listAll('teamLeaders')]);
-  const editingEmp = editingEmployeeId ? emps.find(e=>e.id===editingEmployeeId) : null;
   
   const leaderCards = leaders.map(ld=>{
     const members = emps.filter(e=>e.teamLeaderId===ld.id);
@@ -411,7 +465,7 @@ async function employeesTeamsView(){
       </div>
       <p style="color:var(--muted);font-size:13px;margin:8px 0">حدد الموظفين التابعين لهذا القائد:</p>
       <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--surface)">
-      ${emps.map(e=>`<div class="qopt"><input type="checkbox" class="teamChk-${ld.id}" value="${e.id}" e.teamLeaderId===ld.id?'checked':''><span>{e.name} ${e.dept?'('+e.dept+')':''}</span></div>`).join('') || '<p style="color:var(--muted)">لا يوجد موظفون.</p>'}
+      ${emps.map(e=>`<div class="qopt"><input type="checkbox" class="teamChk-${ld.id}" value="${e.id}" ${e.teamLeaderId===ld.id?'checked':''}><span>${e.name} ${e.dept?'('+e.dept+')':''}</span></div>`).join('') || '<p style="color:var(--muted)">لا يوجد موظفون.</p>'}
       </div>
       <button class="btn" data-savemembers="${ld.id}" style="margin-top:8px">حفظ أعضاء الفريق</button>
     </div>`;
@@ -420,18 +474,17 @@ async function employeesTeamsView(){
   return `<h1>الموظفون والفرق</h1>
   
   <div class="card">
-    <h3 id="empFormTitle">${editingEmployeeId?'تعديل بيانات الموظف':'إضافة موظف جديد'}</h3>
+    <h3>إضافة موظف جديد</h3>
     <div class="row">
-      <div><label>الاسم</label><input id="pName" style="width:100%" value="${editingEmp?editingEmp.name||'':''}"></div>
-      <div><label>Employee ID</label><input id="pEmpId" style="width:100%" value="${editingEmp?editingEmp.empId||'':''}"></div>
-      <div><label>البريد الإلكتروني</label><input id="pEmail" style="width:100%" value="${editingEmp?editingEmp.email||'':''}"></div>
-      <div><label>القسم</label><input id="pDept" style="width:100%" value="${editingEmp?editingEmp.dept||'':''}"></div>
-      <div><label>الفريق</label><input id="pTeam" style="width:100%" value="${editingEmp?editingEmp.team||'':''}"></div>
-      <div><label>الوظيفة</label><input id="pPos" style="width:100%" value="${editingEmp?editingEmp.position||'':''}"></div>
-      <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${leaders.map(l=>`<option value="${l.id}" editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''>{l.name}</option>`).join('')}</select></div>
+      <div><label>الاسم</label><input id="pName" style="width:100%"></div>
+      <div><label>Employee ID</label><input id="pEmpId" style="width:100%"></div>
+      <div><label>البريد الإلكتروني</label><input id="pEmail" style="width:100%"></div>
+      <div><label>القسم</label><input id="pDept" style="width:100%"></div>
+      <div><label>الفريق</label><input id="pTeam" style="width:100%"></div>
+      <div><label>الوظيفة</label><input id="pPos" style="width:100%"></div>
+      <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${leaders.map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select></div>
     </div>
-    <button class="btn" id="addEmp" style="margin-top:8px">${editingEmployeeId?'حفظ التعديلات':'إضافة موظف'}</button>
-    ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-right:6px">إلغاء التعديل</button>':''}
+    <button class="btn" id="addEmp" style="margin-top:8px">إضافة موظف</button>
   </div>
 
   <div class="card">
@@ -457,10 +510,9 @@ function renderEmpList(emps,leaders){
   return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="empSelectAll"></th><th>الاسم</th><th>ID</th><th>القسم</th><th>الفريق</th><th>قائد الفريق</th><th>الحالة</th><th></th></tr>
   ${emps.map(e=>{
     const ld=leaders.find(l=>l.id===e.teamLeaderId);
-    return `<tr><td><input type="checkbox" class="empChk" value="e.id"></td><td>{e.name}</td><td>e.empId</td><td>{e.dept||'-'}</td><td>e.team||'-'</td><td>{ld?ld.name:'-'}</td>
+    return `<tr><td><input type="checkbox" class="empChk" value="${e.id}"></td><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td><td>${ld?ld.name:'-'}</td>
   <td><span class="badge ok">${e.status||'نشط'}</span></td>
-  <td style="white-space:nowrap"><button class="btn sec" data-editemp="${e.id}" style="padding:4px 10px">تعديل</button>
-  <button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px;margin-right:4px">حذف</button></td></tr>`;
+  <td><button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px">حذف</button></td></tr>`;
   }).join('')}</table></div>`;
 }
 
@@ -469,26 +521,15 @@ function attachEmployeesTeams(){
     const name=document.getElementById('pName').value.trim(), empId=document.getElementById('pEmpId').value.trim();
     if(!name||!empId){ alert('أدخل الاسم و Employee ID (الحقلان مطلوبان).'); return; }
     const existing = await listAll('employees');
-    const dupExists = existing.some(e=>e.empId===empId && e.id!==editingEmployeeId);
-    if(dupExists){ alert('يوجد موظف آخر بنفس Employee ID بالفعل.'); return; }
-    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent=editingEmployeeId?'جارٍ الحفظ...':'جارٍ الحفظ...';
-    const data={name,empId,email:document.getElementById('pEmail').value.trim(),
+    if(existing.some(e=>e.empId===empId)){ alert('يوجد موظف آخر بنفس Employee ID بالفعل.'); return; }
+    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent='جارٍ الحفظ...';
+    const ok = await setDoc('employees',uid(),{name,empId,email:document.getElementById('pEmail').value.trim(),
       dept:document.getElementById('pDept').value.trim(),team:document.getElementById('pTeam').value.trim(),
-      position:document.getElementById('pPos').value.trim(),
-      teamLeaderId:document.getElementById('pLeader').value||null};
-    if(!editingEmployeeId) data.status='نشط';
-    const targetId = editingEmployeeId || uid();
-    const ok = await setDoc('employees',targetId,data);
-    btn.disabled=false; btn.textContent=editingEmployeeId?'حفظ التعديلات':'إضافة موظف';
-    if(ok){ editingEmployeeId=null; state.view='employees-teams'; routeRender(); }
+      position:document.getElementById('pPos').value.trim(),status:'نشط',
+      teamLeaderId:document.getElementById('pLeader').value||null});
+    btn.disabled=false; btn.textContent='إضافة موظف';
+    if(ok){ state.view='employees-teams'; routeRender(); }
   };
-  const cancelBtn=document.getElementById('cancelEditEmp');
-  if(cancelBtn) cancelBtn.onclick=()=>{ editingEmployeeId=null; state.view='employees-teams'; routeRender(); };
-  document.querySelectorAll('[data-editemp]').forEach(b=>b.onclick=()=>{
-    editingEmployeeId=b.dataset.editemp;
-    state.view='employees-teams'; routeRender();
-    setTimeout(()=>document.getElementById('empFormTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
-  });
 
   document.getElementById('addLeader').onclick=async()=>{
     const name=document.getElementById('tlName').value.trim();
@@ -584,7 +625,7 @@ async function assignView(){
   ${assignments.map(a=>{
     const ex=exams.find(x=>x.id===a.examId), em=emps.find(x=>x.id===a.employeeId);
     const ld=em?leaders.find(l=>l.id===em.teamLeaderId):null;
-    return `<tr><td><input type="checkbox" class="aChk" value="a.id"></td><td>{ex?ex.name:'-'}</td><td>em?em.name:'-'</td><td>{em?(em.dept||'-'):'-'}</td><td>ld?ld.name:'-'</td><td>{a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
+    return `<tr><td><input type="checkbox" class="aChk" value="${a.id}"></td><td>${ex?ex.name:'-'}</td><td>${em?em.name:'-'}</td><td>${em?(em.dept||'-'):'-'}</td><td>${ld?ld.name:'-'}</td><td>${a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
   }).join('') || '<tr><td colspan=7 style="color:var(--muted)">لا توجد إسنادات بعد.</td></tr>'}
   </table></div></div>`;
 }
@@ -610,7 +651,7 @@ function attachAssign(){
       const ld = allLeaders.find(l=>l.id===e.teamLeaderId);
       return `<div class="qopt">
         <input type="checkbox" class="assignEmpChk" value="${e.id}">
-        <span>e.name<smallstyle="color:var(--muted)">({e.dept || 'بدون قسم'}${ld ? ' - فريق: '+ld.name : ''})</small></span>
+        <span>${e.name} <small style="color:var(--muted)">(${e.dept || 'بدون قسم'}${ld ? ' - فريق: '+ld.name : ''})</small></span>
       </div>`;
     }).join('');
 
@@ -630,7 +671,7 @@ function attachAssign(){
     }
     
     teamSelect.innerHTML = `<option value="">-- كل الفرق --</option>` + 
-      validLeaders.map(l => `<option value="l.id">{l.name}</option>`).join('');
+      validLeaders.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
   };
 
   Promise.all([listAll('employees'), listAll('teamLeaders')]).then(([emps, leaders]) => {
@@ -733,8 +774,8 @@ async function buildWrongAnswerRows(){
 function renderWrongAnswerTable(rows){
   if(!rows.length) return '<p style="color:var(--muted)">لا توجد إجابات خاطئة مسجّلة حتى الآن.</p>';
   return `<div class="table-wrap"><table><tr><th>الموظف</th><th>Employee ID</th><th>الاختبار</th><th>السؤال</th><th>إجابة الموظف</th><th>الإجابة الصحيحة</th><th>التاريخ</th></tr>
-  ${rows.map(r=>`<tr><td>${r.employeeName}</td><td>r.empId</td><td>{r.examName}</td><td>${r.questionText}</td>
-  <td style="color:var(--bad)">r.employeeAnswer</td><tdstyle="color:var(--ok)">{r.correctAnswer}</td>
+  ${rows.map(r=>`<tr><td>${r.employeeName}</td><td>${r.empId}</td><td>${r.examName}</td><td>${r.questionText}</td>
+  <td style="color:var(--bad)">${r.employeeAnswer}</td><td style="color:var(--ok)">${r.correctAnswer}</td>
   <td>${r.when?new Date(r.when).toLocaleString('ar-EG'):'-'}</td></tr>`).join('')}</table></div>`;
 }
 async function wrongAnswersView(){
@@ -761,23 +802,22 @@ function attachWrongAnswers(){
     let csv='Employee,Employee ID,Exam,Question,Employee Answer,Correct Answer,Date\n';
     rows.forEach(r=>{
       const esc=(s)=>'"'+String(s).replace(/<[^>]+>/g,'').replace(/"/g,'""')+'"';
-      csv+=`esc(r.employeeName),{esc(r.empId)},esc(r.examName),{esc(r.questionText)},esc(r.employeeAnswer),{esc(r.correctAnswer)},${esc(r.when?new Date(r.when).toLocaleString('ar-EG'):'-')}\n`;
+      csv+=`${esc(r.employeeName)},${esc(r.empId)},${esc(r.examName)},${esc(r.questionText)},${esc(r.employeeAnswer)},${esc(r.correctAnswer)},${esc(r.when?new Date(r.when).toLocaleString('ar-EG'):'-')}\n`;
     });
     const blob=new Blob([csv],{type:'text/csv'});
     const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='wrong-answers.csv'; a.click(); URL.revokeObjectURL(url);
   };
 }
 
-// ---------- ADMIN: create/edit/manage exams (merged) ----------
+// ---------- ADMIN: review/edit exams ----------
 async function reviewExamsView(){
   const [exams, qs] = await Promise.all([listAll('exams'), listAll('questions')]);
 
   if (state.editingExamId) {
-    const isNew = state.editingExamId==='NEW';
-    const exam = isNew ? {} : exams.find(e => e.id === state.editingExamId);
+    const exam = exams.find(e => e.id === state.editingExamId);
     if (!exam) { state.editingExamId = null; return reviewExamsView(); }
     const selectedQs = exam.questionIds || [];
-    return `<h1>${isNew?'إنشاء اختبار جديد':'تعديل الاختبار: '+exam.name}</h1>
+    return `<h1>تعديل الاختبار: ${exam.name}</h1>
     <div class="card">
       <div class="row">
         <div><label>اسم الاختبار</label><input id="editEName" style="width:100%" value="${exam.name||''}"></div>
@@ -801,15 +841,10 @@ async function reviewExamsView(){
       </div>
       <h3>اختر الأسئلة (${qs.length} متاح)</h3>
       <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
-      ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickEditQ" value="${q.id}" selectedQs.includes(q.id)?'checked':''><span>{q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">أضف أسئلة من بنك الأسئلة أولًا.</p>'}
+      ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickEditQ" value="${q.id}" ${selectedQs.includes(q.id)?'checked':''}><span>${q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">لا توجد أسئلة متاحة.</p>'}
       </div>
-      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
-        ${isNew?`
-          <button class="btn sec" id="saveExamDraft">حفظ كمسودة</button>
-          <button class="btn" id="saveExamActive">حفظ وتفعيل</button>
-        `:`
-          <button class="btn" id="saveExamEdit">حفظ التغييرات</button>
-        `}
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button class="btn" id="saveExamEdit">حفظ التغييرات</button>
         <button class="btn sec" id="cancelExamEdit">إلغاء</button>
       </div>
     </div>`;
@@ -820,18 +855,17 @@ async function reviewExamsView(){
     <td>${e.dept||'-'}</td>
     <td>${e.duration||30} دقيقة</td>
     <td>${e.questionIds?e.questionIds.length:0} سؤال</td>
-    <td><span class="badge e.active?'ok':'warn'">{e.active?'نشط':'مسودة'}</span></td>
+    <td><span class="badge ${e.active?'ok':'warn'}">${e.active?'نشط':'مسودة'}</span></td>
     <td>
       <button class="btn sec" data-editexam="${e.id}" style="padding:4px 8px">تعديل</button>
-      <button class="btn" data-toggleactive="e.id"style="padding:4px8px">{e.active?'إيقاف':'تفعيل'}</button>
+      <button class="btn" data-toggleactive="${e.id}" style="padding:4px 8px">${e.active?'إيقاف':'تفعيل'}</button>
       <button class="btn danger" data-delexam="${e.id}" style="padding:4px 8px">حذف</button>
     </td>
   </tr>`).join('');
 
-  return `<h1>إدارة الاختبارات</h1>
+  return `<h1>تعديل وإدارة الاختبارات</h1>
   <div class="card">
-    <p style="color:var(--muted);font-size:13px">أنشئ اختبارات جديدة، وعدّل بيانات الاختبارات الحالية والأسئلة التابعة لها، أو فعّلها/أوقفها واحذفها — كل ذلك من هنا.</p>
-    <button class="btn" id="newExamBtn" style="margin-bottom:12px">+ إنشاء اختبار جديد</button>
+    <p style="color:var(--muted);font-size:13px">يمكنك هنا تعديل بيانت الاختبارات والأسئلة التابعة لها أو تفعيلها/إيقافها وحذفها.</p>
     <div class="table-wrap"><table>
       <tr><th>اسم الاختبار</th><th>القسم</th><th>المدة</th><th>عدد الأسئلة</th><th>الحالة</th><th>الإجراءات</th></tr>
       ${rows || '<tr><td colspan="6" style="color:var(--muted)">لا توجد اختبارات منشأة بعد.</td></tr>'}
@@ -842,46 +876,28 @@ async function reviewExamsView(){
 function attachReviewExams(){
   if (state.editingExamId) {
     document.getElementById('cancelExamEdit').onclick=()=>{ state.editingExamId=null; state.view='review-exams'; routeRender(); };
-    const isNew = state.editingExamId==='NEW';
-    const gather=()=>{
+    document.getElementById('saveExamEdit').onclick=async ()=>{
       const name=document.getElementById('editEName').value.trim();
+      if(!name) return alert('أدخل اسم الاختبار');
       const questionIds=[...document.querySelectorAll('.pickEditQ:checked')].map(c=>c.value);
-      return { ok: !!name, name,
-        data:{
-          name, dept:document.getElementById('editEDept').value.trim(), desc:document.getElementById('editEDesc').value.trim(),
-          duration:parseInt(document.getElementById('editEDur').value)||30, passScore:parseInt(document.getElementById('editEPass').value)||60,
-          attempts:parseInt(document.getElementById('editEAttempts').value)||1,
-          startDate:document.getElementById('editEStart').value, endDate:document.getElementById('editEEnd').value,
-          randomQ:document.getElementById('editERandomQ').checked, randomA:document.getElementById('editERandomA').checked,
-          showResult:document.getElementById('editEShowResult').checked, showAnswers:document.getElementById('editEShowAns').checked,
-          questionIds
-        }
+      const updated={
+        name, dept:document.getElementById('editEDept').value.trim(), desc:document.getElementById('editEDesc').value.trim(),
+        duration:parseInt(document.getElementById('editEDur').value)||30, passScore:parseInt(document.getElementById('editEPass').value)||60,
+        attempts:parseInt(document.getElementById('editEAttempts').value)||1,
+        startDate:document.getElementById('editEStart').value, endDate:document.getElementById('editEEnd').value,
+        randomQ:document.getElementById('editERandomQ').checked, randomA:document.getElementById('editERandomA').checked,
+        showResult:document.getElementById('editEShowResult').checked, showAnswers:document.getElementById('editEShowAns').checked,
+        questionIds
       };
+      await setDoc('exams',state.editingExamId,updated);
+      alert('تم تحديث الاختبار بنجاح');
+      state.editingExamId=null;
+      state.view='review-exams';
+      routeRender();
     };
-    if(isNew){
-      const saveNew=async(active)=>{
-        const g=gather();
-        if(!g.ok) return alert('أدخل اسم الاختبار');
-        await setDoc('exams',uid(),{...g.data, active, draft:!active, createdAt:Date.now()});
-        alert('تم إنشاء الاختبار بنجاح');
-        state.editingExamId=null; state.view='review-exams'; routeRender();
-      };
-      document.getElementById('saveExamDraft').onclick=()=>saveNew(false);
-      document.getElementById('saveExamActive').onclick=()=>saveNew(true);
-    } else {
-      document.getElementById('saveExamEdit').onclick=async ()=>{
-        const g=gather();
-        if(!g.ok) return alert('أدخل اسم الاختبار');
-        await setDoc('exams',state.editingExamId,g.data);
-        alert('تم تحديث الاختبار بنجاح');
-        state.editingExamId=null; state.view='review-exams'; routeRender();
-      };
-    }
     return;
   }
 
-  const newBtn=document.getElementById('newExamBtn');
-  if(newBtn) newBtn.onclick=()=>{ state.editingExamId='NEW'; state.view='review-exams'; routeRender(); };
   document.querySelectorAll('[data-editexam]').forEach(b=>b.onclick=()=>{
     state.editingExamId=b.dataset.editexam;
     state.view='review-exams';
@@ -906,7 +922,7 @@ let reviewSelected=null;
 function reviewBadge(r){
   if(r.reviewStatus==='accepted') return '<span class="badge ok">مقبول (مراجعة يدوية)</span>';
   if(r.reviewStatus==='rejected') return '<span class="badge bad">غير مقبول (مراجعة يدوية)</span>';
-  return `<span class="badge r.passed?'ok':'bad'">{r.passed?'ناجح تلقائيًا':'راسب تلقائيًا'} - لم تتم المراجعة</span>`;
+  return `<span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح تلقائيًا':'راسب تلقائيًا'} - لم تتم المراجعة</span>`;
 }
 async function reviewResultsView(){
   const [results,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
@@ -936,7 +952,7 @@ async function reviewResultsView(){
         const val=r.answers?r.answers[q.id]:undefined;
         const wrong=isAnswerWrong(q,val);
         return `<tr><td>${q.text}</td>
-          <td style="color:wrong?'var(--bad)':'var(--ok)'">{formatAnswerText(q,val)}</td>
+          <td style="color:${wrong?'var(--bad)':'var(--ok)'}">${formatAnswerText(q,val)}</td>
           <td style="color:var(--ok)">${formatCorrectText(q)}</td></tr>`;
       }).join('');
       detailHtml=`<div class="card">
@@ -987,7 +1003,7 @@ document.addEventListener('click',async (e)=>{
     const [results,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
     let csv='Employee,Exam,Score,Percent,Status\n';
     results.forEach(r=>{ const em=emps.find(x=>x.id===r.employeeId),ex=exams.find(x=>x.id===r.examId);
-      csv+=`em?em.name:'',{ex?ex.name:''},r.score,{r.percent}%,${r.passed?'Pass':'Fail'}\n`; });
+      csv+=`${em?em.name:''},${ex?ex.name:''},${r.score},${r.percent}%,${r.passed?'Pass':'Fail'}\n`; });
     const blob=new Blob([csv],{type:'text/csv'});
     const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='results.csv'; a.click(); URL.revokeObjectURL(url);
   }
@@ -1053,7 +1069,7 @@ async function messagesView(){
     const seenCount = recipients.filter(e=>m.seenBy && m.seenBy[e.id]).length;
     const seenListHtml = recipients.map(e=>{
       const seenAt=m.seenBy && m.seenBy[e.id];
-      return `<tr><td>e.name</td><td>{seenAt? '<span class="badge ok">شاهدها في '+new Date(seenAt).toLocaleString('ar-EG')+'</span>' : '<span class="badge warn">لم تُشاهد بعد</span>'}</td></tr>`;
+      return `<tr><td>${e.name}</td><td>${seenAt? '<span class="badge ok">شاهدها في '+new Date(seenAt).toLocaleString('ar-EG')+'</span>' : '<span class="badge warn">لم تُشاهد بعد</span>'}</td></tr>`;
     }).join('');
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
@@ -1063,7 +1079,7 @@ async function messagesView(){
       <p style="margin:8px 0">${m.body}</p>
       <p style="font-size:12px;color:var(--muted)">إلى: ${m.toEmployeeId==='all'?'كل الموظفين':(recipients[0]?recipients[0].name:'(موظف محذوف)')} — شاهدها ${seenCount} من ${recipients.length}</p>
       <button class="btn sec" data-toggleseen="${m.id}" style="padding:4px 10px">رآيه</button>
-      <div class="table-wrap" id="seen-m.id"style="display:none;margin-top:8px"><table><tr><th>الموظف</th><th>الحالة</th></tr>{seenListHtml}</table></div>
+      <div class="table-wrap" id="seen-${m.id}" style="display:none;margin-top:8px"><table><tr><th>الموظف</th><th>الحالة</th></tr>${seenListHtml}</table></div>
     </div>`;
   }).join('');
   return `<h1>مراسلات</h1>
@@ -1117,7 +1133,7 @@ async function suggestionsView(){
       <p>${suggestionStatusBadge(s)}</p>
       ${s.reply?`<p style="font-size:13px;background:var(--bg);padding:8px;border-radius:8px"><strong>ردّك:</strong> ${s.reply}</p>`:''}
       <label>الرد على الموظف</label>
-      <textarea class="replyBox" data-replyfor="s.id"rows="2"style="width:100%">{s.reply||''}</textarea>
+      <textarea class="replyBox" data-replyfor="${s.id}" rows="2" style="width:100%">${s.reply||''}</textarea>
       <div style="margin-top:8px">
         <button class="btn sec" data-sendreply="${s.id}" style="padding:5px 12px">إرسال الرد</button>
         ${!s.addedToBank?`<button class="btn" data-addbank="${s.id}" style="padding:5px 12px">أضف السؤال إلى بنك الأسئلة</button>`:''}
@@ -1218,7 +1234,7 @@ async function empMessagesView(){
         <small style="color:var(--muted)">${m.createdAt?new Date(m.createdAt).toLocaleString('ar-EG'):''}</small>
       </div>
       <p style="margin:8px 0">${m.body}</p>
-      ${seenAt? `<span class="badge ok">تمت المشاهدة في newDate(seenAt).toLocaleString('ar-EG')</span>`:`<buttonclass="btnsec"data-seen="{m.id}" style="padding:5px 12px">رأيته</button>`}
+      ${seenAt? `<span class="badge ok">تمت المشاهدة في ${new Date(seenAt).toLocaleString('ar-EG')}</span>` : `<button class="btn sec" data-seen="${m.id}" style="padding:5px 12px">رأيته</button>`}
     </div>`;
   }).join('');
   return `<h1>مراسلات</h1>${html || '<p style="color:var(--muted)">لا توجد رسائل لك حتى الآن.</p>'}`;
@@ -1296,8 +1312,8 @@ async function empResultsView(){
   return `<h1>نتائجي السابقة</h1><div class="card">
   <table><tr><th>الاختبار</th><th>الدرجة</th><th>النسبة</th><th>الحالة</th><th>محاولة</th></tr>
   ${mine.map(r=>{const ex=exams.find(x=>x.id===r.examId);
-    return `<tr><td>ex?ex.name:'-'</td><td>{r.score}</td><td>${r.percent}%</td>
-    <td><span class="badge r.passed?'ok':'bad'">{r.passed?'ناجح':'راسب'}</span></td><td>${r.attemptNum}</td></tr>`;
+    return `<tr><td>${ex?ex.name:'-'}</td><td>${r.score}</td><td>${r.percent}%</td>
+    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح':'راسب'}</span></td><td>${r.attemptNum}</td></tr>`;
   }).join('') || '<tr><td colspan=5 style="color:var(--muted)">لا توجد نتائج بعد.</td></tr>'}
   </table></div>`;
 }
@@ -1333,18 +1349,18 @@ async function takeExamView(){
     <button class="btn sec" id="nextQ" ${i===qs.length-1?'disabled':''}>التالي</button>
     <button class="btn" id="submitExam" style="float:left">تسليم الاختبار</button>
   </div>
-  <div class="card qnav">${order.map((oi,pos)=>`<button class="${answers[qs[oi].id]!==undefined?'answered':''} pos===i?'current':''"data-jump="{pos}">${pos+1}</button>`).join('')}</div>`;
+  <div class="card qnav">${order.map((oi,pos)=>`<button class="${answers[qs[oi].id]!==undefined?'answered':''} ${pos===i?'current':''}" data-jump="${pos}">${pos+1}</button>`).join('')}</div>`;
 }
 function answerInput(q,val){
   if(q.type==='mcq'||q.type==='tf'){
     const opts = q.type==='tf'? ['صح','خطأ'] : q.options;
     return opts.map((o,idx)=>{
       const v=q.type==='tf'? (idx===0?'true':'false') : idx;
-      return `<div class="qopt"><input type="radio" name="ans" value="${v}" String(val)===String(v)?'checked':''><span>{o}</span></div>`;
+      return `<div class="qopt"><input type="radio" name="ans" value="${v}" ${String(val)===String(v)?'checked':''}><span>${o}</span></div>`;
     }).join('');
   }
   if(q.type==='multi'){
-    return q.options.map((o,idx)=>`<div class="qopt"><input type="checkbox" name="ansM" value="${idx}" Array.isArray(val)&&val.includes(idx)?'checked':''><span>{o}</span></div>`).join('');
+    return q.options.map((o,idx)=>`<div class="qopt"><input type="checkbox" name="ansM" value="${idx}" ${Array.isArray(val)&&val.includes(idx)?'checked':''}><span>${o}</span></div>`).join('');
   }
   return `<input id="ansShort" style="width:100%" value="${val||''}">`;
 }
@@ -1362,7 +1378,7 @@ function attachTakeExam(){
     const box=document.getElementById('timerBox'); if(!box) return;
     if(left<=0){ clearInterval(timerInterval); finishExam(); return; }
     const m=Math.floor(left/60000), s2=Math.floor((left%60000)/1000);
-    box.textContent=`m:{s2.toString().padStart(2,'0')}`;
+    box.textContent=`${m}:${s2.toString().padStart(2,'0')}`;
   };
   tick(); timerInterval=setInterval(tick,1000);
   document.getElementById('prevQ').onclick=()=>{ saveCurrentAnswer(); ea.idx--; state.view='take-exam'; routeRender(); };
@@ -1397,4 +1413,3 @@ async function finishExam(){
 </script>
 </body>
 </html>
-
