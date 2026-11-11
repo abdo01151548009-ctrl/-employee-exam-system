@@ -424,9 +424,7 @@ async function employeesTeamsView(){
     <div class="row">
       <div><label>الاسم</label><input id="pName" style="width:100%" value="${editingEmp?editingEmp.name||'':''}"></div>
       <div><label>Employee ID</label><input id="pEmpId" style="width:100%" value="${editingEmp?editingEmp.empId||'':''}"></div>
-      <div><label>البريد الإلكتروني</label><input id="pEmail" style="width:100%" value="${editingEmp?editingEmp.email||'':''}"></div>
       <div><label>القسم</label><input id="pDept" style="width:100%" value="${editingEmp?editingEmp.dept||'':''}"></div>
-      <div><label>الفريق</label><input id="pTeam" style="width:100%" value="${editingEmp?editingEmp.team||'':''}"></div>
       <div><label>الوظيفة</label><input id="pPos" style="width:100%" value="${editingEmp?editingEmp.position||'':''}"></div>
       <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${leaders.map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
     </div>
