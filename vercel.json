@@ -2,10 +2,3 @@
   "cleanUrls": true,
   "trailingSlash": false
 }
-{
-  "username": "superadmin",
-  "passwordHash": "8520", 
-  "role": "SUPER_ADMIN",
-  "createdAt": 1718300000000,
-  "status": "active"
-}

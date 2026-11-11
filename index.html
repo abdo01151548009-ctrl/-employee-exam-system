@@ -106,7 +106,7 @@ const DICT={
   ar:{
     nav_dashboard:'لوحة التحكم', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
     nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'إدارة الاختبارات',
-    nav_review_results:'مراجعة الإجابات', nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
+    nav_review_results:'مراجعة الإجابات', nav_grading:'تصحيح الاختبار', nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
     nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
     admin_label:'مدير النظام', logout:'تسجيل الخروج', toggle_lang:'English',
     login_title:'تسجيل الدخول', admin_pass_label:'دخول كمدير — كلمة المرور', admin_login_btn:'دخول كمدير',
@@ -116,7 +116,7 @@ const DICT={
   en:{
     nav_dashboard:'Dashboard', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
     nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Manage Exams',
-    nav_review_results:'Review Answers', nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
+    nav_review_results:'Review Answers', nav_grading:'Grade Exams', nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
     nav_my_exams:'My Exams', nav_my_results:'My Results', nav_my_profile:'Edit My Profile', nav_suggest_question:'Suggest a Question',
     admin_label:'Admin', logout:'Log out', toggle_lang:'العربية',
     login_title:'Sign In', admin_pass_label:'Admin Login — Password', admin_login_btn:'Login as Admin',
@@ -179,10 +179,11 @@ function shell(){
   const adminLinks=[
     ['dashboard',T('nav_dashboard')],['questions',T('nav_questions')],
     ['employees-teams',T('nav_employees_teams')],['assign',T('nav_assign')],['results',T('nav_results')],['wrong-answers',T('nav_wrong')],
-    ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
+    ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['grading',T('nav_grading')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
   ];
   const empLinks=[['emp-home',T('nav_my_exams')],['emp-results',T('nav_my_results')],['emp-profile',T('nav_my_profile')],['emp-messages',T('nav_messages')],['suggest-question',T('nav_suggest_question')]];
-  const links = s.role==='admin'?adminLinks:empLinks;
+  const leaderLinks=[['grading',T('nav_grading')]];
+  const links = s.role==='admin'?adminLinks:(s.role==='leader'?leaderLinks:empLinks);
   return `<div class="app">
     <div class="topbar">
       <button class="menuBtn" id="openMenu">☰</button>
@@ -192,7 +193,7 @@ function shell(){
     <div class="sidebar" id="sidebar">
       <button class="closeBtn" id="closeMenu">✕</button>
       <h2>Employee Exam System</h2>
-      <div class="user">${s.role==='admin'?T('admin_label'):s.name}</div>
+      <div class="user">${s.role==='admin'?T('admin_label'):(s.role==='leader'?'👑 '+s.name:s.name)}</div>
       <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${l[1]}</a>`).join('')}
       <a href="#" id="langBtnSide" style="color:var(--brand)">${T('toggle_lang')}</a>
       <a href="#logout" style="color:var(--bad)">${T('logout')}</a></div>
@@ -224,6 +225,11 @@ function loginView(){
     <input id="empLogin" style="width:100%" placeholder="EMP001 / name@company.com">
     <button class="btn" id="asEmp" style="width:100%;margin-top:8px">${T('emp_login_btn')}</button>
     <p id="loginErr" style="color:var(--bad);font-size:12px"></p>
+    <hr style="margin:16px 0;border-color:var(--border)">
+    <label>دخول كقائد فريق — كود القائد</label>
+    <input id="leaderCode" type="password" style="width:100%" placeholder="••••••">
+    <button class="btn" id="asLeader" style="width:100%;margin-top:8px">دخول كقائد فريق</button>
+    <p id="leaderErr" style="color:var(--bad);font-size:12px"></p>
   </div>`;
 }
 
@@ -248,6 +254,16 @@ function attachLogin(){
     state.session={role:'admin'}; state.view='dashboard'; render();
   };
   document.getElementById('adminPass').onkeydown=(e)=>{ if(e.key==='Enter') document.getElementById('asAdmin').click(); };
+  document.getElementById('asLeader').onclick=async ()=>{
+    const code=document.getElementById('leaderCode').value.trim();
+    const err=document.getElementById('leaderErr');
+    if(!code){ err.textContent='أدخل كود القائد.'; return; }
+    const leaders=await listAll('teamLeaders');
+    const ld=leaders.find(l=>l.code && String(l.code)===code);
+    if(ld){ state.session={role:'leader',id:ld.id,name:ld.name}; state.view='grading'; render(); }
+    else err.textContent='كود القائد غير صحيح.';
+  };
+  document.getElementById('leaderCode').onkeydown=(e)=>{ if(e.key==='Enter') document.getElementById('asLeader').click(); };
   document.getElementById('asEmp').onclick=async ()=>{
     const v=document.getElementById('empLogin').value.trim();
     if(!v){ document.getElementById('loginErr').textContent='أدخل Employee ID أو البريد الإلكتروني.'; return; }
@@ -268,6 +284,7 @@ window.addEventListener('hashchange', ()=>{
 async function routeRender(){
   const main=document.getElementById('main');
   main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
+  if(state.session && state.session.role==='leader') state.view='grading';
   const v=state.view;
   if(v==='dashboard') main.innerHTML=await dashboardView();
   else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
@@ -276,6 +293,7 @@ async function routeRender(){
   else if(v==='results'){ main.innerHTML=await resultsView(); attachResults(); }
   else if(v==='wrong-answers'){ main.innerHTML=await wrongAnswersView(); attachWrongAnswers(); }
   else if(v==='review-exams'){ main.innerHTML=await reviewExamsView(); attachReviewExams(); }
+  else if(v==='grading'){ main.innerHTML=await gradingView(); attachGrading(); }
   else if(v==='review-results'){ main.innerHTML=await reviewResultsView(); attachReviewResults(); }
   else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
   else if(v==='messages'){ main.innerHTML=await messagesView(); attachMessages(); }
@@ -406,6 +424,7 @@ async function employeesTeamsView(){
     return `<div class="card" style="background:var(--bg)">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <strong>👑 قائد الفريق: ${ld.name}</strong>
+        <span style="font-size:12px;color:var(--muted)">كود الدخول: ${ld.code?ld.code:'<em>غير محدد</em>'} <button class="btn sec" data-setcode="${ld.id}" style="padding:2px 8px;font-size:11px">${ld.code?'تغيير':'تعيين'}</button></span>
         <div><span style="color:var(--muted);font-size:12px">${members.length} عضو</span>
         <button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-right:8px">حذف القائد</button></div>
       </div>
@@ -438,6 +457,7 @@ async function employeesTeamsView(){
     <h3>إدارة قادة الفرق (Team Leaders)</h3>
     <div class="row">
       <div><input id="tlName" placeholder="اسم قائد الفريق الجديد" style="width:100%"></div>
+      <div><input id="tlCode" placeholder="كود دخول القائد (للتصحيح)" style="width:100%"></div>
       <div><button class="btn" id="addLeader" style="width:100%">إضافة قائد فريق</button></div>
     </div>
     <div style="margin-top:14px">${leaderCards || '<p style="color:var(--muted)">لا يوجد قادة فرق بعد. أضف قائدًا أولًا.</p>'}</div>
@@ -492,11 +512,21 @@ function attachEmployeesTeams(){
 
   document.getElementById('addLeader').onclick=async()=>{
     const name=document.getElementById('tlName').value.trim();
+    const code=document.getElementById('tlCode').value.trim();
     if(!name){ alert('أدخل اسم قائد الفريق.'); return; }
-    await setDoc('teamLeaders',uid(),{name,createdAt:Date.now()});
+    if(code){ const ex=await listAll('teamLeaders'); if(ex.some(l=>String(l.code)===code)){ alert('هذا الكود مستخدم لقائد آخر.'); return; } }
+    await setDoc('teamLeaders',uid(),{name,code:code||null,createdAt:Date.now()});
     state.view='employees-teams'; routeRender();
   };
 
+  document.querySelectorAll('[data-setcode]').forEach(b=>b.onclick=async()=>{
+    const code=(prompt('أدخل كود الدخول الجديد للقائد:')||'').trim();
+    if(!code) return;
+    const ex=await listAll('teamLeaders');
+    if(ex.some(l=>String(l.code)===code && l.id!==b.dataset.setcode)){ alert('هذا الكود مستخدم لقائد آخر.'); return; }
+    await setDoc('teamLeaders',b.dataset.setcode,{code});
+    state.view='employees-teams'; routeRender();
+  });
   document.querySelectorAll('[data-delleader]').forEach(b=>b.onclick=async()=>{
     if(!confirm('حذف قائد الفريق؟ لن يتم حذف الموظفين، فقط ارتباطهم بهذا القائد.')) return;
     await delDoc('teamLeaders',b.dataset.delleader);
@@ -968,6 +998,139 @@ function attachReviewResults(){
   });
 }
 
+
+// ---------- LEADER/ADMIN: exam grading by team leader ----------
+let gradingSelected=null, gradingLeaderId='', gradingExamId='';
+function examTotalPoints(exam,questions){
+  return (exam.questionIds||[]).reduce((a,qid)=>{ const q=questions.find(x=>x.id===qid); return a+(q?Number(q.points)||0:0); },0);
+}
+function autoPoints(q,val){
+  if(val===undefined||val===null||val==='') return 0;
+  return isAnswerWrong(q,val)?0:(Number(q.points)||0);
+}
+async function gradingView(){
+  const s=state.session;
+  const isLeader=s.role==='leader';
+  const [results,emps,exams,questions,leaders]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions'),listAll('teamLeaders')]);
+  const leaderId = isLeader ? s.id : gradingLeaderId;
+  const teamEmps = emps.filter(e=> leaderId ? e.teamLeaderId===leaderId : !!e.teamLeaderId);
+  const teamIds = new Set(teamEmps.map(e=>e.id));
+  let teamResults = results.filter(r=>teamIds.has(r.employeeId));
+  const examOptions = exams.filter(x=>teamResults.some(r=>r.examId===x.id));
+  if(gradingExamId && !examOptions.some(x=>x.id===gradingExamId)) gradingExamId='';
+  if(gradingExamId) teamResults = teamResults.filter(r=>r.examId===gradingExamId);
+  teamResults.sort((a,b)=>(b.endTime||0)-(a.endTime||0));
+
+  const pendingCount = teamResults.filter(r=>r.gradeStatus!=='graded').length;
+  const rows = teamResults.map(r=>{
+    const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+    const total = exam?examTotalPoints(exam,questions):0;
+    const graded = r.gradeStatus==='graded';
+    return `<tr>
+      <td>${emp?emp.name:'(موظف محذوف)'}</td>
+      <td>${exam?exam.name:'(اختبار محذوف)'}</td>
+      <td>${r.score} / ${total}</td>
+      <td>${r.percent}%</td>
+      <td>${graded?`<span class="badge ok">تم التصحيح${r.gradedByName?' — '+r.gradedByName:''}</span>`:'<span class="badge warn">بانتظار التصحيح</span>'}</td>
+      <td>${r.endTime?new Date(r.endTime).toLocaleString('ar-EG'):'-'}</td>
+      <td><button class="btn" data-grade="${r.id}" style="padding:4px 10px">${graded?'إعادة التصحيح':'تصحيح'}</button></td>
+    </tr>`;
+  }).join('');
+
+  let detail='';
+  if(gradingSelected){
+    const r=results.find(x=>x.id===gradingSelected);
+    const emp=r?emps.find(e=>e.id===r.employeeId):null;
+    const exam=r?exams.find(x=>x.id===r.examId):null;
+    if(r && exam && emp && (isLeader ? emp.teamLeaderId===s.id : true)){
+      const qRows=(exam.questionIds||[]).map(qid=>{
+        const q=questions.find(x=>x.id===qid); if(!q) return '';
+        const val=r.answers?r.answers[q.id]:undefined;
+        const max=Number(q.points)||0;
+        const cur=(r.manualGrades && r.manualGrades[q.id]!==undefined)? r.manualGrades[q.id] : autoPoints(q,val);
+        const wrong=isAnswerWrong(q,val);
+        return `<tr>
+          <td style="white-space:normal;min-width:180px">${q.text}</td>
+          <td style="color:${wrong||val===undefined?'var(--bad)':'var(--ok)'};white-space:normal">${formatAnswerText(q,val)}</td>
+          <td style="color:var(--ok);white-space:normal">${formatCorrectText(q)}</td>
+          <td>${max}</td>
+          <td><input type="number" class="gradeInp" data-qid="${q.id}" data-max="${max}" min="0" max="${max}" step="0.5" value="${cur}" style="width:80px"></td>
+        </tr>`;
+      }).join('');
+      detail=`<div class="card" id="gradeCard">
+        <h3>تصحيح: ${emp.name} — ${exam.name}</h3>
+        <div class="table-wrap"><table><tr><th>السؤال</th><th>إجابة الموظف</th><th>الإجابة الصحيحة</th><th>الدرجة الكاملة</th><th>الدرجة الممنوحة</th></tr>${qRows}</table></div>
+        <p style="margin-top:10px"><strong>المجموع: <span id="gradeSum">0</span> / ${examTotalPoints(exam,questions)}</strong> — النسبة: <span id="gradePct">0</span>% — <span id="gradeVerdict"></span></p>
+        <label>ملاحظات / إرشادات للموظف (اختياري)</label>
+        <textarea id="gradeFeedback" rows="3" style="width:100%">${r.gradeFeedback||''}</textarea>
+        <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="saveGrade" data-rid="${r.id}">حفظ التصحيح</button>
+          <button class="btn sec" id="closeGrade">إغلاق</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  const adminPicker = isLeader ? '' : `<div><label>قائد الفريق</label><select id="gLeader" style="width:100%"><option value="">-- كل الفرق --</option>${leaders.map(l=>`<option value="${l.id}" ${l.id===gradingLeaderId?'selected':''}>${l.name}</option>`).join('')}</select></div>`;
+  return `<h1>تصحيح الاختبار</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">${isLeader?'اختبارات موظفي فريقك فقط. ':''}قائد الفريق هو المسؤول عن تصحيح اختبارات فريقه ومنح الدرجات لكل سؤال، والنتيجة النهائية تُحدَّث للموظف تلقائيًا.</p>
+    <div class="row">
+      ${adminPicker}
+      <div><label>الاختبار</label><select id="gExam" style="width:100%"><option value="">-- كل الاختبارات --</option>${examOptions.map(x=>`<option value="${x.id}" ${x.id===gradingExamId?'selected':''}>${x.name}</option>`).join('')}</select></div>
+    </div>
+    <p style="margin-top:10px">بانتظار التصحيح: <strong>${pendingCount}</strong> من ${teamResults.length}</p>
+    <div class="table-wrap"><table><tr><th>الموظف</th><th>الاختبار</th><th>الدرجة</th><th>النسبة</th><th>الحالة</th><th>تاريخ التسليم</th><th></th></tr>
+    ${rows || '<tr><td colspan="7" style="color:var(--muted)">لا توجد اختبارات مسلَّمة من موظفي هذا الفريق بعد.</td></tr>'}</table></div>
+  </div>
+  ${detail}`;
+}
+function attachGrading(){
+  const s=state.session;
+  const gl=document.getElementById('gLeader'); if(gl) gl.onchange=()=>{ gradingLeaderId=gl.value; gradingSelected=null; routeRender(); };
+  const ge=document.getElementById('gExam'); if(ge) ge.onchange=()=>{ gradingExamId=ge.value; gradingSelected=null; routeRender(); };
+  document.querySelectorAll('[data-grade]').forEach(b=>b.onclick=()=>{
+    gradingSelected=b.dataset.grade; routeRender();
+    setTimeout(()=>document.getElementById('gradeCard')?.scrollIntoView({behavior:'smooth',block:'start'}),150);
+  });
+  const card=document.getElementById('gradeCard'); if(!card) return;
+  document.getElementById('closeGrade').onclick=()=>{ gradingSelected=null; routeRender(); };
+  const inputs=[...card.querySelectorAll('.gradeInp')];
+  let passScore=60, total=0;
+  Promise.all([listAll('results'),listAll('exams'),listAll('questions')]).then(([results,exams,questions])=>{
+    const r=results.find(x=>x.id===gradingSelected); const exam=r&&exams.find(x=>x.id===r.examId);
+    if(exam){ passScore=exam.passScore||60; total=examTotalPoints(exam,questions); }
+    recalc();
+  });
+  function clampVal(inp){ let v=parseFloat(inp.value); const max=parseFloat(inp.dataset.max)||0; if(isNaN(v)||v<0) v=0; if(v>max) v=max; return v; }
+  function recalc(){
+    const sum=inputs.reduce((a,i)=>a+clampVal(i),0);
+    const pct= total? Math.round(sum/total*100):0;
+    document.getElementById('gradeSum').textContent=sum;
+    document.getElementById('gradePct').textContent=pct;
+    const v=document.getElementById('gradeVerdict');
+    v.innerHTML = pct>=passScore ? '<span class="badge ok">ناجح</span>' : '<span class="badge bad">راسب</span>';
+  }
+  inputs.forEach(i=>i.oninput=recalc);
+  document.getElementById('saveGrade').onclick=async()=>{
+    const rid=document.getElementById('saveGrade').dataset.rid;
+    const [results,exams,questions,emps]=await Promise.all([listAll('results'),listAll('exams'),listAll('questions'),listAll('employees')]);
+    const r=results.find(x=>x.id===rid); const exam=r&&exams.find(x=>x.id===r.examId); const emp=r&&emps.find(e=>e.id===r.employeeId);
+    if(!r||!exam||!emp){ alert('تعذر العثور على النتيجة.'); return; }
+    if(s.role==='leader' && emp.teamLeaderId!==s.id){ alert('هذا الموظف ليس من فريقك.'); return; }
+    const manualGrades={}; let sum=0;
+    inputs.forEach(i=>{ const v=clampVal(i); manualGrades[i.dataset.qid]=v; sum+=v; });
+    const tot=examTotalPoints(exam,questions);
+    const percent= tot? Math.round(sum/tot*100):0;
+    const leaders=await listAll('teamLeaders');
+    const gName = s.role==='leader' ? s.name : ((leaders.find(l=>l.id===emp.teamLeaderId)||{}).name || 'المدير');
+    const ok=await setDoc('results',rid,{manualGrades,score:sum,percent,passed:percent>=(exam.passScore||60),
+      reviewStatus:null,gradeStatus:'graded',gradedBy:s.role==='leader'?s.id:'admin',gradedByName:gName,
+      gradedAt:Date.now(),gradeFeedback:document.getElementById('gradeFeedback').value.trim()});
+    if(ok){ alert('تم حفظ التصحيح والدرجات.'); gradingSelected=null; routeRender(); }
+  };
+}
+
 // ---------- ADMIN: results ----------
 async function resultsView(){
   const [results,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
@@ -1297,7 +1460,7 @@ async function empResultsView(){
   <table><tr><th>الاختبار</th><th>الدرجة</th><th>النسبة</th><th>الحالة</th><th>محاولة</th></tr>
   ${mine.map(r=>{const ex=exams.find(x=>x.id===r.examId);
     return `<tr><td>${ex?ex.name:'-'}</td><td>${r.score}</td><td>${r.percent}%</td>
-    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح':'راسب'}</span></td><td>${r.attemptNum}</td></tr>`;
+    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح':'راسب'}</span>${r.gradeStatus==='graded'?' <span class="badge ok">صحّحه '+(r.gradedByName||'القائد')+'</span>':''}</td><td>${r.attemptNum}</td></tr>${r.gradeFeedback?`<tr><td colspan="5" style="white-space:normal;color:var(--muted)">ملاحظات القائد: ${r.gradeFeedback}</td></tr>`:''}`;
   }).join('') || '<tr><td colspan=5 style="color:var(--muted)">لا توجد نتائج بعد.</td></tr>'}
   </table></div>`;
 }
