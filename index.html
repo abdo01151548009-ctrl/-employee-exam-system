@@ -166,11 +166,60 @@ function attachSelectAll(allId,chkClass){
 }
 
 // ---------- render shell ----------
+
+// ---------- notifications (sender gets notified when employee sees a message) ----------
+let notifUnsub=null, notifKeyActive=null, notifList=[], notifUnread=0;
+function notifKey(){ const s=state.session; return s&&s.role==='leader'? s.id : 'admin'; }
+function showToast(msg){
+  const t=document.createElement('div'); t.textContent=msg;
+  t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:10px 16px;border-radius:10px;z-index:200;box-shadow:0 4px 14px rgba(0,0,0,.25);max-width:90%;font-size:14px';
+  document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
+}
+function updateNavBadge(){
+  const a=document.querySelector('.nav a[href="#messages"]'); if(!a) return;
+  const old=a.querySelector('#msgBadge'); if(old) old.remove();
+  if(notifUnread>0){ const sp=document.createElement('span'); sp.id='msgBadge'; sp.className='badge bad'; sp.style.marginRight='6px'; sp.textContent=notifUnread; a.appendChild(sp); }
+}
+function renderNotifBox(){
+  const box=document.getElementById('notifBox'); if(!box) return;
+  const items=notifList.slice(0,10).map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);${n.read?'color:var(--muted)':'font-weight:600'}">${n.read?'':'🔔 '}<strong>${n.employeeName||'-'}</strong> اطّلع على رسالتك «${n.subject||''}» <small>— ${n.createdAt?new Date(n.createdAt).toLocaleString('ar-EG'):''}</small></div>`).join('');
+  box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">الإشعارات ${notifUnread?`<span class="badge bad">${notifUnread}</span>`:''}</h3>
+    ${notifUnread?'<button class="btn sec" id="markAllNotif" style="padding:4px 10px">تحديد الكل كمقروء</button>':''}</div>
+    ${items||'<p style="color:var(--muted);margin:8px 0 0">لا توجد إشعارات.</p>'}`;
+  const mb=document.getElementById('markAllNotif');
+  if(mb) mb.onclick=async()=>{ for(const n of notifList.filter(x=>!x.read)) await setDoc('notifications',n.id,{read:true}); };
+}
+function stopNotifListener(){ if(notifUnsub){ try{notifUnsub();}catch(e){} } notifUnsub=null; notifKeyActive=null; notifList=[]; notifUnread=0; }
+function ensureNotifListener(){
+  const s=state.session; if(!s||s.role==='employee'||!db) return;
+  const key=notifKey(); if(notifUnsub && notifKeyActive===key) return;
+  stopNotifListener(); notifKeyActive=key; let first=true;
+  notifUnsub=db.collection('notifications').where('toId','==',key).onSnapshot(snap=>{
+    notifList=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    notifUnread=notifList.filter(n=>!n.read).length;
+    if(!first) snap.docChanges().forEach(ch=>{ if(ch.type==='added'){ const n=ch.doc.data(); if(!n.read) showToast('🔔 '+(n.employeeName||'')+' اطّلع على رسالتك: '+(n.subject||'')); } });
+    first=false; updateNavBadge(); renderNotifBox();
+  },err=>console.error(err));
+}
+
+function isLeaderSession(){ return !!(state.session && state.session.role==='leader'); }
+function visibleLeaders(leaders){ return isLeaderSession()? leaders.filter(l=>l.id===state.session.id) : leaders; }
+function ownExams(exams){ return isLeaderSession()? exams.filter(x=>x.createdBy===state.session.id) : exams; }
+function filterResultsForLeader(results,emps,exams){
+  if(!isLeaderSession()) return results;
+  const me=state.session.id;
+  return results.filter(r=>{
+    const ex=exams.find(x=>x.id===r.examId); const em=emps.find(e=>e.id===r.employeeId);
+    return (ex&&ex.createdBy===me) || (em&&em.teamLeaderId===me);
+  });
+}
+
 function render(){
   const root=document.getElementById('root');
   if(!state.session){ root.innerHTML=loginView(); attachLogin(); return; }
   root.innerHTML = shell();
   attachShellNav();
+  ensureNotifListener(); updateNavBadge();
   routeRender();
 }
 
@@ -182,7 +231,7 @@ function shell(){
     ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['grading',T('nav_grading')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
   ];
   const empLinks=[['emp-home',T('nav_my_exams')],['emp-results',T('nav_my_results')],['emp-profile',T('nav_my_profile')],['emp-messages',T('nav_messages')],['suggest-question',T('nav_suggest_question')]];
-  const leaderLinks=[['grading',T('nav_grading')]];
+  const leaderLinks=adminLinks.filter(l=>l[0]!=='dashboard');
   const links = s.role==='admin'?adminLinks:(s.role==='leader'?leaderLinks:empLinks);
   return `<div class="app">
     <div class="topbar">
@@ -276,7 +325,7 @@ function attachLogin(){
 
 window.addEventListener('hashchange', ()=>{
   const v=(location.hash||'#').slice(1);
-  if(v==='logout'){ state.session=null; state.view='login'; location.hash=''; render(); return; }
+  if(v==='logout'){ stopNotifListener(); state.session=null; state.view='login'; location.hash=''; render(); return; }
   if(v) state.view=v;
   render();
 });
@@ -284,7 +333,7 @@ window.addEventListener('hashchange', ()=>{
 async function routeRender(){
   const main=document.getElementById('main');
   main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
-  if(state.session && state.session.role==='leader') state.view='grading';
+  if(state.session && state.session.role==='leader' && (state.view==='dashboard'||!state.view)) state.view='grading';
   const v=state.view;
   if(v==='dashboard') main.innerHTML=await dashboardView();
   else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
@@ -419,18 +468,18 @@ async function employeesTeamsView(){
   const [emps, leaders] = await Promise.all([listAll('employees'), listAll('teamLeaders')]);
   const editingEmp = editingEmployeeId ? emps.find(e=>e.id===editingEmployeeId) : null;
   
-  const leaderCards = leaders.map(ld=>{
+  const leaderCards = visibleLeaders(leaders).map(ld=>{
     const members = emps.filter(e=>e.teamLeaderId===ld.id);
     return `<div class="card" style="background:var(--bg)">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <strong>👑 قائد الفريق: ${ld.name}</strong>
         <span style="font-size:12px;color:var(--muted)">كود الدخول: ${ld.code?ld.code:'<em>غير محدد</em>'} <button class="btn sec" data-setcode="${ld.id}" style="padding:2px 8px;font-size:11px">${ld.code?'تغيير':'تعيين'}</button></span>
         <div><span style="color:var(--muted);font-size:12px">${members.length} عضو</span>
-        <button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-right:8px">حذف القائد</button></div>
+        ${state.session.role==='leader'?'':`<button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-right:8px">حذف القائد</button>`}</div>
       </div>
       <p style="color:var(--muted);font-size:13px;margin:8px 0">حدد الموظفين التابعين لهذا القائد:</p>
       <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--surface)">
-      ${emps.map(e=>`<div class="qopt"><input type="checkbox" class="teamChk-${ld.id}" value="${e.id}" ${e.teamLeaderId===ld.id?'checked':''}><span>${e.name} ${e.dept?'('+e.dept+')':''}</span></div>`).join('') || '<p style="color:var(--muted)">لا يوجد موظفون.</p>'}
+      ${emps.map(e=>`<div class="qopt" style="${e.teamLeaderId&&e.teamLeaderId!==ld.id?'display:none':''}"><input type="checkbox" data-teamchk="1" class="teamChk-${ld.id}" value="${e.id}" ${e.teamLeaderId===ld.id?'checked':''}><span>${e.name} ${e.dept?'('+e.dept+')':''}</span></div>`).join('') || '<p style="color:var(--muted)">لا يوجد موظفون.</p>'}
       </div>
       <button class="btn" data-savemembers="${ld.id}" style="margin-top:8px">حفظ أعضاء الفريق</button>
     </div>`;
@@ -447,19 +496,19 @@ async function employeesTeamsView(){
       <div><label>القسم</label><input id="pDept" style="width:100%" value="${editingEmp?editingEmp.dept||'':''}"></div>
       <div><label>الفريق</label><input id="pTeam" style="width:100%" value="${editingEmp?editingEmp.team||'':''}"></div>
       <div><label>الوظيفة</label><input id="pPos" style="width:100%" value="${editingEmp?editingEmp.position||'':''}"></div>
-      <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${leaders.map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
+      <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${visibleLeaders(leaders).map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
     </div>
     <button class="btn" id="addEmp" style="margin-top:8px">${editingEmployeeId?'حفظ التعديلات':'إضافة موظف'}</button>
     ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-right:6px">إلغاء التعديل</button>':''}
   </div>
 
   <div class="card">
-    <h3>إدارة قادة الفرق (Team Leaders)</h3>
-    <div class="row">
+    <h3>${isLeaderSession()?'قائمة فريقي':'إدارة قادة الفرق (Team Leaders)'}</h3>
+    ${isLeaderSession()?'':`<div class="row">
       <div><input id="tlName" placeholder="اسم قائد الفريق الجديد" style="width:100%"></div>
       <div><input id="tlCode" placeholder="كود دخول القائد (للتصحيح)" style="width:100%"></div>
       <div><button class="btn" id="addLeader" style="width:100%">إضافة قائد فريق</button></div>
-    </div>
+    </div>`}
     <div style="margin-top:14px">${leaderCards || '<p style="color:var(--muted)">لا يوجد قادة فرق بعد. أضف قائدًا أولًا.</p>'}</div>
   </div>
 
@@ -510,7 +559,7 @@ function attachEmployeesTeams(){
     setTimeout(()=>document.getElementById('empFormTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
   });
 
-  document.getElementById('addLeader').onclick=async()=>{
+  (document.getElementById('addLeader')||{}).onclick=async()=>{
     const name=document.getElementById('tlName').value.trim();
     const code=document.getElementById('tlCode').value.trim();
     if(!name){ alert('أدخل اسم قائد الفريق.'); return; }
@@ -519,6 +568,11 @@ function attachEmployeesTeams(){
     state.view='employees-teams'; routeRender();
   };
 
+  document.querySelectorAll('input[data-teamchk]').forEach(cb=>cb.onchange=()=>{
+    document.querySelectorAll('input[data-teamchk][value="'+cb.value+'"]').forEach(o=>{
+      if(o!==cb) o.closest('.qopt').style.display = cb.checked ? 'none' : 'flex';
+    });
+  });
   document.querySelectorAll('[data-setcode]').forEach(b=>b.onclick=async()=>{
     const code=(prompt('أدخل كود الدخول الجديد للقائد:')||'').trim();
     if(!code) return;
@@ -528,6 +582,7 @@ function attachEmployeesTeams(){
     state.view='employees-teams'; routeRender();
   });
   document.querySelectorAll('[data-delleader]').forEach(b=>b.onclick=async()=>{
+    if(state.session.role==='leader'){ alert('حذف القائد من صلاحيات المدير فقط.'); return; }
     if(!confirm('حذف قائد الفريق؟ لن يتم حذف الموظفين، فقط ارتباطهم بهذا القائد.')) return;
     await delDoc('teamLeaders',b.dataset.delleader);
     state.view='employees-teams'; routeRender();
@@ -561,7 +616,9 @@ function attachEmployeesTeams(){
 
 // ---------- ADMIN: assign ----------
 async function assignView(){
-  const [exams,emps,assignments,leaders] = await Promise.all([listAll('exams'),listAll('employees'),listAll('assignments'),listAll('teamLeaders')]);
+  const [exams0,emps,assignments0,leaders0] = await Promise.all([listAll('exams'),listAll('employees'),listAll('assignments'),listAll('teamLeaders')]);
+  const exams=ownExams(exams0); const leaders=visibleLeaders(leaders0);
+  const assignments=isLeaderSession()? assignments0.filter(a=>exams.some(x=>x.id===a.examId)) : assignments0;
   const depts=[...new Set(emps.map(e=>e.dept).filter(Boolean))];
 
   return `<h1>إسناد الاختبارات</h1>
@@ -736,7 +793,8 @@ function isAnswerWrong(q,val){
   return false;
 }
 async function buildWrongAnswerRows(){
-  const [results,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const [results0,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const results=filterResultsForLeader(results0,emps,exams);
   const rows=[];
   results.forEach(r=>{
     const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
@@ -800,7 +858,8 @@ function attachWrongAnswers(){
 
 // ---------- ADMIN: create/edit/manage exams (merged) ----------
 async function reviewExamsView(){
-  const [exams, qs] = await Promise.all([listAll('exams'), listAll('questions')]);
+  const [exams0, qs] = await Promise.all([listAll('exams'), listAll('questions')]);
+  const exams = ownExams(exams0);
 
   if (state.editingExamId) {
     const isNew = state.editingExamId==='NEW';
@@ -892,7 +951,7 @@ function attachReviewExams(){
       const saveNew=async(active)=>{
         const g=gather();
         if(!g.ok) return alert('أدخل اسم الاختبار');
-        await setDoc('exams',uid(),{...g.data, active, draft:!active, createdAt:Date.now()});
+        await setDoc('exams',uid(),{...g.data, active, draft:!active, createdAt:Date.now(), createdBy:isLeaderSession()?state.session.id:'admin'});
         alert('تم إنشاء الاختبار بنجاح');
         state.editingExamId=null; state.view='review-exams'; routeRender();
       };
@@ -939,7 +998,8 @@ function reviewBadge(r){
   return `<span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح تلقائيًا':'راسب تلقائيًا'} - لم تتم المراجعة</span>`;
 }
 async function reviewResultsView(){
-  const [results,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const [results0,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const results=filterResultsForLeader(results0,emps,exams);
   const sorted=[...results].sort((a,b)=>(b.endTime||0)-(a.endTime||0));
   const rowsHtml = sorted.map(r=>{
     const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
@@ -1133,7 +1193,8 @@ function attachGrading(){
 
 // ---------- ADMIN: results ----------
 async function resultsView(){
-  const [results,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+  const [results0,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+  const results=filterResultsForLeader(results0,emps,exams);
   return `<h1>النتائج</h1>
   <div class="card">
   <button class="btn sec" id="exportCsv">تصدير CSV</button>
@@ -1147,7 +1208,8 @@ function attachResults(){
 }
 document.addEventListener('click',async (e)=>{
   if(e.target.id==='exportCsv'){
-    const [results,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+    const [results0,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+    const results=filterResultsForLeader(results0,emps,exams);
     let csv='Employee,Exam,Score,Percent,Status\n';
     results.forEach(r=>{ const em=emps.find(x=>x.id===r.employeeId),ex=exams.find(x=>x.id===r.examId);
       csv+=`${em?em.name:''},${ex?ex.name:''},${r.score},${r.percent}%,${r.passed?'Pass':'Fail'}\n`; });
@@ -1209,7 +1271,8 @@ function attachSettings(){
 
 // ---------- ADMIN: messages ----------
 async function messagesView(){
-  const [emps,exams,messages]=await Promise.all([listAll('employees'),listAll('exams'),listAll('messages')]);
+  const [emps,exams0,messages]=await Promise.all([listAll('employees'),listAll('exams'),listAll('messages')]);
+  const exams=ownExams(exams0);
   const sorted=[...messages].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   const msgHtml = sorted.map(m=>{
     const recipients = m.toEmployeeId==='all' ? emps : emps.filter(e=>e.id===m.toEmployeeId);
@@ -1230,6 +1293,7 @@ async function messagesView(){
     </div>`;
   }).join('');
   return `<h1>مراسلات</h1>
+  <div class="card" id="notifBox"></div>
   <div class="card">
     <h3>إرسال إرشادات للموظفين</h3>
     <div class="row">
@@ -1244,13 +1308,15 @@ async function messagesView(){
   ${msgHtml || '<p style="color:var(--muted)">لا توجد رسائل مرسلة بعد.</p>'}`;
 }
 function attachMessages(){
+  renderNotifBox();
   document.getElementById('sendMsg').onclick=async ()=>{
     const subject=document.getElementById('mSubject').value.trim();
     const body=document.getElementById('mBody').value.trim();
     if(!subject||!body){ alert('أدخل عنوان الرسالة ونصها.'); return; }
     const toEmployeeId=document.getElementById('mTo').value;
     const examId=document.getElementById('mExam').value;
-    await setDoc('messages',uid(),{toEmployeeId,examId:examId||null,subject,body,createdAt:Date.now(),seenBy:{}});
+    await setDoc('messages',uid(),{toEmployeeId,examId:examId||null,subject,body,createdAt:Date.now(),seenBy:{},
+      fromId:state.session.role==='leader'?state.session.id:'admin'});
     state.view='messages'; routeRender();
   };
   document.querySelectorAll('[data-toggleseen]').forEach(b=>b.onclick=()=>{
@@ -1381,15 +1447,19 @@ async function empMessagesView(){
         <small style="color:var(--muted)">${m.createdAt?new Date(m.createdAt).toLocaleString('ar-EG'):''}</small>
       </div>
       <p style="margin:8px 0">${m.body}</p>
-      ${seenAt? `<span class="badge ok">تمت المشاهدة في ${new Date(seenAt).toLocaleString('ar-EG')}</span>` : `<button class="btn sec" data-seen="${m.id}" style="padding:5px 12px">رأيته</button>`}
+      ${seenAt? `<button class="btn" disabled style="padding:5px 12px;background:var(--ok);opacity:1;cursor:default">✓ رأيته — ${new Date(seenAt).toLocaleString('ar-EG')}</button>` : `<button class="btn sec" data-seen="${m.id}" style="padding:5px 12px">رأيته</button>`}
     </div>`;
   }).join('');
   return `<h1>مراسلات</h1>${html || '<p style="color:var(--muted)">لا توجد رسائل لك حتى الآن.</p>'}`;
 }
 function attachEmpMessages(){
   document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=async()=>{
-    const empId=state.session.id;
-    await setDoc('messages',b.dataset.seen,{['seenBy.'+empId]:Date.now()});
+    const s=state.session, empId=s.id, mid=b.dataset.seen;
+    b.disabled=true; b.className='btn'; b.style.background='var(--ok)'; b.style.color='#fff'; b.style.opacity='1'; b.textContent='✓ رأيته';
+    let m=null; try{ const d=await db.collection('messages').doc(mid).get(); m=d.exists?d.data():null; }catch(e){}
+    await setDoc('messages',mid,{['seenBy.'+empId]:Date.now()});
+    await setDoc('notifications',uid(),{type:'message_seen',toId:(m&&m.fromId)||'admin',employeeId:empId,employeeName:s.name,
+      messageId:mid,subject:(m&&m.subject)||'',createdAt:Date.now(),read:false});
     state.view='emp-messages'; routeRender();
   });
 }
