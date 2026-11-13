@@ -81,6 +81,76 @@ h1{font-size:20px;margin:0 0 14px}
 .qnav button{width:34px;height:34px;border-radius:6px;border:1px solid var(--border);background:var(--surface);margin:2px;color:var(--text)}
 .qnav button.answered{background:#dbeafe}
 .qnav button.current{outline:2px solid var(--brand)}
+
+/* ===== New login (ID only) ===== */
+.lg-wrap{min-height:100vh;display:grid;place-items:center;padding:32px 18px;position:relative;overflow:hidden;
+  font-family:"Cairo","Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+  background:radial-gradient(1000px 560px at 85% -10%,rgba(79,134,247,.55),transparent 60%),
+    radial-gradient(800px 560px at 0% 110%,rgba(245,179,1,.22),transparent 55%),
+    linear-gradient(155deg,#071433 0%,#0b1f4d 45%,#123a9c 100%);}
+.lg-wrap::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 25%,transparent 75%);mask-image:radial-gradient(circle at 50% 45%,#000 25%,transparent 75%)}
+.lg-wrap svg.lg-i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.lg-card{position:relative;width:100%;max-width:470px;background:rgba(255,255,255,.94);color:#0f1b3d;border:1px solid rgba(255,255,255,.9);border-radius:24px;
+  box-shadow:0 30px 80px -20px rgba(7,20,51,.6),0 8px 24px -8px rgba(7,20,51,.35);padding:34px 34px 26px;animation:lgRise .9s both cubic-bezier(.2,.8,.2,1)}
+@keyframes lgRise{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+.lg-brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:20px}
+.lg-logo{width:74px;height:74px;filter:drop-shadow(0 10px 18px rgba(29,78,216,.35));animation:lgPop .8s .2s both cubic-bezier(.3,1.5,.5,1)}
+@keyframes lgPop{from{opacity:0;transform:scale(.6) rotate(-8deg)}to{opacity:1;transform:none}}
+.lg-brand h1{font-size:23px;font-weight:800;color:#0b1f4d;margin:6px 0 0}
+.lg-en{font-size:11.5px;letter-spacing:1.6px;color:#5b6785;font-weight:600;direction:ltr}
+.lg-tagline{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:#1d4ed8}
+.lg-tagline i{width:5px;height:5px;border-radius:50%;background:#f5b301}
+.lg-sep{height:1px;background:linear-gradient(90deg,transparent,#e3e8f4,transparent);margin:4px 0 18px}
+.lg-welcome h2{font-size:22px;font-weight:800;color:#0b1f4d;margin:0}
+.lg-welcome p{color:#5b6785;font-size:14px;margin:2px 0 16px}
+.lg-lbl{display:block;font-size:13px;font-weight:700;color:#10296a;margin:0 0 7px}
+.lg-field{position:relative;display:flex;align-items:center;border:1.6px solid #e3e8f4;background:#fff;border-radius:14px;transition:border-color .2s,box-shadow .2s}
+.lg-field:focus-within{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.16)}
+.lg-field.err{border-color:#c62828;box-shadow:0 0 0 4px rgba(198,40,40,.12)}
+.lg-field .lg-i{position:absolute;right:15px;font-size:19px;color:#7d8bb0;pointer-events:none}
+.lg-field:focus-within .lg-i{color:#2563eb}
+.lg-field input{width:100%;border:0;outline:0;background:transparent;color:#0f1b3d;border-radius:14px;padding:15px 46px 15px 14px;font-size:15.5px;font-weight:600;font-family:inherit}
+.lg-field input::placeholder{color:#9aa6c4;font-weight:400}
+.lg-error{display:none;align-items:flex-start;gap:9px;margin-top:12px;padding:11px 13px;border-radius:12px;background:#fdecec;color:#c62828;font-size:13px;font-weight:600;line-height:1.7;border:1px solid rgba(198,40,40,.22)}
+.lg-error.show{display:flex;animation:lgShake .45s}
+.lg-error .lg-i{font-size:18px;margin-top:2px}
+@keyframes lgShake{20%{transform:translateX(7px)}40%{transform:translateX(-7px)}60%{transform:translateX(5px)}80%{transform:translateX(-4px)}}
+.lg-btn{width:100%;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:10px;border:0;cursor:pointer;color:#fff;font-weight:800;font-size:16px;font-family:inherit;
+  padding:15px 18px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#1d4ed8 55%,#10296a);box-shadow:0 14px 28px -10px rgba(29,78,216,.7);
+  transition:transform .2s,box-shadow .2s,filter .2s,opacity .2s;position:relative;overflow:hidden}
+.lg-btn::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);transform:translateX(-120%);transition:transform .7s}
+.lg-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 20px 34px -12px rgba(29,78,216,.8);filter:brightness(1.06)}
+.lg-btn:hover:not(:disabled)::after{transform:translateX(120%)}
+.lg-btn:focus-visible{outline:3px solid #ffc933;outline-offset:3px}
+.lg-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.lg-btn .lg-i{font-size:19px}
+.lg-btn.success{background:linear-gradient(135deg,#1aa150,#12803c)}
+.lg-spin{width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:lgSpin .8s linear infinite;display:none}
+.lg-btn.loading .lg-spin{display:block}
+.lg-btn.loading .lg-arrow{display:none}
+@keyframes lgSpin{to{transform:rotate(360deg)}}
+.lg-who{margin-top:24px}
+.lg-who-title{display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:800;color:#0b1f4d;margin-bottom:12px}
+.lg-who-title::before,.lg-who-title::after{content:"";flex:1;height:1px;background:#e3e8f4}
+.lg-who-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lg-who-card{text-align:center;padding:13px 8px 12px;border-radius:14px;background:#fff;border:1px solid #e3e8f4;transition:transform .25s,box-shadow .25s,border-color .25s}
+.lg-who-card:hover{transform:translateY(-4px);border-color:#4f86f7;box-shadow:0 14px 26px -14px rgba(29,78,216,.5)}
+.lg-who-card .lg-ic{width:38px;height:38px;margin:0 auto 8px;border-radius:12px;display:grid;place-items:center;font-size:19px;color:#fff}
+.lg-who-card:nth-child(1) .lg-ic{background:linear-gradient(135deg,#ffc933,#e09b00);color:#071433}
+.lg-who-card:nth-child(2) .lg-ic{background:linear-gradient(135deg,#2563eb,#10296a)}
+.lg-who-card:nth-child(3) .lg-ic{background:linear-gradient(135deg,#2bb673,#17803d)}
+.lg-who-card h4{font-size:12.5px;font-weight:800;color:#0b1f4d;margin:0}
+.lg-who-card p{font-size:11px;line-height:1.6;color:#5b6785;margin:3px 0 0}
+.lg-secure{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #e3e8f4;font-size:12.5px;font-weight:600;color:#5b6785}
+.lg-secure .lg-i{color:#17803d;font-size:17px}
+@media (max-width:640px){
+  .lg-card{padding:26px 20px 22px}
+  .lg-who-grid{grid-template-columns:1fr}
+  .lg-who-card{display:flex;align-items:center;gap:12px;text-align:right;padding:11px 12px}
+  .lg-who-card .lg-ic{margin:0}
+}
+@media (prefers-reduced-motion:reduce){.lg-wrap *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -262,23 +332,56 @@ function attachShellNav(){
 }
 
 function loginView(){
-  return `<div class="login card">
-    <div style="text-align:left;margin-bottom:8px"><button class="btn sec" id="langBtnLogin" style="padding:5px 14px">${T('toggle_lang')}</button></div>
-    <h1>${T('login_title')}</h1>
-    <label>${T('admin_pass_label')}</label>
-    <input id="adminPass" type="password" style="width:100%" placeholder="••••••">
-    <button class="btn" id="asAdmin" style="width:100%;margin-top:8px">${T('admin_login_btn')}</button>
-    <p id="adminErr" style="color:var(--bad);font-size:12px"></p>
-    <hr style="margin:16px 0;border-color:var(--border)">
-    <label>${T('emp_login_label')}</label>
-    <input id="empLogin" style="width:100%" placeholder="EMP001 / name@company.com">
-    <button class="btn" id="asEmp" style="width:100%;margin-top:8px">${T('emp_login_btn')}</button>
-    <p id="loginErr" style="color:var(--bad);font-size:12px"></p>
-    <hr style="margin:16px 0;border-color:var(--border)">
-    <label>دخول كقائد فريق — كود القائد</label>
-    <input id="leaderCode" type="password" style="width:100%" placeholder="••••••">
-    <button class="btn" id="asLeader" style="width:100%;margin-top:8px">دخول كقائد فريق</button>
-    <p id="leaderErr" style="color:var(--bad);font-size:12px"></p>
+  return `<div class="lg-wrap">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="lg-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="lg-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="lg-usercheck" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></symbol>
+    <symbol id="lg-crown" viewBox="0 0 24 24"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></symbol>
+    <symbol id="lg-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="lg-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+    <symbol id="lg-arrow" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+  </svg>
+  <div class="lg-card">
+    <header class="lg-brand">
+      <svg class="lg-logo" viewBox="0 0 96 96" role="img" aria-label="شعار نظام اختبارات الموظفين">
+        <defs>
+          <linearGradient id="lgGb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f86f7"/><stop offset="1" stop-color="#0b1f4d"/></linearGradient>
+          <linearGradient id="lgGg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd75e"/><stop offset="1" stop-color="#e09b00"/></linearGradient>
+        </defs>
+        <rect x="4" y="4" width="88" height="88" rx="26" fill="url(#lgGb)"/>
+        <circle cx="29" cy="52" r="7" fill="#fff" opacity=".78"/><path d="M16 78c0-9 6-15 13-15s13 6 13 15z" fill="#fff" opacity=".78"/>
+        <circle cx="67" cy="52" r="7" fill="#fff" opacity=".78"/><path d="M54 78c0-9 6-15 13-15s13 6 13 15z" fill="#fff" opacity=".78"/>
+        <circle cx="48" cy="46" r="9" fill="#fff"/><path d="M31 80c0-12 8-20 17-20s17 8 17 20z" fill="#fff"/>
+        <path d="M48 8l4.2 8.6 9.4 1.4-6.8 6.6 1.6 9.4L48 29.6l-8.4 4.4 1.6-9.4-6.8-6.6 9.4-1.4z" fill="url(#lgGg)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <h1>نظام اختبارات الموظفين</h1>
+      <div class="lg-en">EMPLOYEE EXAMINATION SYSTEM</div>
+      <div class="lg-tagline">تطوير <i></i> تقييم <i></i> نجاح</div>
+    </header>
+    <div class="lg-sep"></div>
+    <div class="lg-welcome"><h2>مرحبًا بك</h2><p>سجل دخولك للمتابعة</p></div>
+    <form id="lgForm" novalidate autocomplete="off">
+      <label class="lg-lbl" for="lgId">ID</label>
+      <div class="lg-field" id="lgField">
+        <svg class="lg-i"><use href="#lg-user"/></svg>
+        <input id="lgId" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="أدخل الـ ID الخاص بك" aria-describedby="lgErr">
+      </div>
+      <div class="lg-error" id="lgErr" role="alert" aria-live="assertive"><svg class="lg-i"><use href="#lg-alert"/></svg><span id="lgErrTxt"></span></div>
+      <button class="lg-btn" id="lgBtn" type="submit" disabled>
+        <span class="lg-spin" aria-hidden="true"></span><span id="lgBtnLbl">دخول</span><svg class="lg-i lg-arrow"><use href="#lg-arrow"/></svg>
+      </button>
+    </form>
+    <section class="lg-who" aria-label="لمن هذا النظام">
+      <div class="lg-who-title">لمن هذا النظام؟</div>
+      <div class="lg-who-grid">
+        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-crown"/></svg></div><h4>مالك النظام</h4><p>إدارة كاملة وصلاحيات شاملة.</p></div>
+        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-users"/></svg></div><h4>القادة والمديرون</h4><p>متابعة وإدارة نتائج الفرق.</p></div>
+        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-usercheck"/></svg></div><h4>الموظفون</h4><p>أداء الاختبارات ومعرفة النتائج.</p></div>
+      </div>
+    </section>
+    <footer class="lg-secure"><svg class="lg-i"><use href="#lg-shield"/></svg> بياناتك آمنة ومحمية</footer>
+  </div>
   </div>`;
 }
 
@@ -292,35 +395,44 @@ async function getAdminPassword(){
     return (data && data.password) ? data.password : DEFAULT_ADMIN_PASSWORD;
   }catch(e){ return DEFAULT_ADMIN_PASSWORD; }
 }
+// ID-only login: owner code -> team leader code -> employee (Employee ID or email)
+async function authenticateId(id){
+  if(!db) throw new Error('no-db');
+  if(id===String(await getAdminPassword())) return {user:{role:'admin'},view:'dashboard'};
+  const lead=await db.collection('teamLeaders').where('code','==',id).limit(1).get();
+  if(!lead.empty){ const d=lead.docs[0]; return {user:{role:'leader',id:d.id,name:d.data().name},view:'grading'}; }
+  let emp=await db.collection('employees').where('empId','==',id).limit(1).get();
+  if(emp.empty) emp=await db.collection('employees').where('email','==',id).limit(1).get();
+  if(!emp.empty){ const d=emp.docs[0]; return {user:{role:'employee',id:d.id,...d.data()},view:'emp-home'}; }
+  return null;
+}
 function attachLogin(){
-  const lb=document.getElementById('langBtnLogin'); if(lb) lb.onclick=()=>{ lang=lang==='ar'?'en':'ar'; applyLangToDocument(); render(); };
-  document.getElementById('asAdmin').onclick=async ()=>{
-    const btn=document.getElementById('asAdmin'); btn.disabled=true;
-    const p=document.getElementById('adminPass').value;
-    const current=await getAdminPassword();
-    btn.disabled=false;
-    if(p!==current){ document.getElementById('adminErr').textContent='كلمة المرور غير صحيحة.'; return; }
-    state.session={role:'admin'}; state.view='dashboard'; render();
-  };
-  document.getElementById('adminPass').onkeydown=(e)=>{ if(e.key==='Enter') document.getElementById('asAdmin').click(); };
-  document.getElementById('asLeader').onclick=async ()=>{
-    const code=document.getElementById('leaderCode').value.trim();
-    const err=document.getElementById('leaderErr');
-    if(!code){ err.textContent='أدخل كود القائد.'; return; }
-    const leaders=await listAll('teamLeaders');
-    const ld=leaders.find(l=>l.code && String(l.code)===code);
-    if(ld){ state.session={role:'leader',id:ld.id,name:ld.name}; state.view='grading'; render(); }
-    else err.textContent='كود القائد غير صحيح.';
-  };
-  document.getElementById('leaderCode').onkeydown=(e)=>{ if(e.key==='Enter') document.getElementById('asLeader').click(); };
-  document.getElementById('asEmp').onclick=async ()=>{
-    const v=document.getElementById('empLogin').value.trim();
-    if(!v){ document.getElementById('loginErr').textContent='أدخل Employee ID أو البريد الإلكتروني.'; return; }
-    const emps = await listAll('employees');
-    const emp = emps.find(e=>e.empId===v || e.email===v);
-    if(emp){ state.session={role:'employee',...emp}; state.view='emp-home'; render(); }
-    else document.getElementById('loginErr').textContent='لم يتم العثور على الموظف. تأكد من البيانات أو اطلب من المدير إضافتك.';
-  };
+  const form=document.getElementById('lgForm'), input=document.getElementById('lgId'), field=document.getElementById('lgField');
+  const btn=document.getElementById('lgBtn'), lbl=document.getElementById('lgBtnLbl');
+  const errBox=document.getElementById('lgErr'), errTxt=document.getElementById('lgErrTxt');
+  let busy=false;
+  const sync=()=>{ btn.disabled = busy || input.value.trim()===''; };
+  const showErr=(m)=>{ errTxt.textContent=m; errBox.classList.remove('show'); void errBox.offsetWidth; errBox.classList.add('show'); field.classList.add('err'); };
+  const clearErr=()=>{ errBox.classList.remove('show'); field.classList.remove('err'); };
+  const setLoading=(on)=>{ busy=on; btn.classList.toggle('loading',on); lbl.textContent=on?'جارٍ التحقق...':'دخول'; input.readOnly=on; sync(); };
+  input.addEventListener('input',()=>{ clearErr(); sync(); });
+  form.addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    const id=input.value.trim();
+    if(!id){ showErr('من فضلك أدخل الـ ID الخاص بك.'); return; }
+    if(busy) return;
+    clearErr(); setLoading(true);
+    try{
+      const res=await authenticateId(id);
+      if(!res){ setLoading(false); showErr('الـ ID غير صحيح. تأكد من الرقم وحاول مرة أخرى.'); input.focus(); input.select(); return; }
+      btn.classList.remove('loading'); btn.classList.add('success'); lbl.textContent='تم تسجيل الدخول ✓';
+      setTimeout(()=>{ state.session=res.user; state.view=res.view; render(); },450);
+    }catch(err){
+      console.error(err); setLoading(false);
+      showErr('تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
+    }
+  });
+  input.focus({preventScroll:true}); sync();
 }
 
 window.addEventListener('hashchange', ()=>{
