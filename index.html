@@ -222,6 +222,15 @@ async function setDoc(name,id,data){
   try{ await db.collection(name).doc(id).set(data,{merge:true}); return true; }
   catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:'غير معروف')); return false; }
 }
+// update() understands dotted paths (nested fields); set(...,{merge:true}) does NOT
+async function updDoc(name,id,data){
+  if(!db){ alert('تعذر الاتصال بقاعدة البيانات.'); return false; }
+  try{ await db.collection(name).doc(id).update(data); return true; }
+  catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:'غير معروف')); return false; }
+}
+// read helpers that also honour legacy literal "seenBy.<id>" / "deletedBy.<id>" fields
+function seenAtOf(m,id){ return (m.seenBy&&m.seenBy[id]) || m['seenBy.'+id] || null; }
+function deletedByOf(m,id){ return !!((m.deletedBy&&m.deletedBy[id]) || m['deletedBy.'+id]); }
 async function delDoc(name,id){ if(!db) return; try{ await db.collection(name).doc(id).delete(); }catch(e){console.error(e);} }
 async function bulkDeleteSelected(collectionName,chkClass){
   const ids=[...document.querySelectorAll('.'+chkClass+':checked')].map(c=>c.value);
@@ -252,12 +261,15 @@ function updateNavBadge(){
 }
 function renderNotifBox(){
   const box=document.getElementById('notifBox'); if(!box) return;
-  const items=notifList.slice(0,10).map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);${n.read?'color:var(--muted)':'font-weight:600'}">${n.read?'':'🔔 '}<strong>${n.employeeName||'-'}</strong> اطّلع على رسالتك «${n.subject||''}» <small>— ${n.createdAt?new Date(n.createdAt).toLocaleString('ar-EG'):''}</small></div>`).join('');
+  const items=notifList.slice(0,10).map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);${n.read?'color:var(--muted)':'font-weight:600'}">${n.read?'':'🔔 '}<strong>${n.employeeName||'-'}</strong> اطّلع على رسالتك «${n.subject||''}» <small>— ${n.createdAt?new Date(n.createdAt).toLocaleString('ar-EG'):''}</small> <button class="btn danger" data-delnotif="${n.id}" style="padding:2px 8px;font-size:11px;margin-right:6px">حذف</button></div>`).join('');
   box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">الإشعارات ${notifUnread?`<span class="badge bad">${notifUnread}</span>`:''}</h3>
-    ${notifUnread?'<button class="btn sec" id="markAllNotif" style="padding:4px 10px">تحديد الكل كمقروء</button>':''}</div>
+    <div>${notifUnread?'<button class="btn sec" id="markAllNotif" style="padding:4px 10px">تحديد الكل كمقروء</button> ':''}${notifList.length?'<button class="btn danger" id="delAllNotif" style="padding:4px 10px">حذف الكل</button>':''}</div></div>
     ${items||'<p style="color:var(--muted);margin:8px 0 0">لا توجد إشعارات.</p>'}`;
   const mb=document.getElementById('markAllNotif');
   if(mb) mb.onclick=async()=>{ for(const n of notifList.filter(x=>!x.read)) await setDoc('notifications',n.id,{read:true}); };
+  box.querySelectorAll('[data-delnotif]').forEach(b=>b.onclick=async()=>{ await delDoc('notifications',b.dataset.delnotif); });
+  const da=document.getElementById('delAllNotif');
+  if(da) da.onclick=async()=>{ if(!confirm('حذف كل الإشعارات؟')) return; for(const n of [...notifList]) await delDoc('notifications',n.id); };
 }
 function stopNotifListener(){ if(notifUnsub){ try{notifUnsub();}catch(e){} } notifUnsub=null; notifKeyActive=null; notifList=[]; notifUnread=0; }
 function ensureNotifListener(){
@@ -1385,12 +1397,14 @@ function attachSettings(){
 async function messagesView(){
   const [emps,exams0,messages]=await Promise.all([listAll('employees'),listAll('exams'),listAll('messages')]);
   const exams=ownExams(exams0);
-  const sorted=[...messages].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const isL=isLeaderSession(), me=state.session;
+  const pickEmps = isL ? emps.filter(e=>e.teamLeaderId===me.id) : emps;
+  const sorted=(isL? messages.filter(m=>m.fromId===me.id) : [...messages]).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   const msgHtml = sorted.map(m=>{
-    const recipients = m.toEmployeeId==='all' ? emps : emps.filter(e=>e.id===m.toEmployeeId);
-    const seenCount = recipients.filter(e=>m.seenBy && m.seenBy[e.id]).length;
+    const recipients = m.toEmployeeId==='all' ? emps : (m.toEmployeeId==='team' ? emps.filter(e=>e.teamLeaderId===m.toTeamId) : emps.filter(e=>e.id===m.toEmployeeId));
+    const seenCount = recipients.filter(e=>seenAtOf(m,e.id)).length;
     const seenListHtml = recipients.map(e=>{
-      const seenAt=m.seenBy && m.seenBy[e.id];
+      const seenAt=seenAtOf(m,e.id);
       return `<tr><td>${e.name}</td><td>${seenAt? '<span class="badge ok">شاهدها في '+new Date(seenAt).toLocaleString('ar-EG')+'</span>' : '<span class="badge warn">لم تُشاهد بعد</span>'}</td></tr>`;
     }).join('');
     return `<div class="card">
@@ -1399,9 +1413,10 @@ async function messagesView(){
         <small style="color:var(--muted)">${m.createdAt?new Date(m.createdAt).toLocaleString('ar-EG'):''}</small>
       </div>
       <p style="margin:8px 0">${m.body}</p>
-      <p style="font-size:12px;color:var(--muted)">إلى: ${m.toEmployeeId==='all'?'كل الموظفين':(recipients[0]?recipients[0].name:'(موظف محذوف)')} — شاهدها ${seenCount} من ${recipients.length}</p>
-      <button class="btn sec" data-toggleseen="${m.id}" style="padding:4px 10px">رآيه</button>
-      <div class="table-wrap" id="seen-${m.id}" style="display:none;margin-top:8px"><table><tr><th>الموظف</th><th>الحالة</th></tr>${seenListHtml}</table></div>
+      <p style="font-size:12px;color:var(--muted)">إلى: ${m.toEmployeeId==='all'?'كل الموظفين':(m.toEmployeeId==='team'?'كل أفراد الفريق':(recipients[0]?recipients[0].name:'(موظف محذوف)'))} — شاهدها ${seenCount} من ${recipients.length}</p>
+      ${isL?'':`<button class="btn sec" data-toggleseen="${m.id}" style="padding:4px 10px">رآيه</button>`}
+      <button class="btn danger" data-delmsg="${m.id}" style="padding:4px 10px">حذف</button>
+      ${isL?'':`<div class="table-wrap" id="seen-${m.id}" style="display:none;margin-top:8px"><table><tr><th>الموظف</th><th>الحالة</th></tr>${seenListHtml}</table></div>`}
     </div>`;
   }).join('');
   return `<h1>مراسلات</h1>
@@ -1409,7 +1424,7 @@ async function messagesView(){
   <div class="card">
     <h3>إرسال إرشادات للموظفين</h3>
     <div class="row">
-      <div><label>المرسل إليه</label><select id="mTo"><option value="all">-- كل الموظفين --</option>${emps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div><label>المرسل إليه</label><select id="mTo"><option value="${isL?'team':'all'}">${isL?'-- كل أفراد فريقي --':'-- كل الموظفين --'}</option>${pickEmps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
       <div><label>مرتبط باختبار (اختياري)</label><select id="mExam"><option value="">-- بدون --</option>${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
     </div>
     <label>عنوان الرسالة</label><input id="mSubject" style="width:100%">
@@ -1427,10 +1442,17 @@ function attachMessages(){
     if(!subject||!body){ alert('أدخل عنوان الرسالة ونصها.'); return; }
     const toEmployeeId=document.getElementById('mTo').value;
     const examId=document.getElementById('mExam').value;
-    await setDoc('messages',uid(),{toEmployeeId,examId:examId||null,subject,body,createdAt:Date.now(),seenBy:{},
-      fromId:state.session.role==='leader'?state.session.id:'admin'});
+    const msg={toEmployeeId,examId:examId||null,subject,body,createdAt:Date.now(),seenBy:{},
+      fromId:state.session.role==='leader'?state.session.id:'admin'};
+    if(toEmployeeId==='team') msg.toTeamId=state.session.id;
+    await setDoc('messages',uid(),msg);
     state.view='messages'; routeRender();
   };
+  document.querySelectorAll('[data-delmsg]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('حذف هذه الرسالة نهائيًا؟ ستختفي أيضًا عند الموظفين.')) return;
+    await delDoc('messages',b.dataset.delmsg);
+    state.view='messages'; routeRender();
+  });
   document.querySelectorAll('[data-toggleseen]').forEach(b=>b.onclick=()=>{
     const box=document.getElementById('seen-'+b.dataset.toggleseen);
     box.style.display = box.style.display==='none'?'block':'none';
@@ -1549,10 +1571,11 @@ function attachSuggestQuestion(){
 // ---------- EMPLOYEE: messages ----------
 async function empMessagesView(){
   const s=state.session;
-  const messages=await listAll('messages');
-  const mine=messages.filter(m=>m.toEmployeeId===s.id||m.toEmployeeId==='all').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const [messages,allEmps]=await Promise.all([listAll('messages'),listAll('employees')]);
+  const meNow=allEmps.find(e=>e.id===s.id)||s;
+  const mine=messages.filter(m=>!deletedByOf(m,s.id) && (m.toEmployeeId===s.id||m.toEmployeeId==='all'||(m.toEmployeeId==='team'&&m.toTeamId&&m.toTeamId===meNow.teamLeaderId))).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   const html=mine.map(m=>{
-    const seenAt=m.seenBy && m.seenBy[s.id];
+    const seenAt=seenAtOf(m,s.id);
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
         <strong>${m.subject}</strong>
@@ -1560,16 +1583,22 @@ async function empMessagesView(){
       </div>
       <p style="margin:8px 0">${m.body}</p>
       ${seenAt? `<button class="btn" disabled style="padding:5px 12px;background:var(--ok);opacity:1;cursor:default">✓ رأيته — ${new Date(seenAt).toLocaleString('ar-EG')}</button>` : `<button class="btn sec" data-seen="${m.id}" style="padding:5px 12px">رأيته</button>`}
+      <button class="btn danger" data-delmymsg="${m.id}" style="padding:5px 12px">حذف</button>
     </div>`;
   }).join('');
   return `<h1>مراسلات</h1>${html || '<p style="color:var(--muted)">لا توجد رسائل لك حتى الآن.</p>'}`;
 }
 function attachEmpMessages(){
+  document.querySelectorAll('[data-delmymsg]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('حذف هذه الرسالة من صندوقك؟')) return;
+    await updDoc('messages',b.dataset.delmymsg,{['deletedBy.'+state.session.id]:true});
+    state.view='emp-messages'; routeRender();
+  });
   document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=async()=>{
     const s=state.session, empId=s.id, mid=b.dataset.seen;
     b.disabled=true; b.className='btn'; b.style.background='var(--ok)'; b.style.color='#fff'; b.style.opacity='1'; b.textContent='✓ رأيته';
     let m=null; try{ const d=await db.collection('messages').doc(mid).get(); m=d.exists?d.data():null; }catch(e){}
-    await setDoc('messages',mid,{['seenBy.'+empId]:Date.now()});
+    await updDoc('messages',mid,{['seenBy.'+empId]:Date.now()});
     await setDoc('notifications',uid(),{type:'message_seen',toId:(m&&m.fromId)||'admin',employeeId:empId,employeeName:s.name,
       messageId:mid,subject:(m&&m.subject)||'',createdAt:Date.now(),read:false});
     state.view='emp-messages'; routeRender();
