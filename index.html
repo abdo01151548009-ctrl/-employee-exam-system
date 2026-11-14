@@ -19,7 +19,7 @@ body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 .app{display:flex;min-height:100vh}
-.sidebar{width:230px;background:var(--surface);border-left:1px solid var(--border);padding:16px;flex-shrink:0}
+.sidebar{width:230px;background:var(--surface);border-inline-end:1px solid var(--border);padding:16px;flex-shrink:0}
 .sidebar h2{font-size:16px;color:var(--brand)}
 .sidebar .user{font-size:13px;color:var(--muted);margin-bottom:14px}
 .nav a{display:block;padding:9px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px;margin-bottom:3px}
@@ -32,7 +32,7 @@ input,select,textarea{font-family:inherit;background:var(--surface);color:var(--
 .stat{font-size:26px;font-weight:700;color:var(--brand)}
 .stat-label{font-size:12px;color:var(--muted)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:8px;border-bottom:1px solid var(--border);text-align:right}
+th,td{padding:8px;border-bottom:1px solid var(--border);text-align:start}
 th{color:var(--muted);font-weight:600}
 .btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px}
 .btn:hover{background:var(--brand-d)}
@@ -57,9 +57,10 @@ label{font-size:12px;color:var(--muted);display:block;margin:8px 0 3px}
   .menuBtn{display:block}
   .sidebar{position:fixed;inset:0;z-index:30;width:100%;height:100%;transform:translateX(100%);
     transition:transform .2s ease;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  [dir="ltr"] .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
   .sidebar .closeBtn{display:block;background:transparent;border:none;font-size:20px;color:var(--text);
-    position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px}
+    position:absolute;top:calc(14px + env(safe-area-inset-top,0px));inset-inline-start:14px}
   .nav a{font-size:16px;padding:12px 10px}
   .main{padding:12px;max-width:100%}
   h1{font-size:17px}
@@ -151,6 +152,84 @@ h1{font-size:20px;margin:0 0 14px}
   .lg-who-card .lg-ic{margin:0}
 }
 @media (prefers-reduced-motion:reduce){.lg-wrap *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ===== Premium dark theme ===== */
+:root{--bg:#0B1120;--surface:#172235;--text:#F8FAFC;--muted:#94A3B8;--border:#34445D;--brand:#F5B342;--brand-d:#e0a030;--ok:#22C55E;--bad:#EF4444;--warn:#F5B342;color-scheme:dark}
+body{background:var(--bg)}
+.sidebar{background:#111827}
+.card,.kc{border-color:var(--border);box-shadow:0 0 0 1px rgba(245,179,66,.07),0 10px 28px -14px rgba(245,179,66,.25)}
+.btn{color:#0B1120;font-weight:700}.btn.danger{color:#fff}.btn.sec{color:var(--brand)}
+.nav a.active,.nav a:hover{background:var(--brand);color:#0B1120}
+.badge.ok{background:rgba(34,197,94,.15);color:#4ade80}.badge.bad{background:rgba(239,68,68,.15);color:#f87171}.badge.warn{background:rgba(245,179,66,.15);color:#F5B342}
+.qnav button.answered{background:#1e3a5f}
+@media (min-width:761px){.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto}}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kc .v{font-size:26px;font-weight:800;color:var(--brand)}.kc .l{font-size:12px;color:var(--muted)}.kc .ic{font-size:20px}
+.dl{font-size:11px;font-weight:700;color:var(--muted)}.dl.up{color:#22C55E}.dl.dn{color:#EF4444}
+.g2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.bar{height:8px;border-radius:99px;background:#0B1120;overflow:hidden}.bar b{display:block;height:100%;background:linear-gradient(90deg,#F5B342,#fb923c)}
+.pill{padding:5px 12px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px}.pill.on{background:var(--brand);color:#0B1120;border-color:var(--brand)}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0}.fnote{font-size:11px;color:var(--muted);margin-top:8px}
+.qr{cursor:pointer;transition:transform .2s,border-color .2s}.qr:hover{transform:translateY(-3px);border-color:var(--brand)}
+.pgr{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:8px;font-size:12px}
+.prn{display:none}
+@media (max-width:900px){.kg{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}}
+@media print{.sidebar,.topbar,.no-print{display:none!important}body{background:#fff;color:#000}.app{display:block}.main{max-width:100%;padding:0}
+.card,.kc{background:#fff!important;color:#000;box-shadow:none;border:1px solid #bbb}.kc .v,.card h3{color:#000}.card table{display:table;white-space:normal}th,td{color:#000}.prn{display:block}
+@page{margin:14mm;@bottom-center{content:"Employee Exam System — صفحة " counter(page)}}}
+
+/* ===== Reference look ===== */
+body{background:radial-gradient(1100px 600px at 80% -10%,rgba(37,99,235,.25),transparent 60%),radial-gradient(900px 600px at 0% 100%,rgba(139,92,246,.14),transparent 60%),#070d24}
+.card,.panel{background:linear-gradient(160deg,#101b3c,#0b1330);border:1px solid #223463;border-radius:18px;box-shadow:0 0 24px -10px rgba(59,130,246,.45)}
+.sidebar{background:linear-gradient(180deg,#0c1533,#0a1028);border-inline-end:1px solid #1d2b4a;display:flex;flex-direction:column}
+.sidebar .nav{display:flex;flex-direction:column;gap:2px}
+.nav a{padding:11px 12px;border-radius:12px;color:#c7d2ee}
+.nav a.active{background:linear-gradient(90deg,#1d6ff2,#2b8cff);color:#fff;box-shadow:0 0 18px rgba(43,140,255,.55)}
+.nav a:hover:not(.active){background:rgba(255,255,255,.06);color:#fff}
+.owner{margin-top:auto;border:1.5px solid #b8860b;border-radius:14px;padding:12px;text-align:center;background:linear-gradient(160deg,rgba(245,179,66,.18),rgba(245,179,66,.04));box-shadow:0 0 18px -6px #f5b342;color:#F5B342}
+.owner b{display:block;font-size:14px}.owner small{color:#d9b25e}
+.sb-logo{display:flex;justify-content:center;margin:2px 0 10px}
+.mainWrap{flex:1;min-width:0}.mainWrap .main{max-width:1500px}
+.hdr{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid #1d2b4a;background:rgba(9,16,40,.8);backdrop-filter:blur(10px);position:sticky;top:0;z-index:15}
+.hdr-t b{display:block;font-size:19px;font-weight:800}.hdr-t small{color:var(--muted);font-size:12px}
+.srch{position:relative;flex:1;max-width:520px;margin:0 auto}
+.srch input{width:100%;border-radius:99px;padding:10px 18px;background:#0e1a3d;border:1px solid #223463}
+.sres{display:none;position:absolute;top:44px;right:0;left:0;background:#0e1a3d;border:1px solid #223463;border-radius:14px;padding:6px;z-index:30;box-shadow:0 14px 30px rgba(0,0,0,.5)}
+.sres a{display:block;padding:8px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:13px}.sres a:hover{background:#1b2c5c}.sres .sh{color:var(--muted);font-size:11px;padding:6px 10px 2px}
+.bell{position:relative;background:#0e1a3d;border:1px solid #223463;border-radius:99px;width:42px;height:42px;font-size:18px;color:#fff}
+.bb{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;display:none;align-items:center;justify-content:center}
+.usr{display:flex;align-items:center;gap:10px}.usr b{display:block;font-size:13px}.usr small{color:var(--muted);font-size:11px}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:linear-gradient(135deg,#2563eb,#8b5cf6);color:#fff}
+.kg4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.kb{position:relative;border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;border:1.5px solid var(--c);background:linear-gradient(135deg,color-mix(in srgb,var(--c) 24%,#0c1531),#0c1531 75%);box-shadow:0 0 22px -6px var(--c)}
+.kb .ci{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:25px;background:color-mix(in srgb,var(--c) 30%,transparent);flex-shrink:0}
+.kb .n{font-size:30px;font-weight:800;line-height:1.1}.kb .t{font-size:13px;color:#cbd5e1}.kb .sp2{margin-right:auto}
+.gr{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.ph h3{margin:0;font-size:16px}
+.lg{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:5px 0}.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:8px}
+.tp{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px}.tp:first-child{background:rgba(255,255,255,.05)}.tp .rk{width:26px;text-align:center;font-weight:800;color:var(--muted)}
+.tp .nm{flex:1;font-size:13px;line-height:1.3}.tp .nm small{color:var(--muted);display:block;font-size:11px}
+.sp{padding:3px 12px;border-radius:99px;font-weight:700;font-size:13px;background:#1d4ed8;color:#fff}.sp.g{background:#15803d}
+.ir{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.04);margin-bottom:8px;font-size:13px}.ir small{display:block;color:var(--muted)}
+.ir .ii{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;background:rgba(255,255,255,.07)}.ir .ip{margin-right:auto;padding:3px 12px;border-radius:99px;font-weight:700;color:#fff}
+.qg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qb{border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 18%,#0b1330);color:#fff;font-family:inherit;font-weight:700;font-size:13px}.qb small{display:block;color:#94a3b8;font-weight:400;font-size:11px}.qb:hover{box-shadow:0 0 16px -4px var(--c)}
+.dsel{background:#0e1a3d;border:1px solid #223463;border-radius:12px;padding:8px 12px}
+@media (max-width:1200px){.gr{grid-template-columns:1fr 1fr}.kg4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:800px){.gr,.kg4{grid-template-columns:1fr}.hdr-t,.usr div{display:none}.hdr{padding:10px 12px}}
+
+/* KPI cards fit */
+.kg4{gap:14px}
+.kb{min-height:118px;padding:14px 16px;gap:12px;overflow:hidden}
+.kb .ci{width:48px;height:48px;font-size:23px}
+.kb .tx{flex:1 1 0;min-width:0}
+.kb .n{font-size:28px;white-space:nowrap}
+.kb .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kb .dd{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.kb .dl{display:inline;font-size:11px}
+.kb{position:relative}.kb .sp2{position:absolute;left:14px;top:16px;width:36%;max-width:130px;min-width:70px;margin:0;pointer-events:none}
+.kb .sp2 svg{width:100%;height:46px;display:block}
+@media (max-width:520px){.kb{flex-wrap:wrap}.kb .sp2{position:static;flex:1 1 100%;width:100%;max-width:none}.kb .sp2 svg{height:40px}}
 </style>
 </head>
 <body>
@@ -174,7 +253,7 @@ let lang='ar';
 try{ const saved=localStorage.getItem('eesLang'); if(saved==='ar'||saved==='en') lang=saved; }catch(e){}
 const DICT={
   ar:{
-    nav_dashboard:'لوحة التحكم', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
+    nav_dashboard:'لوحة التحكم', nav_reports:'التقارير والتحليلات', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
     nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'إدارة الاختبارات',
     nav_review_results:'مراجعة الإجابات', nav_grading:'تصحيح الاختبار', nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
     nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
@@ -184,7 +263,7 @@ const DICT={
     save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل'
   },
   en:{
-    nav_dashboard:'Dashboard', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
+    nav_dashboard:'Dashboard', nav_reports:'Reports & Analytics', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
     nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Manage Exams',
     nav_review_results:'Review Answers', nav_grading:'Grade Exams', nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
     nav_my_exams:'My Exams', nav_my_results:'My Results', nav_my_profile:'Edit My Profile', nav_suggest_question:'Suggest a Question',
@@ -248,6 +327,7 @@ function attachSelectAll(allId,chkClass){
 
 // ---------- notifications (sender gets notified when employee sees a message) ----------
 let notifUnsub=null, notifKeyActive=null, notifList=[], notifUnread=0;
+let empMsgUnread=0, empMsgUnsub=null;
 function notifKey(){ const s=state.session; return s&&s.role==='leader'? s.id : 'admin'; }
 function showToast(msg){
   const t=document.createElement('div'); t.textContent=msg;
@@ -255,9 +335,39 @@ function showToast(msg){
   document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
 }
 function updateNavBadge(){
-  const a=document.querySelector('.nav a[href="#messages"]'); if(!a) return;
-  const old=a.querySelector('#msgBadge'); if(old) old.remove();
-  if(notifUnread>0){ const sp=document.createElement('span'); sp.id='msgBadge'; sp.className='badge bad'; sp.style.marginRight='6px'; sp.textContent=notifUnread; a.appendChild(sp); }
+  const bb=document.getElementById('bellBadge'); if(bb){ bb.textContent=notifUnread||''; bb.style.display=notifUnread?'flex':'none'; }
+  // Admin / leader messages badge
+  const a=document.querySelector('.nav a[href="#messages"]');
+  if(a){
+    const old=a.querySelector('#msgBadge'); if(old) old.remove();
+    if(notifUnread>0){ const sp=document.createElement('span'); sp.id='msgBadge'; sp.className='badge bad'; sp.style.marginInlineStart='6px'; sp.textContent=notifUnread; a.appendChild(sp); }
+  }
+  // Employee messages unread badge
+  const ea=document.querySelector('.nav a[href="#emp-messages"]');
+  if(ea){
+    const old=ea.querySelector('#empMsgBadge'); if(old) old.remove();
+    if(empMsgUnread>0){ const sp=document.createElement('span'); sp.id='empMsgBadge'; sp.className='badge bad'; sp.style.marginInlineStart='6px'; sp.textContent=empMsgUnread; ea.appendChild(sp); }
+  }
+}
+async function countEmpUnreadMessages(){
+  const s=state.session; if(!s||s.role!=='employee'||!db) return 0;
+  try{
+    const [messages, allEmps]=await Promise.all([listAll('messages'), listAll('employees')]);
+    const meNow=allEmps.find(e=>e.id===s.id)||s;
+    const mine=messages.filter(m=>!deletedByOf(m,s.id) && (m.toEmployeeId===s.id||m.toEmployeeId==='all'||(m.toEmployeeId==='team'&&m.toTeamId&&m.toTeamId===meNow.teamLeaderId)));
+    return mine.filter(m=>!seenAtOf(m,s.id)).length;
+  }catch(e){ console.error(e); return 0; }
+}
+async function refreshEmpMsgBadge(){
+  if(!state.session || state.session.role!=='employee'){ empMsgUnread=0; updateNavBadge(); return; }
+  empMsgUnread=await countEmpUnreadMessages();
+  updateNavBadge();
+}
+function stopEmpMsgListener(){ if(empMsgUnsub){ try{empMsgUnsub();}catch(e){} } empMsgUnsub=null; }
+function ensureEmpMsgListener(){
+  const s=state.session; if(!s||s.role!=='employee'||!db){ stopEmpMsgListener(); return; }
+  if(empMsgUnsub) return;
+  empMsgUnsub=db.collection('messages').onSnapshot(()=>{ refreshEmpMsgBadge(); }, err=>console.error(err));
 }
 function renderNotifBox(){
   const box=document.getElementById('notifBox'); if(!box) return;
@@ -298,22 +408,48 @@ function filterResultsForLeader(results,emps,exams){
 
 function render(){
   const root=document.getElementById('root');
-  if(!state.session){ root.innerHTML=loginView(); attachLogin(); return; }
+  if(!state.session){ root.innerHTML=loginView(); attachLogin(); stopEmpMsgListener(); return; }
   root.innerHTML = shell();
   attachShellNav();
-  ensureNotifListener(); updateNavBadge();
+  ensureNotifListener();
+  ensureEmpMsgListener();
+  updateNavBadge();
+  if(state.session.role==='employee') refreshEmpMsgBadge();
   routeRender();
 }
 
+const NAVI={dashboard:'🏠',reports:'📄',questions:'❓','employees-teams':'👥',assign:'📌',results:'📊','wrong-answers':'❌','review-exams':'📝','review-results':'🔍',grading:'✍️',messages:'🔔',suggestions:'💡',settings:'⚙️','emp-home':'📝','emp-results':'📊','emp-profile':'👤','emp-messages':'🔔','suggest-question':'💡'};
+let searchA=null, pendingExport=null;
+function attachHeader(){
+  searchA=null;
+  const bell=document.getElementById('bellBtn'); if(bell) bell.onclick=()=>{state.view='messages'; routeRender();};
+  updateNavBadge();
+  const inp=document.getElementById('gSearch'), box=document.getElementById('sRes'); if(!inp) return;
+  inp.onfocus=async()=>{ if(!searchA) searchA=await loadA(); };
+  inp.oninput=async()=>{
+    const q=inp.value.trim().toLowerCase(); if(!q){box.style.display='none';return;}
+    if(!searchA) searchA=await loadA(); const A=searchA;
+    const emps=A.emps.filter(e=>[e.name,e.empId,e.dept].join(' ').toLowerCase().includes(q)).slice(0,5);
+    const exs=A.exams.filter(x=>(x.name||'').toLowerCase().includes(q)).slice(0,5);
+    const ds=[...new Set(A.empAll.map(e=>e.dept).filter(Boolean))].filter(d=>d.toLowerCase().includes(q)).slice(0,5);
+    const sec=(t,a,k,f)=>a.length?`<div class="sh">${t}</div>`+a.map(x=>`<a href="#" data-sk="${k}" data-sv="${esc(f(x)[1])}">${esc(f(x)[0])}</a>`).join(''):'';
+    box.innerHTML=(sec('موظفون',emps,'emp',e=>[e.name+(e.dept?' — '+e.dept:''),e.id])+sec('اختبارات',exs,'exam',x=>[x.name,x.id])+sec('أقسام',ds,'dept',d=>[d,d]))||'<div class="sh">لا توجد نتائج</div>';
+    box.style.display='block';
+    box.querySelectorAll('[data-sk]').forEach(a=>a.onclick=ev=>{ev.preventDefault(); const k=a.dataset.sk; box.style.display='none'; inp.value='';
+      if(k==='emp') state.view='employees-teams'; else if(k==='exam') state.view='review-exams'; else {rep.dept=a.dataset.sv; rep.tab='department'; state.view='reports';} routeRender();});
+  };
+  document.onclick=e=>{ if(box.isConnected && !e.target.closest('.srch')) box.style.display='none'; };
+}
 function shell(){
   const s=state.session;
   const adminLinks=[
-    ['dashboard',T('nav_dashboard')],['questions',T('nav_questions')],
+    ['dashboard',T('nav_dashboard')],['reports',T('nav_reports')],['questions',T('nav_questions')],
     ['employees-teams',T('nav_employees_teams')],['assign',T('nav_assign')],['results',T('nav_results')],['wrong-answers',T('nav_wrong')],
     ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['grading',T('nav_grading')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
   ];
   const empLinks=[['emp-home',T('nav_my_exams')],['emp-results',T('nav_my_results')],['emp-profile',T('nav_my_profile')],['emp-messages',T('nav_messages')],['suggest-question',T('nav_suggest_question')]];
-  const leaderLinks=adminLinks.filter(l=>l[0]!=='dashboard');
+  // Leaders: same as admin except dashboard + settings
+  const leaderLinks=adminLinks.filter(l=>l[0]!=='dashboard' && l[0]!=='settings');
   const links = s.role==='admin'?adminLinks:(s.role==='leader'?leaderLinks:empLinks);
   return `<div class="app">
     <div class="topbar">
@@ -323,13 +459,22 @@ function shell(){
     </div>
     <div class="sidebar" id="sidebar">
       <button class="closeBtn" id="closeMenu">✕</button>
-      <h2>Employee Exam System</h2>
+      <div class="sb-logo"><svg width="64" height="52" viewBox="0 0 64 52"><path d="M32 4 4 18l28 14 28-14z" fill="#2b8cff"/><path d="M14 26v12c0 4 8 8 18 8s18-4 18-8V26l-18 9z" fill="#fff"/><path d="M58 20v18" stroke="#2b8cff" stroke-width="3"/></svg></div>
       <div class="user">${s.role==='admin'?T('admin_label'):(s.role==='leader'?'👑 '+s.name:s.name)}</div>
-      <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${l[1]}</a>`).join('')}
+      <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${NAVI[l[0]]||'•'} ${l[1]}</a>`).join('')}
       <a href="#" id="langBtnSide" style="color:var(--brand)">${T('toggle_lang')}</a>
       <a href="#logout" style="color:var(--bad)">${T('logout')}</a></div>
+      ${s.role==='admin'?'<div class="owner">👑<b>منطقة المالك</b><small>وصول كامل</small></div>':''}
     </div>
-    <div class="main" id="main"></div>
+    <div class="mainWrap">
+      <header class="hdr">
+        <div class="hdr-t"><b>نظام اختبارات الموظفين</b><small>قيّم • حلّل • طوّر</small></div>
+        ${s.role!=='employee'?'<div class="srch"><input id="gSearch" placeholder="ابحث عن موظف أو اختبار أو قسم..." autocomplete="off"><div id="sRes" class="sres"></div></div>':'<div style="flex:1"></div>'}
+        ${s.role!=='employee'?'<button class="bell" id="bellBtn">🔔<span class="bb" id="bellBadge"></span></button>':''}
+        <div class="usr"><span class="av">${esc((s.name||'م').trim().charAt(0))}</span><div><b>${esc(s.role==='admin'?T('admin_label'):s.name)}</b><small>${s.role==='admin'?'مالك النظام':(s.role==='leader'?'قائد فريق':'موظف')}</small></div></div>
+      </header>
+      <div class="main" id="main"></div>
+    </div>
   </div>`;
 }
 function attachShellNav(){
@@ -341,6 +486,7 @@ function attachShellNav(){
   const toggleLang=(e)=>{ if(e) e.preventDefault(); lang = lang==='ar'?'en':'ar'; applyLangToDocument(); render(); };
   const lb1=document.getElementById('langBtnTop'); if(lb1) lb1.onclick=toggleLang;
   const lb2=document.getElementById('langBtnSide'); if(lb2) lb2.onclick=toggleLang;
+  attachHeader();
 }
 
 function loginView(){
@@ -449,17 +595,37 @@ function attachLogin(){
 
 window.addEventListener('hashchange', ()=>{
   const v=(location.hash||'#').slice(1);
-  if(v==='logout'){ stopNotifListener(); state.session=null; state.view='login'; location.hash=''; render(); return; }
+  if(v==='logout'){ stopNotifListener(); stopEmpMsgListener(); clearSession(); state.session=null; state.view='login'; location.hash=''; render(); return; }
   if(v) state.view=v;
   render();
 });
 
+const SESS_KEY='eesSess', SESS_TTL=24*60*60*1000;
+function saveSession(){ try{ if(state.session) localStorage.setItem(SESS_KEY,JSON.stringify({s:state.session,v:state.view,t:Date.now()})); }catch(e){} }
+function clearSession(){ try{ localStorage.removeItem(SESS_KEY); sessionStorage.removeItem(SESS_KEY); }catch(e){} }
+async function restoreSession(){
+  try{
+    const raw=localStorage.getItem(SESS_KEY)||sessionStorage.getItem(SESS_KEY); if(!raw) return;
+    const {s:sess,v,t}=JSON.parse(raw); if(!sess||!sess.role) return;
+    if(t && Date.now()-t>SESS_TTL){ clearSession(); return; }
+    state.session=sess;
+    // refresh the stored profile from the database; on network errors keep the saved session (never log out because of a failed request)
+    try{
+      if(db && sess.role==='employee'){ const d=await db.collection('employees').doc(sess.id).get(); if(d.exists) state.session={role:'employee',id:sess.id,...d.data()}; else { clearSession(); state.session=null; return; } }
+      else if(db && sess.role==='leader'){ const d=await db.collection('teamLeaders').doc(sess.id).get(); if(d.exists) state.session={role:'leader',id:sess.id,name:d.data().name}; else { clearSession(); state.session=null; return; } }
+    }catch(e){ console.error(e); }
+    const first={admin:'dashboard',leader:'grading',employee:'emp-home'}[sess.role];
+    state.view=(!v||v==='login'||v==='take-exam')?first:v;
+  }catch(e){ console.error(e); }
+}
 async function routeRender(){
+  saveSession();
   const main=document.getElementById('main');
   main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
   if(state.session && state.session.role==='leader' && (state.view==='dashboard'||!state.view)) state.view='grading';
   const v=state.view;
-  if(v==='dashboard') main.innerHTML=await dashboardView();
+  if(v==='dashboard'){ main.innerHTML=await dashboardView(); attachDashboard(); }
+  else if(v==='reports'){ main.innerHTML=await reportsView(); attachReports(); }
   else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
   else if(v==='employees-teams'){ main.innerHTML=await employeesTeamsView(); attachEmployeesTeams(); }
   else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
@@ -468,7 +634,7 @@ async function routeRender(){
   else if(v==='review-exams'){ main.innerHTML=await reviewExamsView(); attachReviewExams(); }
   else if(v==='grading'){ main.innerHTML=await gradingView(); attachGrading(); }
   else if(v==='review-results'){ main.innerHTML=await reviewResultsView(); attachReviewResults(); }
-  else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
+  else if(v==='settings'){ if(state.session.role!=='admin'){ main.innerHTML='<p style="color:var(--muted)">غير مصرح.</p>'; } else { main.innerHTML=settingsView(); attachSettings(); } }
   else if(v==='messages'){ main.innerHTML=await messagesView(); attachMessages(); }
   else if(v==='emp-messages'){ main.innerHTML=await empMessagesView(); attachEmpMessages(); }
   else if(v==='suggestions'){ main.innerHTML=await suggestionsView(); attachSuggestionsAdmin(); }
@@ -480,8 +646,256 @@ async function routeRender(){
   else main.innerHTML=await dashboardView();
 }
 
-// ---------- ADMIN: dashboard ----------
+
+// ================= Analytics engine =================
+const DAY=864e5;
+let dash={p:'30d',from:'',to:'',top:5,q:'',sort:'date',asc:false,page:0}, dashCtx=null;
+let rep={p:'30d',from:'',to:'',dept:'',team:'',emp:'',exam:'',status:'',min:'',max:'',att:'',tab:'employee'};
+const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const avgOf=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0;
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const fdate=t=>t?new Date(t).toLocaleDateString('ar-EG'):'-';
+function rangeOf(f){const now=Date.now(); if(f.p==='custom') return [f.from?new Date(f.from).getTime():0, f.to?new Date(f.to).getTime()+DAY-1:now]; return [now-({'7d':7,'30d':30,'3m':90,'6m':180,'12m':365}[f.p]||30)*DAY, now];}
+async function loadA(){
+  const [emps0,exams0,res0,asg0,qs,leaders]=await Promise.all(['employees','exams','results','assignments','questions','teamLeaders'].map(n=>listAll(n)));
+  const L=isLeaderSession(), me=L?state.session.id:null;
+  const emps=L?emps0.filter(e=>e.teamLeaderId===me):emps0;
+  const exams=ownExams(exams0);
+  const results=filterResultsForLeader(res0,emps0,exams0);
+  const asg=L?asg0.filter(a=>exams.some(x=>x.id===a.examId)||emps.some(e=>e.id===a.employeeId)):asg0;
+  return {emps,empAll:emps0,exams,examAll:exams0,results,asg,qs,leaders};
+}
+// final result = latest attempt per (employee, exam); employee counted once
+function finals(rs){const m={}; rs.forEach(r=>{const k=r.employeeId+'|'+r.examId; if(!m[k]||(r.endTime||0)>=(m[k].endTime||0)) m[k]=r;}); return Object.values(m);}
+function kpi(A,from,to){
+  const inR=A.results.filter(r=>r.endTime>=from&&r.endTime<=to), fin=finals(inR), pass=fin.filter(r=>r.passed).length;
+  const byE={}; fin.forEach(r=>(byE[r.employeeId]=byE[r.employeeId]||[]).push(r));
+  let pe=0,fe=0; Object.values(byE).forEach(l=>l.every(r=>r.passed)?pe++:fe++);
+  return {n:fin.length,pass,rate:pct(pass,fin.length),avg:avgOf(fin.map(r=>r.percent||0)),pe,fe,att:inR.length,fin,inR};
+}
+function delta(c,p){ if(!p&&!c) return '<span class="dl">—</span>'; if(!p) return '<span class="dl up">▲ جديد</span>'; const d=Math.round((c-p)/p*100); return `<span class="dl ${d>=0?'up':'dn'}">${d>=0?'▲':'▼'} ${Math.abs(d)}%</span>`; }
+function ring(v,c){const r=22,C=2*Math.PI*r; return `<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="${r}" fill="none" stroke="#0B1120" stroke-width="6"/><circle cx="28" cy="28" r="${r}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(C*v/100).toFixed(1)} ${C}" transform="rotate(-90 28 28)" style="filter:drop-shadow(0 0 4px ${c})"/><text x="28" y="32" text-anchor="middle" font-size="12" font-weight="700" fill="#F8FAFC">${v}%</text></svg>`;}
+function lineChart(series,lbls){
+  const W=600,H=220,P=30,n=lbls.length; if(!n) return '';
+  const x=i=>P+(n>1?i*(W-2*P-24)/(n-1):(W-2*P)/2), y=v=>H-P-(v/100)*(H-2*P), base=y(0);
+  let g='<defs>'+series.map((s,k)=>`<linearGradient id="ar${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.c}" stop-opacity=".35"/><stop offset="1" stop-color="${s.c}" stop-opacity="0"/></linearGradient>`).join('')+'</defs>';
+  g+=[0,20,40,60,80,100].map(t=>`<line x1="${P}" x2="${W-P}" y1="${y(t)}" y2="${y(t)}" stroke="#1d2b4a"/><text x="2" y="${y(t)+4}" fill="#94A3B8" font-size="10">${t}%</text>`).join('');
+  series.forEach((s,k)=>{
+    let seg=[]; const segs=[]; s.v.forEach((v,i)=>{ if(v==null){ if(seg.length) segs.push(seg); seg=[]; } else seg.push([i,v]); }); if(seg.length) segs.push(seg);
+    segs.forEach(sg=>{ const d=sg.map((p,i)=>(i?'L':'M')+x(p[0]).toFixed(1)+' '+y(p[1]).toFixed(1)).join('');
+      g+=`<path d="${d} L${x(sg[sg.length-1][0])} ${base} L${x(sg[0][0])} ${base}Z" fill="url(#ar${k})"/><path d="${d}" fill="none" stroke="${s.c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px ${s.c})"/>`+sg.map(p=>`<circle cx="${x(p[0])}" cy="${y(p[1])}" r="3.5" fill="#0b1330" stroke="${s.c}" stroke-width="2"/>`).join(''); });
+    const last=[...s.v.keys()].reverse().find(i=>s.v[i]!=null); if(last!=null) g+=`<rect x="${x(last)-24}" y="${y(s.v[last])-30}" width="48" height="20" rx="10" fill="${s.c}"/><text x="${x(last)}" y="${y(s.v[last])-16}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${s.v[last]}%</text>`;
+  });
+  const st=Math.ceil(n/6); g+=lbls.map((l,i)=>i%st?'':`<text x="${x(i)}" y="${H-8}" fill="#94A3B8" font-size="10" text-anchor="middle">${l}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${g}</svg>`;
+}
+function donut(items,top,sub){
+  const r=62,C=2*Math.PI*r,t=items.reduce((a,i)=>a+i.v,0)||1; let off=0;
+  const segs=items.map(i=>{const len=C*i.v/t; const e=`<circle cx="80" cy="80" r="${r}" fill="none" stroke="${i.c}" stroke-width="22" stroke-dasharray="${len.toFixed(1)} ${(C-len).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 80 80)"/>`; off+=len; return e;}).join('');
+  return `<svg viewBox="0 0 160 160" width="100%" style="max-width:190px"><circle cx="80" cy="80" r="${r}" fill="none" stroke="#0B1120" stroke-width="22"/>${segs}<text x="80" y="82" text-anchor="middle" font-size="21" font-weight="800" fill="#F8FAFC">${top}</text><text x="80" y="98" text-anchor="middle" font-size="9" fill="#94A3B8">${sub}</text></svg>`;
+}
+function spark(v,c){
+  const ok=v.filter(x=>x!=null); if(ok.length<2) return ''; const mn=Math.min(...ok),mx=Math.max(...ok),W=110,H=44,n=v.length;
+  const pts=v.map((x,i)=>x==null?null:[i*(W/(n-1)),H-4-((x-mn)/((mx-mn)||1))*(H-8)]).filter(Boolean);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join('');
+  return `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${d} L${pts[pts.length-1][0].toFixed(1)} ${H} L${pts[0][0].toFixed(1)} ${H}Z" fill="${c}" opacity=".18"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" style="filter:drop-shadow(0 0 3px ${c})"/></svg>`;
+}
+function trendData(A,from,to){
+  const span=to-from, step=span<=31*DAY?DAY:span<=130*DAY?7*DAY:30*DAY, start=Math.max(from,to-366*DAY), nb=Math.min(60,Math.max(1,Math.ceil((to-start)/step)));
+  const a=[],r=[],l=[],ed=[];
+  for(let i=0;i<nb;i++){const b0=start+i*step,b1=b0+step; ed.push(b0); const fin=finals(A.results.filter(x=>x.endTime>=b0&&x.endTime<b1));
+    a.push(fin.length?avgOf(fin.map(x=>x.percent||0)):null); r.push(fin.length?pct(fin.filter(x=>x.passed).length,fin.length):null);
+    const d=new Date(b0); l.push(step>=30*DAY?(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2):d.getDate()+'/'+(d.getMonth()+1));}
+  return {series:[{c:'#3b82f6',v:a},{c:'#f59e0b',v:r}],lbls:l,edges:ed,step};
+}
+function deptStats(A,fin){
+  const emp=id=>A.empAll.find(e=>e.id===id)||{}, m={};
+  const get=d=>m[d]=m[d]||{dept:d,emps:new Set(),exams:new Set(),r:[]};
+  A.emps.forEach(e=>get(e.dept||'بدون قسم').emps.add(e.id));
+  fin.forEach(r=>{const o=get(emp(r.employeeId).dept||'بدون قسم'); o.exams.add(r.examId); o.r.push(r);});
+  return Object.values(m).map(o=>({dept:o.dept,emps:o.emps.size,exams:o.exams.size,n:o.r.length,avg:avgOf(o.r.map(r=>r.percent||0)),rate:pct(o.r.filter(r=>r.passed).length,o.r.length),fail:o.r.length?100-pct(o.r.filter(r=>r.passed).length,o.r.length):0,
+    best:(o.r.slice().sort((a,b)=>b.percent-a.percent)[0]||{}).employeeId,worst:(o.r.slice().sort((a,b)=>a.percent-b.percent)[0]||{}).employeeId})).sort((a,b)=>b.avg-a.avg);
+}
+function empStats(A,fin,inR){
+  const eb={}; fin.forEach(r=>(eb[r.employeeId]=eb[r.employeeId]||[]).push(r));
+  return A.emps.map(e=>{const l=(eb[e.id]||[]).sort((a,b)=>a.endTime-b.endTime), sc=l.map(r=>r.percent||0), dur=inR.filter(r=>r.employeeId===e.id&&r.durationSec).map(r=>r.durationSec), ld=A.leaders.find(x=>x.id===e.teamLeaderId);
+    return {id:e.id,empId:e.empId,name:e.name,dept:e.dept||'-',team:ld?ld.name:(e.team||'-'),leaderId:e.teamLeaderId,asg:A.asg.filter(a=>a.employeeId===e.id).length,done:l.length,pass:l.filter(r=>r.passed).length,fail:l.filter(r=>!r.passed).length,
+      avg:avgOf(sc),hi:sc.length?Math.max(...sc):0,lo:sc.length?Math.min(...sc):0,rate:pct(l.filter(r=>r.passed).length,l.length),dur:dur.length?Math.round(avgOf(dur)/6)/10:0,imp:sc.length>1?sc[sc.length-1]-sc[0]:null};});
+}
+function examStats(A,fin,inR){
+  return A.exams.map(x=>{const l=fin.filter(r=>r.examId===x.id), sc=l.map(r=>r.percent||0), att=inR.filter(r=>r.examId===x.id), asg=new Set(A.asg.filter(a=>a.examId===x.id).map(a=>a.employeeId)), done=new Set(l.map(r=>r.employeeId)), dur=att.filter(r=>r.durationSec).map(r=>r.durationSec);
+    const pn=l.filter(r=>r.passed).length;
+    return {id:x.id,name:x.name,asg:asg.size,done:done.size,ns:Math.max(0,asg.size-done.size),n:l.length,att:att.length,avg:avgOf(sc),hi:sc.length?Math.max(...sc):0,lo:sc.length?Math.min(...sc):0,rate:pct(pn,l.length),fail:l.length?100-pct(pn,l.length):0,comp:pct(done.size,asg.size),dur:dur.length?Math.round(avgOf(dur)/6)/10:0,active:x.active,
+      deadline:A.asg.filter(a=>a.examId===x.id&&a.deadline).map(a=>a.deadline).sort()[0]||''};});
+}
+function questionStats(A,rs){
+  const m={};
+  rs.forEach(r=>{const ex=A.examAll.find(x=>x.id===r.examId); if(!ex) return; (ex.questionIds||[]).forEach(qid=>{const q=A.qs.find(z=>z.id===qid); if(!q) return; const v=r.answers?r.answers[qid]:undefined; if(v===undefined||v===null||v==='') return;
+    const o=m[qid]=m[qid]||{id:qid,text:q.text,topic:q.category||'-',tot:0,ok:0}; o.tot++; if(!isAnswerWrong(q,v)) o.ok++;});});
+  return Object.values(m).map(o=>{const c=pct(o.ok,o.tot); return {...o,bad:o.tot-o.ok,c,w:100-c,diff:c<40?'صعب':c<75?'متوسط':'سهل',note:c===100?'أجاب الجميع صحيحًا':c<30?'يحتاج مراجعة / قد يكون غير واضح':c<40?'صعب':''};}).sort((a,b)=>a.c-b.c);
+}
+function topTable(rows,N){return `<div class="table-wrap"><table><tr><th>#</th><th>ID</th><th>الموظف</th><th>القسم</th><th>الفريق</th><th>المتوسط</th><th>النجاح</th></tr>${rows.slice(0,N).map((e,i)=>`<tr><td>${i+1}</td><td>${esc(e.empId)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.team)}</td><td>${e.avg}%</td><td>${e.rate}%</td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">لا توجد بيانات.</td></tr>'}</table></div>`;}
+function periodBar(f,idp){return `<div class="no-print" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${[['7d','7 أيام'],['30d','30 يومًا'],['3m','3 أشهر'],['6m','6 أشهر'],['12m','12 شهرًا'],['custom','مخصص']].map(([k,t])=>`<button class="pill ${f.p===k?'on':''}" data-${idp}="${k}">${t}</button>`).join('')}
+  ${f.p==='custom'?`<input type="date" data-${idp}from value="${f.from}" style="padding:4px 8px"> <input type="date" data-${idp}to value="${f.to}" style="padding:4px 8px">`:''}</div>`;}
+
+// ================= Dashboard =================
 async function dashboardView(){
+  const A=await loadA(), [from,to]=rangeOf(dash), len=to-from, K=kpi(A,from,to), P=kpi(A,from-len-1,from-1);
+  const es=examStats(A,K.fin,K.inR), ps=empStats(A,K.fin,K.inR).filter(e=>e.done).sort((a,b)=>b.avg-a.avg||b.rate-a.rate);
+  const ongoing=es.filter(e=>e.active&&e.asg>e.done).length;
+  const newEx=A.exams.filter(x=>x.createdAt>=from&&x.createdAt<=to).length, prevEx=A.exams.filter(x=>x.createdAt>=from-len-1&&x.createdAt<from).length;
+  const T=trendData(A,from,to), D=deptStats(A,K.fin), pal=['#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444'];
+  const actE=T.edges.map(b0=>{const l=A.results.filter(r=>r.endTime>=b0&&r.endTime<b0+T.step); return l.length?new Set(l.map(r=>r.employeeId)).size:null;});
+  const exC=T.edges.map(b0=>A.exams.filter(x=>x.createdAt<b0+T.step).length);
+  const kb=(c,ic,n,t,d,sp)=>`<div class="kb" style="--c:${c}"><div class="ci">${ic}</div><div class="tx"><div class="n">${n}</div><div class="t">${t}</div><div class="dd">${d}</div></div><div class="sp2">${sp}</div></div>`;
+  const cmp=' <span class="dl">مقارنة بالسابقة</span>';
+  const cat={}; A.exams.forEach(x=>(x.questionIds||[]).forEach(id=>{const q=A.qs.find(z=>z.id===id); const k=(q&&q.category)||'غير مصنف'; cat[k]=(cat[k]||0)+1;}));
+  const cats=Object.entries(cat).sort((a,b)=>b[1]-a[1]).slice(0,5), ctot=cats.reduce((a,c)=>a+c[1],0);
+  const attn=ps.filter(e=>e.avg<60).length, diff=P.n?K.avg-P.avg:null;
+  const lst=(t,a,f)=>`<div class="card"><h3>${t}</h3>${a.map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${esc(e.name)}</span><strong style="color:var(--brand)">${f(e)}</strong></div>`).join('')||'<span style="color:var(--muted)">لا توجد بيانات.</span>'}</div>`;
+  const hard=[...es].filter(e=>e.n).sort((a,b)=>a.avg-b.avg).slice(0,3), easy=[...es].filter(e=>e.n).sort((a,b)=>b.avg-a.avg).slice(0,3), most=[...es].sort((a,b)=>b.att-a.att).slice(0,3), low=[...es].filter(e=>e.n).sort((a,b)=>a.rate-b.rate).slice(0,3);
+  const sm=(ic,l,v,d)=>`<div class="kc"><div><div class="l">${ic} ${l}</div><div class="v">${v}</div>${d}</div></div>`;
+  dashCtx={A,K,ps};
+  const opts=[['7d','آخر 7 أيام'],['30d','آخر 30 يومًا'],['3m','آخر 3 أشهر'],['6m','آخر 6 أشهر'],['12m','آخر 12 شهرًا'],['custom','نطاق مخصص']];
+  return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div style="display:flex;gap:12px;align-items:center"><span style="font-size:34px">📊</span><div><h1 style="margin:0">لوحة التحكم</h1><div style="color:var(--muted);font-size:13px">مرحبًا بعودتك، ${esc(state.session.name||'المدير')}! هذه نظرة عامة على النظام.</div></div></div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><select id="dpSel" class="dsel">${opts.map(o=>`<option value="${o[0]}" ${dash.p===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>${dash.p==='custom'?`<input type="date" data-dpfrom value="${dash.from}" class="dsel"> <input type="date" data-dpto value="${dash.to}" class="dsel">`:''}</div></div>
+  <div class="kg4">
+    ${kb('#3b82f6','👥',A.emps.length,'إجمالي الموظفين','<span class="dl">'+ps.length+' لديهم نتائج</span>',spark(actE,'#3b82f6'))}
+    ${kb('#14b8a6','📝',A.exams.length,'إجمالي الاختبارات',delta(newEx,prevEx)+' <span class="dl">في الفترة</span>',spark(exC,'#14b8a6'))}
+    ${kb('#8b5cf6','✅',K.rate+'%','نسبة النجاح',delta(K.rate,P.rate)+cmp,spark(T.series[1].v,'#8b5cf6'))}
+    ${kb('#f59e0b','🏆',K.avg+'%','متوسط الدرجات',delta(K.avg,P.avg)+cmp,spark(T.series[0].v,'#f59e0b'))}
+  </div>
+  <div class="kg">
+    ${sm('✅','الاختبارات المكتملة',K.n,delta(K.n,P.n)+cmp)}${sm('⏳','الاختبارات الجارية',ongoing,'<span class="dl">نشطة وفيها معلّقون</span>')}${sm('🏅','الموظفون الناجحون',K.pe,delta(K.pe,P.pe)+cmp)}${sm('⚠️','الموظفون الراسبون',K.fe,delta(K.fe,P.fe)+cmp)}
+  </div>
+  <div class="gr">
+    <div class="panel"><div class="ph"><h3>📈 نظرة عامة على الأداء</h3><small><span style="color:#3b82f6">●</span> المتوسط &nbsp;<span style="color:#f59e0b">●</span> نسبة النجاح</small></div>${K.n?lineChart(T.series,T.lbls):'<p style="color:var(--muted)">لا توجد نتائج في هذه الفترة.</p>'}</div>
+    <div class="panel"><div class="ph"><h3>👥 أداء الأقسام</h3></div>${D.length&&K.n?`<div style="text-align:center">${donut(D.slice(0,6).map((d,i)=>({v:Math.max(d.avg,1),c:pal[i]})),K.avg+'%','الأداء العام')}</div>`+D.slice(0,6).map((d,i)=>`<div class="lg"><span><i style="background:${pal[i]}"></i>${esc(d.dept)} <small style="color:var(--muted)">(${d.emps} موظف · ${d.exams} اختبار)</small></span><b>${d.avg}%</b></div>`).join(''):'<p style="color:var(--muted)">لا توجد بيانات.</p>'}</div>
+    <div class="panel"><div class="ph"><h3>🏆 أفضل الموظفين</h3><span>${[5,10,20].map(n=>`<button class="pill ${dash.top===n?'on':''}" data-top="${n}">${n}</button>`).join(' ')} <a href="#" data-vall style="color:#4f9dff;font-size:13px">عرض الكل ←</a></span></div>
+      <div style="max-height:330px;overflow-y:auto">${ps.slice(0,dash.top).map((e,i)=>`<div class="tp"><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="av" style="width:34px;height:34px;font-size:14px">${esc(e.name.charAt(0))}</span><div class="nm">${esc(e.name)}<small>${esc(e.dept)} · ${esc(e.team)}</small></div><span class="sp ${e.avg>=90?'g':''}">${e.avg}%</span></div>`).join('')||'<span style="color:var(--muted)">لا توجد بيانات.</span>'}</div></div>
+  </div>
+  <div class="gr">
+    <div class="panel"><div class="ph"><h3>🥧 تحليلات الاختبارات</h3><small style="color:var(--muted)">حسب موضوع الأسئلة</small></div>${cats.length?`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:150px;text-align:center">${donut(cats.map((c,i)=>({v:c[1],c:pal[i]})),A.exams.length,'إجمالي الاختبارات')}</div><div style="flex:1;min-width:150px">${cats.map((c,i)=>`<div class="lg"><span><i style="background:${pal[i]}"></i>${esc(c[0])}</span><b>${pct(c[1],ctot)}%</b></div>`).join('')}</div></div>`:'<p style="color:var(--muted)">لا توجد اختبارات بأسئلة مصنفة.</p>'}</div>
+    <div class="panel"><div class="ph"><h3>💡 رؤى رئيسية</h3><a href="#" data-rep="insights" style="color:#4f9dff;font-size:13px">كل الرؤى ←</a></div>
+      <div class="ir"><div class="ii">📈</div><div>${diff==null?'لا توجد فترة سابقة للمقارنة':diff>=0?'تحسّن الأداء':'انخفض الأداء'}<small>${diff==null?'':'متوسط الدرجات '+(diff>=0?'ارتفع':'انخفض')+' بمقدار '+Math.abs(diff)+' نقطة'}</small></div>${diff==null?'':`<span class="ip" style="background:${diff>=0?'#15803d':'#b91c1c'}">${diff>=0?'+':''}${diff}%</span>`}</div>
+      <div class="ir"><div class="ii">👥</div><div>نسبة النجاح<small>${K.pass} من ${K.n} نتيجة نهائية ناجحة</small></div><span class="ip" style="background:#1d4ed8">${K.rate}%</span></div>
+      <div class="ir"><div class="ii">⚠️</div><div>يحتاجون انتباهًا<small>${attn} موظف متوسطهم أقل من 60%</small></div><span class="ip" style="background:#d97706">${attn}</span></div></div>
+    <div class="panel"><div class="ph"><h3>📄 تقارير سريعة</h3><a href="#" data-rep="employee" style="color:#4f9dff;font-size:13px">عرض الكل ←</a></div>
+      <div class="qg"><button class="qb" style="--c:#14b8a6" data-qx="xXlsx">📗 تصدير Excel<small>تقرير مفصل</small></button><button class="qb" style="--c:#ef4444" data-qx="xPdf">📕 تصدير PDF<small>تقرير رسمي</small></button><button class="qb" style="--c:#8b5cf6" data-qx="xPrint">🖨️ طباعة<small>صيغة قابلة للطباعة</small></button><button class="qb" style="--c:#3b82f6" data-qx="xPrint" data-tab="monthly">📊 التقرير الشهري<small>تحليلات</small></button></div></div>
+  </div>
+  <div class="g3">${lst('الأصعب (أقل متوسط)',hard,e=>e.avg+'%')}${lst('الأسهل (أعلى متوسط)',easy,e=>e.avg+'%')}${lst('الأكثر محاولات',most,e=>e.att)}${lst('أقل نسبة نجاح',low,e=>e.rate+'%')}
+    <div class="card"><h3>مؤشرات الاختبارات</h3><div style="font-size:13px;line-height:2">متوسط درجة الاختبار: <b>${K.avg}%</b><br>النجاح: <b>${K.rate}%</b> · الرسوب: <b>${K.n?100-K.rate:0}%</b><br>معدل الإكمال: <b>${pct(es.reduce((a,e)=>a+e.done,0),es.reduce((a,e)=>a+e.asg,0))}%</b><br>متوسط المدة: <b>${avgOf(es.filter(e=>e.dur).map(e=>e.dur*10))/10||0} دقيقة</b></div></div></div>
+  <div class="card" style="margin-top:14px"><h3>الاختبارات النشطة</h3><div class="g3">${es.filter(e=>e.active).map(e=>`<div class="kc" style="display:block"><strong>${esc(e.name)}</strong> <span class="badge ok">نشط</span><div class="l" style="margin:6px 0">${e.asg} مُسند · ${e.done} أكمل · ${e.ns} لم يبدأ${e.deadline?' · الموعد '+esc(e.deadline):''}</div><div class="bar"><b style="width:${e.comp}%"></b></div><div style="margin-top:8px"><button class="btn sec" data-goto="review-exams" style="padding:3px 10px">عرض الاختبار</button> <button class="btn sec" data-goto="results" style="padding:3px 10px">النتائج</button></div></div>`).join('')||'<span style="color:var(--muted)">لا توجد اختبارات نشطة.</span>'}</div></div>
+  <div class="card"><h3>آخر الاختبارات</h3><input id="histQ" placeholder="بحث بالاختبار أو الموظف أو القسم..." value="${esc(dash.q)}" style="width:100%;margin-bottom:8px"><div id="histBox"></div></div>
+  <div class="card"><h3>تقارير حسب النوع</h3><div class="g3">${[['employee','أداء الموظفين'],['department','تقرير الأقسام'],['team','تقرير الفرق'],['exam','تقرير الاختبارات'],['monthly','التقرير الشهري'],['question','تحليل الأسئلة']].map(([k,t])=>`<div class="kc qr" data-rep="${k}"><strong>📄 ${t}</strong><span class="btn sec" style="padding:2px 10px">فتح</span></div>`).join('')}</div></div>
+  <div class="card" id="notifBox"></div>
+  <p class="fnote">طريقة الحساب: النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار. نسبة النجاح = الناجحة ÷ النهائية. المتوسط = متوسط نسب النتائج النهائية. الموظف ناجح إذا نجح في كل نتائجه النهائية، وراسب إن رسب في أي منها (يُحتسب مرة واحدة). المقارنة مع فترة سابقة بنفس الطول.</p>`;
+}
+function drawHist(){
+  const {A,K}=dashCtx, emp=id=>A.empAll.find(e=>e.id===id)||{}, q=dash.q.trim().toLowerCase();
+  let rows=K.inR.map(r=>({r,e:emp(r.employeeId),x:A.examAll.find(x=>x.id===r.examId)||{}})).filter(o=>!q||[o.x.name,o.e.name,o.e.dept].join(' ').toLowerCase().includes(q));
+  rows.sort((a,b)=>(dash.sort==='score'?(a.r.percent||0)-(b.r.percent||0):(a.r.endTime||0)-(b.r.endTime||0))*(dash.asc?1:-1));
+  const per=8, pages=Math.max(1,Math.ceil(rows.length/per)); dash.page=Math.min(dash.page,pages-1);
+  document.getElementById('histBox').innerHTML=`<div class="table-wrap"><table><tr><th>الاختبار</th><th>الموظف</th><th>القسم</th><th><a href="#" data-hs="date">التاريخ ⇅</a></th><th><a href="#" data-hs="score">الدرجة ⇅</a></th><th>الحالة</th><th></th></tr>
+  ${rows.slice(dash.page*per,dash.page*per+per).map(o=>`<tr><td>${esc(o.x.name||'-')}</td><td>${esc(o.e.name||'-')}</td><td>${esc(o.e.dept||'-')}</td><td>${fdate(o.r.endTime)}</td><td>${o.r.percent}%</td><td><span class="badge ${o.r.passed?'ok':'bad'}">${o.r.passed?'ناجح':'راسب'}</span></td><td><button class="btn sec" data-goto="review-results" style="padding:2px 8px">التفاصيل</button></td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">لا توجد نتائج.</td></tr>'}</table></div>
+  <div class="pgr"><button class="pill" data-pg="-1" ${dash.page<=0?'disabled':''}>السابق</button> ${dash.page+1} / ${pages} <button class="pill" data-pg="1" ${dash.page>=pages-1?'disabled':''}>التالي</button></div>`;
+  const hb=document.getElementById('histBox');
+  hb.querySelectorAll('[data-hs]').forEach(a=>a.onclick=e=>{e.preventDefault(); dash.asc=dash.sort===a.dataset.hs?!dash.asc:false; dash.sort=a.dataset.hs; drawHist();});
+  hb.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{dash.page+=+b.dataset.pg; drawHist();});
+  hb.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{state.view=b.dataset.goto; routeRender();});
+}
+function bindPeriod(f,idp,again){
+  document.querySelectorAll(`[data-${idp}]`).forEach(b=>b.onclick=()=>{f.p=b.dataset[idp]; again();});
+  const a=document.querySelector(`[data-${idp}from]`), z=document.querySelector(`[data-${idp}to]`);
+  if(a) a.onchange=()=>{f.from=a.value; again();}; if(z) z.onchange=()=>{f.to=z.value; again();};
+}
+function attachDashboard(){
+  const again=()=>{state.view='dashboard'; routeRender();};
+  const sel=document.getElementById('dpSel'); if(sel) sel.onchange=()=>{dash.p=sel.value; again();};
+  bindPeriod(dash,'dp',again);
+  document.querySelectorAll('[data-top]').forEach(b=>b.onclick=()=>{dash.top=+b.dataset.top; again();});
+  document.querySelectorAll('[data-vall]').forEach(b=>b.onclick=e=>{e.preventDefault(); rep.tab='employee'; state.view='reports'; routeRender();});
+  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{state.view=b.dataset.goto; routeRender();});
+  document.querySelectorAll('[data-rep]').forEach(b=>b.onclick=e=>{e.preventDefault(); rep.tab=b.dataset.rep; state.view='reports'; routeRender();});
+  document.querySelectorAll('[data-qx]').forEach(b=>b.onclick=()=>{rep.tab=b.dataset.tab||'employee'; pendingExport=b.dataset.qx; state.view='reports'; routeRender();});
+  document.getElementById('histQ').oninput=e=>{dash.q=e.target.value; dash.page=0; drawHist();};
+  drawHist(); renderNotifBox();
+}
+
+// ================= Reports & Analytics =================
+let repCtx=null;
+function buildReports(A,rs){
+  const fin=finals(rs), emp=id=>A.empAll.find(e=>e.id===id)||{}, name=id=>emp(id).name||'-';
+  const es=empStats(A,fin,rs), xs=examStats(A,fin,rs), ds=deptStats(A,fin), qs=questionStats(A,rs);
+  const ts=A.leaders.map(ld=>{const m=es.filter(e=>e.leaderId===ld.id), l=fin.filter(r=>emp(r.employeeId).teamLeaderId===ld.id), pn=l.filter(r=>r.passed).length;
+    return {name:ld.name,n:m.length,avg:avgOf(l.map(r=>r.percent||0)),rate:pct(pn,l.length),failedEmps:m.filter(e=>e.fail>0).length,cnt:l.length};}).filter(t=>t.n).sort((a,b)=>b.avg-a.avg);
+  const mo={}; fin.forEach(r=>{const d=new Date(r.endTime||0), k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); (mo[k]=mo[k]||[]).push(r);});
+  const ms=Object.keys(mo).sort().map(k=>({k,n:mo[k].length,avg:avgOf(mo[k].map(r=>r.percent||0)),rate:pct(mo[k].filter(r=>r.passed).length,mo[k].length),ex:new Set(mo[k].map(r=>r.examId)).size,emps:new Set(mo[k].map(r=>r.employeeId)).size}));
+  const per=(a,b)=>{const l=fin.filter(r=>r.endTime>=a&&r.endTime<b); return [l.length,avgOf(l.map(r=>r.percent||0)),pct(l.filter(r=>r.passed).length,l.length)];};
+  const now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1).getTime(), m1=new Date(now.getFullYear(),now.getMonth()-1,1).getTime(), qs0=new Date(now.getFullYear(),Math.floor(now.getMonth()/3)*3,1).getTime(), qs1=new Date(now.getFullYear(),Math.floor(now.getMonth()/3)*3-3,1).getTime();
+  const cmpRows=[['الشهر الحالي',...per(m0,Infinity)],['الشهر السابق',...per(m1,m0)],['الربع الحالي',...per(qs0,Infinity)],['الربع السابق',...per(qs1,qs0)]];
+  const R={
+   employee:{t:'أداء الموظفين',head:['Employee ID','الاسم','القسم','الفريق','مُسند','مكتمل','ناجح','راسب','المتوسط','الأعلى','الأدنى','نسبة النجاح','متوسط المدة (د)','الاتجاه','التحسن %'],rows:es.map(e=>[e.empId,e.name,e.dept,e.team,e.asg,e.done,e.pass,e.fail,e.avg+'%',e.hi+'%',e.lo+'%',e.rate+'%',e.dur,e.imp==null?'-':e.imp>0?'▲ صاعد':e.imp<0?'▼ هابط':'ثابت',e.imp==null?'-':e.imp])},
+   department:{t:'أداء الأقسام',head:['القسم','عدد الموظفين','عدد الاختبارات','المتوسط','نسبة النجاح','نسبة الرسوب','الأفضل','الأدنى'],rows:ds.map(d=>[d.dept,d.emps,d.exams,d.avg+'%',d.rate+'%',d.fail+'%',name(d.best),name(d.worst)])},
+   team:{t:'أداء الفرق',head:['الترتيب','الفريق (القائد)','عدد الموظفين','متوسط الفريق','نسبة النجاح','موظفون راسبون','النتائج'],rows:ts.map((t,i)=>[i+1,t.name,t.n,t.avg+'%',t.rate+'%',t.failedEmps,t.cnt])},
+   exam:{t:'أداء الاختبارات',head:['الاختبار','ID','مُسند','أكمل','لم يبدأ','المتوسط','الأعلى','الأدنى','نسبة النجاح','نسبة الرسوب','متوسط المدة (د)'],rows:xs.map(x=>[x.name,x.id,x.asg,x.done,x.ns,x.avg+'%',x.hi+'%',x.lo+'%',x.rate+'%',x.fail+'%',x.dur])},
+   question:{t:'تحليل الأسئلة',head:['ID','السؤال','الموضوع','الصعوبة','إجمالي الإجابات','صحيحة','خاطئة','% صحيحة','% خاطئة','ملاحظة'],rows:qs.map(q=>[q.id.slice(0,6),q.text,q.topic,q.diff,q.tot,q.ok,q.bad,q.c+'%',q.w+'%',q.note])},
+   monthly:{t:'التقرير الشهري',head:['الشهر','النتائج','المتوسط','نسبة النجاح','عدد الاختبارات','عدد الموظفين'],rows:ms.map(m=>[m.k,m.n,m.avg+'%',m.rate+'%',m.ex,m.emps])},
+   compare:{t:'مقارنة الفترات',head:['الفترة','النتائج','المتوسط %','نسبة النجاح %'],rows:cmpRows}
+  };
+  const ins=[], withData=es.filter(e=>e.done);
+  if(ds.length&&ds[0].n) ins.push(`أفضل قسم أداءً: ${ds[0].dept} (متوسط ${ds[0].avg}%)`);
+  if(ds.length>1) ds.filter(d=>d.n&&d.rate<60).forEach(d=>ins.push(`قسم يحتاج تدريبًا إضافيًا: ${d.dept} (نجاح ${d.rate}%)`));
+  if(ts.length) ins.push(`أفضل فريق: ${ts[0].name} (متوسط ${ts[0].avg}%)`);
+  const imp=withData.filter(e=>e.imp!=null).sort((a,b)=>b.imp-a.imp); if(imp.length&&imp[0].imp>0) ins.push(`أعلى موظف تحسنًا: ${imp[0].name} (+${imp[0].imp} نقطة)`); if(imp.length&&imp[imp.length-1].imp<0) ins.push(`أكثر موظف انخفاضًا: ${imp[imp.length-1].name} (${imp[imp.length-1].imp} نقطة)`);
+  const xd=xs.filter(x=>x.n).sort((a,b)=>b.rate-a.rate); if(xd.length){ ins.push(`أعلى اختبار نجاحًا: ${xd[0].name} (${xd[0].rate}%)`); if(xd.length>1) ins.push(`اختبار يحتاج مراجعة: ${xd[xd.length-1].name} (نجاح ${xd[xd.length-1].rate}%)`); }
+  const tp={}; qs.forEach(q=>{const o=tp[q.topic]=tp[q.topic]||{t:q.topic,tot:0,ok:0}; o.tot+=q.tot; o.ok+=q.ok;}); const tl=Object.values(tp).filter(o=>o.tot).sort((a,b)=>a.ok/a.tot-b.ok/b.tot); if(tl.length&&tl[0].t!=='-') ins.push(`أكثر موضوع يعاني فيه الموظفون: ${tl[0].t} (صحيح ${pct(tl[0].ok,tl[0].tot)}%)`);
+  return {R,ins,fin,rs,summary:[['عدد النتائج النهائية',fin.length],['عدد المحاولات',rs.length],['المتوسط',avgOf(fin.map(r=>r.percent||0))+'%'],['نسبة النجاح',pct(fin.filter(r=>r.passed).length,fin.length)+'%'],['عدد الموظفين',new Set(fin.map(r=>r.employeeId)).size]]};
+}
+async function reportsView(){
+  const A=await loadA(), [from,to]=rangeOf(rep), emp=id=>A.empAll.find(e=>e.id===id)||{};
+  const rs=A.results.filter(r=>r.endTime>=from&&r.endTime<=to&&(!rep.dept||emp(r.employeeId).dept===rep.dept)&&(!rep.team||emp(r.employeeId).teamLeaderId===rep.team)&&(!rep.emp||r.employeeId===rep.emp)&&(!rep.exam||r.examId===rep.exam)
+    &&(!rep.status||(rep.status==='pass')===!!r.passed)&&(rep.min===''||r.percent>=+rep.min)&&(rep.max===''||r.percent<=+rep.max)&&(!rep.att||r.attemptNum==rep.att));
+  const B=buildReports(A,rs); repCtx={A,B};
+  const depts=[...new Set(A.empAll.map(e=>e.dept).filter(Boolean))];
+  const sel=(id,lab,opts,v)=>`<div><label>${lab}</label><select id="${id}" style="width:100%"><option value="">الكل</option>${opts.map(o=>`<option value="${esc(o[0])}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+  const tabs=[['employee','الموظفون'],['department','الأقسام'],['team','الفرق'],['exam','الاختبارات'],['question','الأسئلة'],['monthly','شهري'],['insights','رؤى الأداء']];
+  const cur=B.R[rep.tab], filt=[rep.dept&&'القسم: '+rep.dept,rep.exam&&'اختبار محدد',rep.emp&&'موظف محدد',rep.status&&(rep.status==='pass'?'ناجح فقط':'راسب فقط')].filter(Boolean).join(' | ')||'بدون فلاتر إضافية';
+  return `<h1>التقارير والتحليلات</h1>
+  <div class="card no-print"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><strong>الفلاتر</strong>${periodBar(rep,'rp')}</div>
+   <div class="row">${sel('rDept','القسم',depts.map(d=>[d,d]),rep.dept)}${sel('rTeam','الفريق',A.leaders.map(l=>[l.id,l.name]),rep.team)}${sel('rEmp','الموظف',A.emps.map(e=>[e.id,e.name]),rep.emp)}${sel('rExam','الاختبار',A.exams.map(x=>[x.id,x.name]),rep.exam)}
+   ${sel('rStatus','الحالة',[['pass','ناجح'],['fail','راسب']],rep.status)}<div><label>الدرجة من</label><input id="rMin" type="number" value="${rep.min}" style="width:100%"></div><div><label>إلى</label><input id="rMax" type="number" value="${rep.max}" style="width:100%"></div><div><label>رقم المحاولة</label><input id="rAtt" type="number" value="${rep.att}" style="width:100%"></div></div>
+   <button class="btn sec" id="rReset" style="margin-top:8px">إعادة تعيين الفلاتر</button></div>
+  <div class="prn" style="margin-bottom:10px"><h2>🌟 نظام اختبارات الموظفين — ${esc(rep.tab==='insights'?'رؤى الأداء':cur.t)}</h2><div>تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')} — ${esc(filt)}</div></div>
+  <div class="kg">${B.summary.map(([l,v])=>`<div class="kc"><div><div class="l">${l}</div><div class="v">${v}</div></div></div>`).join('')}</div>
+  <div class="tabs no-print">${tabs.map(([k,t])=>`<button class="pill ${rep.tab===k?'on':''}" data-rtab="${k}">${t}</button>`).join('')}</div>
+  <div class="card">${rep.tab==='insights'?`<h3>رؤى الأداء (من البيانات الفعلية)</h3>${B.ins.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">💡 ${esc(t)}</div>`).join('')||'<span style="color:var(--muted)">لا توجد بيانات كافية لاستخلاص رؤى.</span>'}`
+   :`<h3>${cur.t}</h3><div class="table-wrap"><table><tr>${cur.head.map(h=>`<th>${h}</th>`).join('')}</tr>${cur.rows.map(r=>`<tr>${r.map(c=>`<td style="${/%$/.test(String(c))&&0?'':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cur.head.length}" style="color:var(--muted)">لا توجد بيانات مطابقة للفلاتر.</td></tr>`}</table></div>${rep.tab==='monthly'?`<h3 style="margin-top:14px">${B.R.compare.t}</h3><div class="table-wrap"><table><tr>${B.R.compare.head.map(h=>`<th>${h}</th>`).join('')}</tr>${B.R.compare.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`:''}`}</div>
+  <div class="card no-print"><h3>مركز التصدير</h3><button class="btn" id="xXlsx">Excel</button> <button class="btn sec" id="xCsv">CSV</button> <button class="btn sec" id="xPdf">PDF</button> <button class="btn sec" id="xPrint">طباعة</button>
+   <p class="fnote">Excel يضم كل الجداول في أوراق منفصلة. PDF: اختاري "حفظ كـ PDF" من نافذة الطباعة. التصدير يحترم الفلاتر الحالية. النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار.</p></div>`;
+}
+function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),500);}
+function attachReports(){
+  const again=()=>{state.view='reports'; routeRender();};
+  bindPeriod(rep,'rp',again);
+  document.querySelectorAll('[data-rtab]').forEach(b=>b.onclick=()=>{rep.tab=b.dataset.rtab; again();});
+  [['rDept','dept'],['rTeam','team'],['rEmp','emp'],['rExam','exam'],['rStatus','status'],['rMin','min'],['rMax','max'],['rAtt','att']].forEach(([id,k])=>{const el=document.getElementById(id); if(el) el.onchange=()=>{rep[k]=el.value; again();};});
+  document.getElementById('rReset').onclick=()=>{Object.assign(rep,{p:'30d',from:'',to:'',dept:'',team:'',emp:'',exam:'',status:'',min:'',max:'',att:''}); again();};
+  const {B}=repCtx, tabs=['employee','department','team','exam','question','monthly','compare'];
+  document.getElementById('xCsv').onclick=()=>{const t=B.R[rep.tab]||B.R.employee, q=v=>'"'+String(v).replace(/"/g,'""')+'"'; dl('report-'+rep.tab+'.csv',new Blob(['\ufeff'+[t.head,...t.rows].map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));};
+  document.getElementById('xXlsx').onclick=async()=>{
+    try{ if(!window.XLSX) await new Promise((ok,no)=>{const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s);});
+      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['ملخص التقرير'],...B.summary]),'Summary');
+      tabs.forEach(k=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([B.R[k].head,...B.R[k].rows]),k)); XLSX.writeFile(wb,'exam-report.xlsx');
+    }catch(e){ alert('تعذر تحميل مكتبة Excel. تحقق من الاتصال بالإنترنت أو استخدم CSV.'); }};
+  document.getElementById('xPrint').onclick=()=>window.print();
+  document.getElementById('xPdf').onclick=()=>{alert('في نافذة الطباعة اختاري الوجهة: حفظ كـ PDF'); window.print();};
+  if(pendingExport){ const id=pendingExport; pendingExport=null; setTimeout(()=>{const el=document.getElementById(id); if(el) el.click();},300); }
+}
+
+// ---------- ADMIN: dashboard (legacy, unused) ----------
+async function dashboardViewLegacy(){
   const [emps,exams,results] = await Promise.all([listAll('employees'),listAll('exams'),listAll('results')]);
   const completed=results.length;
   const avg = completed? Math.round(results.reduce((a,r)=>a+(r.percent||0),0)/completed):0;
@@ -592,14 +1006,15 @@ async function employeesTeamsView(){
   const [emps, leaders] = await Promise.all([listAll('employees'), listAll('teamLeaders')]);
   const editingEmp = editingEmployeeId ? emps.find(e=>e.id===editingEmployeeId) : null;
   
+  const isL=isLeaderSession();
   const leaderCards = visibleLeaders(leaders).map(ld=>{
     const members = emps.filter(e=>e.teamLeaderId===ld.id);
     return `<div class="card" style="background:var(--bg)">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <strong>👑 قائد الفريق: ${ld.name}</strong>
-        <span style="font-size:12px;color:var(--muted)">كود الدخول: ${ld.code?ld.code:'<em>غير محدد</em>'} <button class="btn sec" data-setcode="${ld.id}" style="padding:2px 8px;font-size:11px">${ld.code?'تغيير':'تعيين'}</button></span>
+        ${isL?'':`<span style="font-size:12px;color:var(--muted)">كود الدخول: ${ld.code?ld.code:'<em>غير محدد</em>'} <button class="btn sec" data-setcode="${ld.id}" style="padding:2px 8px;font-size:11px">${ld.code?'تغيير':'تعيين'}</button></span>`}
         <div><span style="color:var(--muted);font-size:12px">${members.length} عضو</span>
-        ${state.session.role==='leader'?'':`<button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-right:8px">حذف القائد</button>`}</div>
+        ${isL?'':`<button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-inline-start:8px">حذف القائد</button>`}</div>
       </div>
       <p style="color:var(--muted);font-size:13px;margin:8px 0">حدد الموظفين التابعين لهذا القائد:</p>
       <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--surface)">
@@ -623,12 +1038,12 @@ async function employeesTeamsView(){
       <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${visibleLeaders(leaders).map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
     </div>
     <button class="btn" id="addEmp" style="margin-top:8px">${editingEmployeeId?'حفظ التعديلات':'إضافة موظف'}</button>
-    ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-right:6px">إلغاء التعديل</button>':''}
+    ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-inline-start:6px">إلغاء التعديل</button>':''}
   </div>
 
   <div class="card">
-    <h3>${isLeaderSession()?'قائمة فريقي':'إدارة قادة الفرق (Team Leaders)'}</h3>
-    ${isLeaderSession()?'':`<div class="row">
+    <h3>${isL?'قائمة فريقي':'إدارة قادة الفرق (Team Leaders)'}</h3>
+    ${isL?'':`<div class="row">
       <div><input id="tlName" placeholder="اسم قائد الفريق الجديد" style="width:100%"></div>
       <div><input id="tlCode" placeholder="كود دخول القائد (للتصحيح)" style="width:100%"></div>
       <div><button class="btn" id="addLeader" style="width:100%">إضافة قائد فريق</button></div>
@@ -658,7 +1073,8 @@ function renderEmpList(emps,leaders){
 }
 
 function attachEmployeesTeams(){
-  document.getElementById('addEmp').onclick=async ()=>{
+  const addEmpBtn=document.getElementById('addEmp');
+  if(addEmpBtn) addEmpBtn.onclick=async ()=>{
     const name=document.getElementById('pName').value.trim(), empId=document.getElementById('pEmpId').value.trim();
     if(!name||!empId){ alert('أدخل الاسم و Employee ID (الحقلان مطلوبان).'); return; }
     const existing = await listAll('employees');
@@ -683,7 +1099,8 @@ function attachEmployeesTeams(){
     setTimeout(()=>document.getElementById('empFormTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
   });
 
-  (document.getElementById('addLeader')||{}).onclick=async()=>{
+  const addLeaderBtn=document.getElementById('addLeader');
+  if(addLeaderBtn) addLeaderBtn.onclick=async()=>{
     const name=document.getElementById('tlName').value.trim();
     const code=document.getElementById('tlCode').value.trim();
     if(!name){ alert('أدخل اسم قائد الفريق.'); return; }
@@ -728,13 +1145,16 @@ function attachEmployeesTeams(){
 
   document.querySelectorAll('[data-delemp]').forEach(b=>b.onclick=async()=>{ await delDoc('employees',b.dataset.delemp); state.view='employees-teams'; routeRender(); });
   
-  document.getElementById('eSearch').oninput=async(e)=>{
+  const eSearch=document.getElementById('eSearch');
+  if(eSearch) eSearch.oninput=async(e)=>{
     const [emps,leaders]=await Promise.all([listAll('employees'),listAll('teamLeaders')]);
     const f=emps.filter(x=>x.name.includes(e.target.value)||(x.dept||'').includes(e.target.value));
-    document.getElementById('empList').innerHTML=renderEmpList(f,leaders);
+    const empList=document.getElementById('empList');
+    if(empList) empList.innerHTML=renderEmpList(f,leaders);
     attachSelectAll('empSelectAll','empChk');
   };
-  document.getElementById('empBulkDelete').onclick=()=>bulkDeleteSelected('employees','empChk');
+  const bulkBtn=document.getElementById('empBulkDelete');
+  if(bulkBtn) bulkBtn.onclick=()=>bulkDeleteSelected('employees','empChk');
   attachSelectAll('empSelectAll','empChk');
 }
 
@@ -1592,6 +2012,7 @@ function attachEmpMessages(){
   document.querySelectorAll('[data-delmymsg]').forEach(b=>b.onclick=async()=>{
     if(!confirm('حذف هذه الرسالة من صندوقك؟')) return;
     await updDoc('messages',b.dataset.delmymsg,{['deletedBy.'+state.session.id]:true});
+    await refreshEmpMsgBadge();
     state.view='emp-messages'; routeRender();
   });
   document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=async()=>{
@@ -1601,6 +2022,7 @@ function attachEmpMessages(){
     await updDoc('messages',mid,{['seenBy.'+empId]:Date.now()});
     await setDoc('notifications',uid(),{type:'message_seen',toId:(m&&m.fromId)||'admin',employeeId:empId,employeeName:s.name,
       messageId:mid,subject:(m&&m.subject)||'',createdAt:Date.now(),read:false});
+    await refreshEmpMsgBadge();
     state.view='emp-messages'; routeRender();
   });
 }
@@ -1767,7 +2189,7 @@ async function finishExam(){
 }
 
 // ---------- boot ----------
-(async function(){ applyLangToDocument(); await initCaps(); render(); })();
+(async function(){ applyLangToDocument(); await initCaps(); await restoreSession(); render(); })();
 </script>
 </body>
 </html>
