@@ -907,7 +907,7 @@ async function dashboardView(){
   const es=examStats(A,K.fin,K.inR), ps=empStats(A,K.fin,K.inR).filter(e=>e.done).sort((a,b)=>b.avg-a.avg||b.rate-a.rate);
   const ongoing=es.filter(e=>e.active&&e.asg>e.done).length;
   const newEx=A.exams.filter(x=>x.createdAt>=from&&x.createdAt<=to).length, prevEx=A.exams.filter(x=>x.createdAt>=from-len-1&&x.createdAt<from).length;
-  const T=trendData(A,from,to), D=deptStats(A,K.fin), pal=['#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444'];
+ const T=Object.assign(k=>window.T(k), trendData(A,from,to)), D=deptStats(A,K.fin), pal=['#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444'];
   const actE=T.edges.map(b0=>{const l=A.results.filter(r=>r.endTime>=b0&&r.endTime<b0+T.step); return l.length?new Set(l.map(r=>r.employeeId)).size:null;});
   const exC=T.edges.map(b0=>A.exams.filter(x=>x.createdAt<b0+T.step).length);
   const kb=(c,ic,n,t,d,sp)=>`<div class="kb" style="--c:${c}"><div class="ci">${ic}</div><div class="tx"><div class="n">${n}</div><div class="t">${t}</div><div class="dd">${d}</div></div><div class="sp2">${sp}</div></div>`;
@@ -1034,7 +1034,7 @@ async function reportsView(){
   <div class="kg">${B.summary.map(([l,v])=>`<div class="kc"><div><div class="l">${l}</div><div class="v">${v}</div></div></div>`).join('')}</div>
   <div class="tabs no-print">${tabs.map(([k,t])=>`<button class="pill ${rep.tab===k?'on':''}" data-rtab="${k}">${t}</button>`).join('')}</div>
   <div class="card">${rep.tab==='insights'?`<h3>${T('insights_from_data')}</h3>${B.ins.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">💡 ${esc(t)}</div>`).join('')||'<span style="color:var(--muted)">'+T('no_insights')+'</span>'}`
-   :`<h3>${cur.t}</h3><div class="table-wrap"><table><tr>${cur.head.map(h=>`<th>${h}</th>`).join('')}</tr>${cur.rows.map(r=>`<tr>${r.map(c=>`<td style="${/%$/.test(String(c))&&0?'':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cur.head.length}" style="color:var(--muted)">'+T('no_filter_data')+'</td></tr>`}</table></div>${rep.tab==='monthly'?`<h3 style="margin-top:14px">${B.R.compare.t}</h3><div class="table-wrap"><table><tr>${B.R.compare.head.map(h=>`<th>${h}</th>`).join('')}</tr>${B.R.compare.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`:''}`}</div>
+   :`<h3>${cur.t}</h3><div class="table-wrap"><table><tr>${cur.head.map(h=>`<th>${h}</th>`).join('')}</tr>${cur.rows.map(r=>`<tr>${r.map(c=>`<td style="${/%$/.test(String(c))&&0?'':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cur.head.length}" style="color:var(--muted)">${T('no_filter_data')}</td></tr>`}</table></div>${rep.tab==='monthly'?`<h3 style="margin-top:14px">${B.R.compare.t}</h3><div class="table-wrap"><table><tr>${B.R.compare.head.map(h=>`<th>${h}</th>`).join('')}</tr>${B.R.compare.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`:''}`}</div>
   <div class="card no-print"><h3>${T('export_center')}</h3><button class="btn" id="xXlsx">Excel</button> <button class="btn sec" id="xCsv">CSV</button> <button class="btn sec" id="xPdf">PDF</button> <button class="btn sec" id="xPrint">${T('print')}</button>
    <p class="fnote">Excel يضم كل الجداول في أوراق منفصلة. PDF: اختاري "حفظ كـ PDF" من نافذة الطباعة. التصدير يحترم الفلاتر الحالية. النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار.</p></div>`;
 }
