@@ -19,7 +19,7 @@ body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 .app{display:flex;min-height:100vh}
-.sidebar{width:230px;background:var(--surface);border-inline-end:1px solid var(--border);padding:16px;flex-shrink:0}
+.sidebar{width:230px;background:var(--surface);border-left:1px solid var(--border);padding:16px;flex-shrink:0}
 .sidebar h2{font-size:16px;color:var(--brand)}
 .sidebar .user{font-size:13px;color:var(--muted);margin-bottom:14px}
 .nav a{display:block;padding:9px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px;margin-bottom:3px}
@@ -32,7 +32,7 @@ input,select,textarea{font-family:inherit;background:var(--surface);color:var(--
 .stat{font-size:26px;font-weight:700;color:var(--brand)}
 .stat-label{font-size:12px;color:var(--muted)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:8px;border-bottom:1px solid var(--border);text-align:start}
+th,td{padding:8px;border-bottom:1px solid var(--border);text-align:right}
 th{color:var(--muted);font-weight:600}
 .btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px}
 .btn:hover{background:var(--brand-d)}
@@ -57,10 +57,9 @@ label{font-size:12px;color:var(--muted);display:block;margin:8px 0 3px}
   .menuBtn{display:block}
   .sidebar{position:fixed;inset:0;z-index:30;width:100%;height:100%;transform:translateX(100%);
     transition:transform .2s ease;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top,0px))}
-  [dir="ltr"] .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
   .sidebar .closeBtn{display:block;background:transparent;border:none;font-size:20px;color:var(--text);
-    position:absolute;top:calc(14px + env(safe-area-inset-top,0px));inset-inline-start:14px}
+    position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px}
   .nav a{font-size:16px;padding:12px 10px}
   .main{padding:12px;max-width:100%}
   h1{font-size:17px}
@@ -162,7 +161,7 @@ body{background:var(--bg)}
 .nav a.active,.nav a:hover{background:var(--brand);color:#0B1120}
 .badge.ok{background:rgba(34,197,94,.15);color:#4ade80}.badge.bad{background:rgba(239,68,68,.15);color:#f87171}.badge.warn{background:rgba(245,179,66,.15);color:#F5B342}
 .qnav button.answered{background:#1e3a5f}
-@media (min-width:761px){.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto}}
+@media (min-width:761px){.app{flex-direction:row-reverse}.sidebar{border-left:none;border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto}}
 .kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
 .kc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .kc .v{font-size:26px;font-weight:800;color:var(--brand)}.kc .l{font-size:12px;color:var(--muted)}.kc .ic{font-size:20px}
@@ -182,7 +181,7 @@ body{background:var(--bg)}
 /* ===== Reference look ===== */
 body{background:radial-gradient(1100px 600px at 80% -10%,rgba(37,99,235,.25),transparent 60%),radial-gradient(900px 600px at 0% 100%,rgba(139,92,246,.14),transparent 60%),#070d24}
 .card,.panel{background:linear-gradient(160deg,#101b3c,#0b1330);border:1px solid #223463;border-radius:18px;box-shadow:0 0 24px -10px rgba(59,130,246,.45)}
-.sidebar{background:linear-gradient(180deg,#0c1533,#0a1028);border-inline-end:1px solid #1d2b4a;display:flex;flex-direction:column}
+.sidebar{background:linear-gradient(180deg,#0c1533,#0a1028);border-right:1px solid #1d2b4a;display:flex;flex-direction:column}
 .sidebar .nav{display:flex;flex-direction:column;gap:2px}
 .nav a{padding:11px 12px;border-radius:12px;color:#c7d2ee}
 .nav a.active{background:linear-gradient(90deg,#1d6ff2,#2b8cff);color:#fff;box-shadow:0 0 18px rgba(43,140,255,.55)}
@@ -253,187 +252,24 @@ let lang='ar';
 try{ const saved=localStorage.getItem('eesLang'); if(saved==='ar'||saved==='en') lang=saved; }catch(e){}
 const DICT={
   ar:{
-    nav_dashboard:'لوحة التحكم', nav_reports:'التقارير والتحليلات', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
+    nav_dashboard:'لوحة التحكم', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
     nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'إدارة الاختبارات',
     nav_review_results:'مراجعة الإجابات', nav_grading:'تصحيح الاختبار', nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
     nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
     admin_label:'مدير النظام', logout:'تسجيل الخروج', toggle_lang:'English',
-    login_title:'تسجيل الدخول', save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل',
-    loading:'جارِ التحميل…', system_title:'نظام اختبارات الموظفين', system_tagline:'قيّم • حلّل • طوّر',
-    owner_zone:'منطقة المالك', full_access:'وصول كامل', system_owner:'مالك النظام', team_leader:'قائد فريق', employee:'موظف',
-    search_global:'ابحث عن موظف أو اختبار أو قسم...', no_results:'لا توجد نتائج', employees:'موظفون', exams:'اختبارات', departments:'أقسام',
-    unauthorized:'غير مصرح.', all:'الكل', none:'-- بدون --', active:'نشط', draft:'مسودة', completed:'مكتمل', passed:'ناجح', failed:'راسب',
-    name:'الاسم', email:'البريد الإلكتروني', dept:'القسم', team:'الفريق', position:'الوظيفة', status:'الحالة',
-    confirm_delete:'هل أنت متأكد من الحذف؟', saved_ok:'تم الحفظ بنجاح', error_generic:'حدث خطأ', no_data:'لا توجد بيانات.',
-    welcome:'مرحبًا بك', login_subtitle:'سجّل دخولك للمتابعة', id_label:'ID', id_placeholder:'أدخل الـ ID الخاص بك', login_btn:'دخول',
-    verifying:'جارٍ التحقق...', login_success:'تم تسجيل الدخول ✓', id_invalid:'الـ ID غير صحيح. تأكد من الرقم وحاول مرة أخرى.',
-    id_required:'من فضلك أدخل الـ ID الخاص بك.', conn_error:'تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
-    for_whom:'لمن هذا النظام؟', role_emp:'الموظفون', role_emp_desc:'أداء الاختبارات ومعرفة النتائج', role_lead:'القادة والمديرون', role_lead_desc:'متابعة وإدارة نتائج الفرق', role_admin:'مالك النظام', role_admin_desc:'إدارة كاملة وصلاحيات شاملة', secure_data:'بياناتك آمنة ومحمية',
-    dash_welcome:'مرحبًا بعودتك. هذه نظرة عامة على النظام.', avg_score:'متوسط الدرجات', pass_rate:'نسبة النجاح', total_exams_period:'إجمالي الاختبارات في الفترة', total_emps:'إجمالي الموظفين',
-    failed_emps:'الموظفون الراسبون', passed_emps:'الموظفون الناجحون', active_exams:'الاختبارات الجارية', done_exams:'الاختبارات المكتملة',
-    top_emps:'أفضل الموظفين', dept_perf:'أداء الأقسام', overall_view:'نظرة عامة على الأداء', exam_analytics:'تحليلات الاختبارات',
-    quick_reports:'تقارير سريعة', export_pdf:'تصدير PDF', export_excel:'تصدير Excel', monthly_report:'التقرير الشهري', print:'طباعة',
-    key_insights:'رؤى رئيسية', no_prev_period:'لا توجد فترة سابقة للمقارنة', by_topic:'حسب موضوع الأسئلة',
-    last_7d:'آخر 7 أيام', last_30d:'آخر 30 يومًا', last_3m:'آخر 3 أشهر', last_6m:'آخر 6 أشهر', last_12m:'آخر 12 شهرًا', custom_range:'نطاق مخصص',
-    vs_prev:'مقارنة بالسابقة', good:'جيد', new:'جديد', show_all:'عرض الكل',
-    reports_title:'التقارير والتحليلات', filters:'الفلاتر', reset_filters:'إعادة تعيين الفلاتر', tab_employee:'الموظفون', tab_department:'الأقسام', tab_team:'الفرق', tab_exam:'الاختبارات', tab_question:'الأسئلة', tab_monthly:'شهري', tab_insights:'رؤى الأداء',
-    no_extra_filters:'بدون فلاتر إضافية', report_date:'تاريخ التقرير', pass_only:'ناجح فقط', fail_only:'راسب فقط',
-    score_from:'الدرجة من', score_to:'إلى', attempt_num:'رقم المحاولة', no_match_filters:'لا توجد بيانات مطابقة للفلاتر.',
-    questions_title:'بنك الأسئلة', q_text:'نص السؤال', q_type:'النوع', q_category:'التصنيف', q_points:'الدرجة',
-    type_mcq:'اختيار واحد', type_multi:'اختيار متعدد', type_tf:'صح/خطأ', type_short:'إجابة قصيرة',
-    options_mark:'الاختيارات (علّم الصحيح)', option_n:'اختيار', explain_opt:'شرح الإجابة (اختياري)', add_question:'إضافة السؤال',
-    all_questions:'كل الأسئلة', bulk_delete:'حذف المحدد', search_q:'بحث...', no_questions:'لا توجد أسئلة بعد.', enter_q_text:'أدخل نص السؤال',
-    emps_title:'الموظفون والفرق', add_emp:'إضافة موظف جديد', edit_emp:'تعديل بيانات الموظف', emp_id:'Employee ID', team_leader_label:'قائد الفريق',
-    save_changes:'حفظ التعديلات', cancel_edit:'إلغاء التعديل', manage_leaders:'إدارة قادة الفرق', my_team_list:'قائمة فريقي',
-    new_leader_name:'اسم قائد الفريق الجديد', leader_code:'كود دخول القائد', add_leader:'إضافة قائد فريق',
-    leader_of:'قائد الفريق:', login_code:'كود الدخول:', not_set:'غير محدد', change:'تغيير', set:'تعيين', members_count:'عضو',
-    delete_leader:'حذف القائد', select_members:'حدد الموظفين التابعين لهذا القائد:', save_members:'حفظ أعضاء الفريق',
-    no_leaders_yet:'لا يوجد قادة فرق بعد. أضف قائدًا أولًا.', all_emps_list:'قائمة الموظفين الكلية', search_name_dept:'بحث بالاسم أو القسم...',
-    no_emps:'لا يوجد موظفون.', members_saved:'تم حفظ أعضاء الفريق.', enter_name_id:'أدخل الاسم و Employee ID (الحقلان مطلوبان).',
-    dup_empid:'يوجد موظف آخر بنفس Employee ID بالفعل.', enter_leader_name:'أدخل اسم قائد الفريق.', code_used:'هذا الكود مستخدم لقائد آخر.',
-    delete_leader_admin_only:'حذف القائد من صلاحيات المدير فقط.', delete_leader_confirm:'حذف قائد الفريق؟ لن يتم حذف الموظفين، فقط ارتباطهم بهذا القائد.',
-    enter_new_code:'أدخل كود الدخول الجديد للقائد:', saving:'جارٍ الحفظ...',
-    assign_title:'إسناد الاختبارات', choose_exam:'اختر اختبارًا', select_emps_assign:'حدد الموظفين المسند إليهم الاختبار:', select_all_shown:'تحديد كل المعروضين',
-    assign_btn:'إسناد الاختبار', assign_need_exam:'اختر اختبارًا', assign_need_emp:'يرجى تحديد موظف واحد على الأقل لإسناد الاختبار إليه.',
-    assign_ok:'تم إسناد الاختبار بنجاح', deadline:'الموعد النهائي',
-    results_title:'النتائج', wrong_title:'الإجابات الخاطئة', review_exams_title:'إدارة الاختبارات', review_results_title:'مراجعة الإجابات',
-    create_exam:'إنشاء اختبار جديد', edit_exam:'تعديل الاختبار', exam_name:'اسم الاختبار', pass_score:'درجة النجاح %', time_limit:'المدة (دقائق)',
-    show_result_emp:'إظهار النتيجة للموظف', shuffle_q:'ترتيب عشوائي للأسئلة', shuffle_opt:'ترتيب عشوائي للاختيارات',
-    select_questions:'اختر الأسئلة', exam_created:'تم إنشاء الاختبار بنجاح', exam_updated:'تم تحديث الاختبار بنجاح', enter_exam_name:'أدخل اسم الاختبار',
-    activate:'تفعيل', deactivate:'إيقاف', no_exams:'لا توجد اختبارات.',
-    grading_title:'تصحيح الاختبار', grade_team_only:'اختبارات موظفي فريقك فقط. ', grade_help:'قائد الفريق هو المسؤول عن تصحيح اختبارات فريقه ومنح الدرجات لكل سؤال، والنتيجة النهائية تُحدَّث للموظف تلقائيًا.',
-    grade_exam:'تصحيح', regrade:'إعادة التصحيح', score:'الدرجة', percent:'النسبة', not_answered:'لم يُجب', correct_answer:'الإجابة الصحيحة', your_answer:'إجابتك',
-    settings_title:'الإعدادات', change_admin_pass:'تغيير كلمة مرور المدير', current_pass:'كلمة المرور الحالية', new_pass:'كلمة المرور الجديدة', confirm_pass:'تأكيد كلمة المرور الجديدة',
-    update_pass:'تحديث كلمة المرور', danger_zone:'منطقة الخطر', wipe_desc:'حذف جميع الاختبارات، الإسنادات، النتائج، والمراسلات نهائيًا. بنك الأسئلة وبيانات الموظفين لن يتأثرا. هذا الإجراء لا يمكن التراجع عنه.',
-    wipe_btn:'حذف كل البيانات (عدا بنك الأسئلة وبيانات الموظفين)',
-    messages_title:'مراسلات', to:'المرسل إليه', all_emps:'-- كل الموظفين --', all_my_team:'-- كل أفراد فريقي --', subject:'عنوان الرسالة', body:'نص الرسالة',
-    sent_messages:'الرسائل المرسلة', no_messages:'لا توجد رسائل.', seen:'رأيته', seen_at:'رأيته —', delete_msg:'حذف', mark_seen:'رأيته',
-    suggestions_title:'اقتراحات الأسئلة', suggest_title:'اقترح سؤال', my_suggestions:'اقتراحاتي السابقة', send_suggestion:'إرسال الاقتراح', no_suggestions:'لا توجد اقتراحات.',
-    my_assigned:'الاختبارات المسندة إليك', no_assigned:'لا توجد اختبارات مسندة.', start_exam:'بدء الاختبار', my_results:'نتائجي السابقة', no_my_results:'لا توجد نتائج سابقة.',
-    profile_title:'تعديل بياناتي', emp_id_fixed:'(ثابت، لا يمكن تعديله)', name_required:'الاسم مطلوب.',
-    submit_exam:'تسليم الاختبار', next:'التالي', prev:'السابق', confirm_submit:'هل أنت متأكد من تسليم الاختبار؟', exam_done_result:'انتهى الاختبار. النتيجة: ', passed_lbl:'ناجح', failed_lbl:'راسب', exam_submitted:'تم تسليم الاختبار بنجاح.',
-    notifications:'الإشعارات', mark_all_read:'تحديد الكل كمقروء', delete_all:'حذف الكل', no_notifs:'لا توجد إشعارات.', delete_all_notifs:'حذف كل الإشعارات؟',
-    true_lbl:'صح', false_lbl:'خطأ', points:'نقطة', attempt:'محاولة', duration:'المدة', filter_status:'الحالة',
-    leader_only_team:'فريقك فقط', db_error:'تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة وحاول مرة أخرى.',
-    save_error:'حدث خطأ أثناء الحفظ: ', select_one_delete:'اختر عنصرًا واحدًا على الأقل للحذف.',
-    excel_fail:'تعذر تحميل مكتبة Excel. تحقق من الاتصال بالإنترنت أو استخدم CSV.', pdf_hint:'في نافذة الطباعة اختاري الوجهة: حفظ كـ PDF',
-    // reports & charts
-    period_7d:'7 أيام', period_30d:'30 يومًا', period_3m:'3 أشهر', period_6m:'6 أشهر', period_12m:'12 شهرًا', period_custom:'مخصص',
-    col_employee:'الموظف', col_dept:'القسم', col_team:'الفريق', col_avg:'المتوسط', col_pass:'النجاح', col_exam:'الاختبار', col_date:'التاريخ', col_score:'الدرجة', col_status:'الحالة',
-    details:'التفاصيل', prev:'السابق', next:'التالي', open:'فتح',
-    kpi_pass_rate:'نسبة النجاح', kpi_avg_score:'متوسط الدرجات', kpi_exams_period:'إجمالي الاختبارات', kpi_total_emps:'إجمالي الموظفين',
-    cmp_prev:'مقارنة بالسابقة', overview_perf:'نظرة عامة على الأداء', top_employees:'أفضل الموظفين',
-    dept_performance:'أداء الأقسام', team_performance:'أداء الفرق', exam_performance:'أداء الاختبارات',
-    monthly_report_t:'التقرير الشهري', question_analysis:'تحليل الأسئلة', period_compare:'مقارنة الفترات',
-    insights_from_data:'رؤى الأداء (من البيانات الفعلية)', no_insights:'لا توجد بيانات كافية لاستخلاص رؤى.',
-    export_center:'مركز التصدير', export_note:'Excel يضم كل الجداول في أوراق منفصلة. PDF: اختاري "حفظ كـ PDF" من نافذة الطباعة. التصدير يحترم الفلاتر الحالية.',
-    report_of:'نظام اختبارات الموظفين — ', report_date_lbl:'تاريخ التقرير',
-    no_results_rows:'لا توجد نتائج.', no_filter_data:'لا توجد بيانات مطابقة للفلاتر.',
-    uncategorized:'غير مصنف', hard:'صعب', medium:'متوسط', easy:'سهل',
-    everyone_correct:'أجاب الجميع صحيحًا', needs_review:'يحتاج مراجعة / قد يكون غير واضح',
-    sum_final_results:'عدد النتائج النهائية', sum_attempts:'عدد المحاولات', sum_avg:'المتوسط', sum_pass_rate:'نسبة النجاح', sum_emps:'عدد الموظفين',
-    head_emps_count:'عدد الموظفين', head_exams_count:'عدد الاختبارات', head_fail_rate:'نسبة الرسوب', head_best:'الأفضل', head_worst:'الأدنى',
-    head_rank:'الترتيب', head_team_leader:'الفريق (القائد)', head_team_avg:'متوسط الفريق', head_failed_emps:'موظفون راسبون', head_results:'النتائج',
-    head_assigned:'مُسند', head_completed:'أكمل', head_not_started:'لم يبدأ', head_highest:'الأعلى', head_lowest:'الأدنى', head_avg_duration:'متوسط المدة (د)',
-    head_month:'الشهر', head_period:'الفترة', head_avg_pct:'المتوسط %', head_pass_pct:'نسبة النجاح %',
-    head_question:'السؤال', head_type:'النوع', head_category:'التصنيف', head_points:'الدرجة',
-    head_topic:'الموضوع', head_total_ans:'إجمالي الإجابات', head_correct_pct:'% صحيحة', head_wrong_pct:'% خاطئة', head_difficulty:'الصعوبة', head_note:'ملاحظة',
-    label_status:'الحالة', label_score_from:'الدرجة من', label_score_to:'إلى', label_attempt:'رقم المحاولة',
-    pass_lbl:'ناجح', fail_lbl:'راسب', filter_dept:'القسم', filter_team:'الفريق', filter_emp:'الموظف', filter_exam:'الاختبار',
-    no_data_short:'لا توجد بيانات.', show_all:'عرض الكل', calc_note:'طريقة الحساب: النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار.',
-    best_dept:'أفضل قسم أداءً', best_team:'أفضل فريق',
-
+    login_title:'تسجيل الدخول', admin_pass_label:'دخول كمدير — كلمة المرور', admin_login_btn:'دخول كمدير',
+    emp_login_label:'دخول كموظف — Employee ID أو البريد الإلكتروني', emp_login_btn:'دخول',
+    save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل'
   },
   en:{
-    nav_dashboard:'Dashboard', nav_reports:'Reports & Analytics', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
+    nav_dashboard:'Dashboard', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
     nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Manage Exams',
     nav_review_results:'Review Answers', nav_grading:'Grade Exams', nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
     nav_my_exams:'My Exams', nav_my_results:'My Results', nav_my_profile:'Edit My Profile', nav_suggest_question:'Suggest a Question',
     admin_label:'Admin', logout:'Log out', toggle_lang:'العربية',
-    login_title:'Sign In', save:'Save', cancel:'Cancel', delete:'Delete', add:'Add', search_ph:'Search...', send:'Send', edit:'Edit',
-    loading:'Loading…', system_title:'Employee Exam System', system_tagline:'Assess • Analyze • Improve',
-    owner_zone:'Owner Zone', full_access:'Full access', system_owner:'System owner', team_leader:'Team leader', employee:'Employee',
-    search_global:'Search employee, exam, or department...', no_results:'No results', employees:'Employees', exams:'Exams', departments:'Departments',
-    unauthorized:'Unauthorized.', all:'All', none:'-- None --', active:'Active', draft:'Draft', completed:'Completed', passed:'Passed', failed:'Failed',
-    name:'Name', email:'Email', dept:'Department', team:'Team', position:'Position', status:'Status',
-    confirm_delete:'Are you sure you want to delete?', saved_ok:'Saved successfully', error_generic:'An error occurred', no_data:'No data.',
-    welcome:'Welcome', login_subtitle:'Sign in to continue', id_label:'ID', id_placeholder:'Enter your ID', login_btn:'Sign in',
-    verifying:'Verifying...', login_success:'Signed in ✓', id_invalid:'Invalid ID. Check the number and try again.',
-    id_required:'Please enter your ID.', conn_error:'Could not reach the server. Check your internet connection and try again.',
-    for_whom:'Who is this system for?', role_emp:'Employees', role_emp_desc:'Take exams and view results', role_lead:'Leaders & managers', role_lead_desc:'Track and manage team results', role_admin:'System owner', role_admin_desc:'Full management and permissions', secure_data:'Your data is safe and protected',
-    dash_welcome:'Welcome back. Here is an overview of the system.', avg_score:'Average score', pass_rate:'Pass rate', total_exams_period:'Exams in period', total_emps:'Total employees',
-    failed_emps:'Failed employees', passed_emps:'Passed employees', active_exams:'Active exams', done_exams:'Completed exams',
-    top_emps:'Top employees', dept_perf:'Department performance', overall_view:'Overall performance', exam_analytics:'Exam analytics',
-    quick_reports:'Quick reports', export_pdf:'Export PDF', export_excel:'Export Excel', monthly_report:'Monthly report', print:'Print',
-    key_insights:'Key insights', no_prev_period:'No previous period to compare', by_topic:'By question topic',
-    last_7d:'Last 7 days', last_30d:'Last 30 days', last_3m:'Last 3 months', last_6m:'Last 6 months', last_12m:'Last 12 months', custom_range:'Custom range',
-    vs_prev:'vs previous', good:'Good', new:'New', show_all:'Show all',
-    reports_title:'Reports & Analytics', filters:'Filters', reset_filters:'Reset filters', tab_employee:'Employees', tab_department:'Departments', tab_team:'Teams', tab_exam:'Exams', tab_question:'Questions', tab_monthly:'Monthly', tab_insights:'Insights',
-    no_extra_filters:'No extra filters', report_date:'Report date', pass_only:'Passed only', fail_only:'Failed only',
-    score_from:'Score from', score_to:'to', attempt_num:'Attempt #', no_match_filters:'No data matching filters.',
-    questions_title:'Question Bank', q_text:'Question text', q_type:'Type', q_category:'Category', q_points:'Points',
-    type_mcq:'Single choice', type_multi:'Multiple choice', type_tf:'True/False', type_short:'Short answer',
-    options_mark:'Options (mark correct)', option_n:'Option', explain_opt:'Explanation (optional)', add_question:'Add question',
-    all_questions:'All questions', bulk_delete:'Delete selected', search_q:'Search...', no_questions:'No questions yet.', enter_q_text:'Enter question text',
-    emps_title:'Employees & Teams', add_emp:'Add new employee', edit_emp:'Edit employee', emp_id:'Employee ID', team_leader_label:'Team leader',
-    save_changes:'Save changes', cancel_edit:'Cancel edit', manage_leaders:'Manage Team Leaders', my_team_list:'My team',
-    new_leader_name:'New team leader name', leader_code:'Leader login code', add_leader:'Add team leader',
-    leader_of:'Team leader:', login_code:'Login code:', not_set:'Not set', change:'Change', set:'Set', members_count:'members',
-    delete_leader:'Delete leader', select_members:'Select employees for this leader:', save_members:'Save team members',
-    no_leaders_yet:'No team leaders yet. Add one first.', all_emps_list:'All employees', search_name_dept:'Search by name or department...',
-    no_emps:'No employees.', members_saved:'Team members saved.', enter_name_id:'Enter name and Employee ID (required).',
-    dup_empid:'Another employee already has this Employee ID.', enter_leader_name:'Enter team leader name.', code_used:'This code is already used by another leader.',
-    delete_leader_admin_only:'Only admin can delete a leader.', delete_leader_confirm:'Delete team leader? Employees will not be deleted, only unlinked.',
-    enter_new_code:'Enter new login code for the leader:', saving:'Saving...',
-    assign_title:'Assign Exams', choose_exam:'Choose exam', select_emps_assign:'Select employees to assign:', select_all_shown:'Select all shown',
-    assign_btn:'Assign exam', assign_need_exam:'Choose an exam', assign_need_emp:'Select at least one employee.',
-    assign_ok:'Exam assigned successfully', deadline:'Deadline',
-    results_title:'Results', wrong_title:'Wrong Answers', review_exams_title:'Manage Exams', review_results_title:'Review Answers',
-    create_exam:'Create new exam', edit_exam:'Edit exam', exam_name:'Exam name', pass_score:'Pass score %', time_limit:'Duration (minutes)',
-    show_result_emp:'Show result to employee', shuffle_q:'Shuffle questions', shuffle_opt:'Shuffle options',
-    select_questions:'Select questions', exam_created:'Exam created successfully', exam_updated:'Exam updated successfully', enter_exam_name:'Enter exam name',
-    activate:'Activate', deactivate:'Deactivate', no_exams:'No exams.',
-    grading_title:'Grade Exams', grade_team_only:'Your team exams only. ', grade_help:'The team leader grades their team exams and scores each question; the final result updates for the employee automatically.',
-    grade_exam:'Grade', regrade:'Re-grade', score:'Score', percent:'Percent', not_answered:'Not answered', correct_answer:'Correct answer', your_answer:'Your answer',
-    settings_title:'Settings', change_admin_pass:'Change admin password', current_pass:'Current password', new_pass:'New password', confirm_pass:'Confirm new password',
-    update_pass:'Update password', danger_zone:'Danger zone', wipe_desc:'Permanently delete all exams, assignments, results, and messages. Question bank and employees are kept. This cannot be undone.',
-    wipe_btn:'Delete all data (except question bank & employees)',
-    messages_title:'Messages', to:'Recipient', all_emps:'-- All employees --', all_my_team:'-- All my team --', subject:'Subject', body:'Message',
-    sent_messages:'Sent messages', no_messages:'No messages.', seen:'Seen', seen_at:'Seen —', delete_msg:'Delete', mark_seen:'Mark as seen',
-    suggestions_title:'Question Suggestions', suggest_title:'Suggest a question', my_suggestions:'My previous suggestions', send_suggestion:'Send suggestion', no_suggestions:'No suggestions.',
-    my_assigned:'Assigned exams', no_assigned:'No assigned exams.', start_exam:'Start exam', my_results:'My previous results', no_my_results:'No previous results.',
-    profile_title:'Edit my profile', emp_id_fixed:'(fixed, cannot be changed)', name_required:'Name is required.',
-    submit_exam:'Submit exam', next:'Next', prev:'Previous', confirm_submit:'Are you sure you want to submit the exam?', exam_done_result:'Exam finished. Score: ', passed_lbl:'Passed', failed_lbl:'Failed', exam_submitted:'Exam submitted successfully.',
-    notifications:'Notifications', mark_all_read:'Mark all as read', delete_all:'Delete all', no_notifs:'No notifications.', delete_all_notifs:'Delete all notifications?',
-    true_lbl:'True', false_lbl:'False', points:'pts', attempt:'Attempt', duration:'Duration', filter_status:'Status',
-    leader_only_team:'Your team only', db_error:'Could not connect to the database. Reload the page and try again.',
-    save_error:'Error while saving: ', select_one_delete:'Select at least one item to delete.',
-    excel_fail:'Could not load Excel library. Check your connection or use CSV.', pdf_hint:'In the print dialog choose destination: Save as PDF',
-    period_7d:'7 days', period_30d:'30 days', period_3m:'3 months', period_6m:'6 months', period_12m:'12 months', period_custom:'Custom',
-    col_employee:'Employee', col_dept:'Department', col_team:'Team', col_avg:'Average', col_pass:'Pass rate', col_exam:'Exam', col_date:'Date', col_score:'Score', col_status:'Status',
-    details:'Details', prev:'Previous', next:'Next', open:'Open',
-    kpi_pass_rate:'Pass rate', kpi_avg_score:'Average score', kpi_exams_period:'Total exams', kpi_total_emps:'Total employees',
-    cmp_prev:'vs previous', overview_perf:'Performance overview', top_employees:'Top employees',
-    dept_performance:'Department performance', team_performance:'Team performance', exam_performance:'Exam performance',
-    monthly_report_t:'Monthly report', question_analysis:'Question analysis', period_compare:'Period comparison',
-    insights_from_data:'Performance insights (from live data)', no_insights:'Not enough data for insights.',
-    export_center:'Export center', export_note:'Excel includes all tables on separate sheets. PDF: choose "Save as PDF" in the print dialog. Export respects current filters.',
-    report_of:'Employee Exam System — ', report_date_lbl:'Report date',
-    no_results_rows:'No results.', no_filter_data:'No data matching filters.',
-    uncategorized:'Uncategorized', hard:'Hard', medium:'Medium', easy:'Easy',
-    everyone_correct:'Everyone answered correctly', needs_review:'Needs review / may be unclear',
-    sum_final_results:'Final results', sum_attempts:'Attempts', sum_avg:'Average', sum_pass_rate:'Pass rate', sum_emps:'Employees',
-    head_emps_count:'Employees', head_exams_count:'Exams', head_fail_rate:'Fail rate', head_best:'Best', head_worst:'Worst',
-    head_rank:'Rank', head_team_leader:'Team (leader)', head_team_avg:'Team average', head_failed_emps:'Failed employees', head_results:'Results',
-    head_assigned:'Assigned', head_completed:'Completed', head_not_started:'Not started', head_highest:'Highest', head_lowest:'Lowest', head_avg_duration:'Avg duration (min)',
-    head_month:'Month', head_period:'Period', head_avg_pct:'Average %', head_pass_pct:'Pass rate %',
-    head_question:'Question', head_type:'Type', head_category:'Category', head_points:'Points',
-    head_topic:'Topic', head_total_ans:'Total answers', head_correct_pct:'% correct', head_wrong_pct:'% wrong', head_difficulty:'Difficulty', head_note:'Note',
-    label_status:'Status', label_score_from:'Score from', label_score_to:'to', label_attempt:'Attempt #',
-    pass_lbl:'Passed', fail_lbl:'Failed', filter_dept:'Department', filter_team:'Team', filter_emp:'Employee', filter_exam:'Exam',
-    no_data_short:'No data.', show_all:'Show all', calc_note:'Calculation: final result = last attempt per employee per exam.',
-    best_dept:'Best department', best_team:'Best team',
-
+    login_title:'Sign In', admin_pass_label:'Admin Login — Password', admin_login_btn:'Login as Admin',
+    emp_login_label:'Employee Login — Employee ID or Email', emp_login_btn:'Login',
+    save:'Save', cancel:'Cancel', delete:'Delete', add:'Add', search_ph:'Search...', send:'Send', edit:'Edit'
   }
 };
 function T(key){ return (DICT[lang] && DICT[lang][key]) || (DICT.ar[key]) || key; }
@@ -460,13 +296,13 @@ async function listAll(name){
   }catch(e){ console.error(e); return []; }
 }
 async function setDoc(name,id,data){
-  if(!db){ alert(T('db_error')); return false; }
+  if(!db){ alert('تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة وحاول مرة أخرى.'); return false; }
   try{ await db.collection(name).doc(id).set(data,{merge:true}); return true; }
   catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:'غير معروف')); return false; }
 }
 // update() understands dotted paths (nested fields); set(...,{merge:true}) does NOT
 async function updDoc(name,id,data){
-  if(!db){ alert(T('db_error')); return false; }
+  if(!db){ alert('تعذر الاتصال بقاعدة البيانات.'); return false; }
   try{ await db.collection(name).doc(id).update(data); return true; }
   catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:'غير معروف')); return false; }
 }
@@ -476,7 +312,7 @@ function deletedByOf(m,id){ return !!((m.deletedBy&&m.deletedBy[id]) || m['delet
 async function delDoc(name,id){ if(!db) return; try{ await db.collection(name).doc(id).delete(); }catch(e){console.error(e);} }
 async function bulkDeleteSelected(collectionName,chkClass){
   const ids=[...document.querySelectorAll('.'+chkClass+':checked')].map(c=>c.value);
-  if(!ids.length){ alert(T('select_one_delete')); return; }
+  if(!ids.length){ alert('اختر عنصرًا واحدًا على الأقل للحذف.'); return; }
   if(!confirm(`هل أنت متأكد من حذف ${ids.length} عنصر؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
   for(const id of ids) await delDoc(collectionName,id);
   routeRender();
@@ -490,7 +326,6 @@ function attachSelectAll(allId,chkClass){
 
 // ---------- notifications (sender gets notified when employee sees a message) ----------
 let notifUnsub=null, notifKeyActive=null, notifList=[], notifUnread=0;
-let empMsgUnread=0, empMsgUnsub=null;
 function notifKey(){ const s=state.session; return s&&s.role==='leader'? s.id : 'admin'; }
 function showToast(msg){
   const t=document.createElement('div'); t.textContent=msg;
@@ -499,38 +334,9 @@ function showToast(msg){
 }
 function updateNavBadge(){
   const bb=document.getElementById('bellBadge'); if(bb){ bb.textContent=notifUnread||''; bb.style.display=notifUnread?'flex':'none'; }
-  // Admin / leader messages badge
-  const a=document.querySelector('.nav a[href="#messages"]');
-  if(a){
-    const old=a.querySelector('#msgBadge'); if(old) old.remove();
-    if(notifUnread>0){ const sp=document.createElement('span'); sp.id='msgBadge'; sp.className='badge bad'; sp.style.marginInlineStart='6px'; sp.textContent=notifUnread; a.appendChild(sp); }
-  }
-  // Employee messages unread badge
-  const ea=document.querySelector('.nav a[href="#emp-messages"]');
-  if(ea){
-    const old=ea.querySelector('#empMsgBadge'); if(old) old.remove();
-    if(empMsgUnread>0){ const sp=document.createElement('span'); sp.id='empMsgBadge'; sp.className='badge bad'; sp.style.marginInlineStart='6px'; sp.textContent=empMsgUnread; ea.appendChild(sp); }
-  }
-}
-async function countEmpUnreadMessages(){
-  const s=state.session; if(!s||s.role!=='employee'||!db) return 0;
-  try{
-    const [messages, allEmps]=await Promise.all([listAll('messages'), listAll('employees')]);
-    const meNow=allEmps.find(e=>e.id===s.id)||s;
-    const mine=messages.filter(m=>!deletedByOf(m,s.id) && (m.toEmployeeId===s.id||m.toEmployeeId==='all'||(m.toEmployeeId==='team'&&m.toTeamId&&m.toTeamId===meNow.teamLeaderId)));
-    return mine.filter(m=>!seenAtOf(m,s.id)).length;
-  }catch(e){ console.error(e); return 0; }
-}
-async function refreshEmpMsgBadge(){
-  if(!state.session || state.session.role!=='employee'){ empMsgUnread=0; updateNavBadge(); return; }
-  empMsgUnread=await countEmpUnreadMessages();
-  updateNavBadge();
-}
-function stopEmpMsgListener(){ if(empMsgUnsub){ try{empMsgUnsub();}catch(e){} } empMsgUnsub=null; }
-function ensureEmpMsgListener(){
-  const s=state.session; if(!s||s.role!=='employee'||!db){ stopEmpMsgListener(); return; }
-  if(empMsgUnsub) return;
-  empMsgUnsub=db.collection('messages').onSnapshot(()=>{ refreshEmpMsgBadge(); }, err=>console.error(err));
+  const a=document.querySelector('.nav a[href="#messages"]'); if(!a) return;
+  const old=a.querySelector('#msgBadge'); if(old) old.remove();
+  if(notifUnread>0){ const sp=document.createElement('span'); sp.id='msgBadge'; sp.className='badge bad'; sp.style.marginRight='6px'; sp.textContent=notifUnread; a.appendChild(sp); }
 }
 function renderNotifBox(){
   const box=document.getElementById('notifBox'); if(!box) return;
@@ -542,7 +348,7 @@ function renderNotifBox(){
   if(mb) mb.onclick=async()=>{ for(const n of notifList.filter(x=>!x.read)) await setDoc('notifications',n.id,{read:true}); };
   box.querySelectorAll('[data-delnotif]').forEach(b=>b.onclick=async()=>{ await delDoc('notifications',b.dataset.delnotif); });
   const da=document.getElementById('delAllNotif');
-  if(da) da.onclick=async()=>{ if(!confirm(T('delete_all_notifs'))) return; for(const n of [...notifList]) await delDoc('notifications',n.id); };
+  if(da) da.onclick=async()=>{ if(!confirm('حذف كل الإشعارات؟')) return; for(const n of [...notifList]) await delDoc('notifications',n.id); };
 }
 function stopNotifListener(){ if(notifUnsub){ try{notifUnsub();}catch(e){} } notifUnsub=null; notifKeyActive=null; notifList=[]; notifUnread=0; }
 function ensureNotifListener(){
@@ -571,13 +377,10 @@ function filterResultsForLeader(results,emps,exams){
 
 function render(){
   const root=document.getElementById('root');
-  if(!state.session){ root.innerHTML=loginView(); attachLogin(); stopEmpMsgListener(); return; }
+  if(!state.session){ root.innerHTML=loginView(); attachLogin(); return; }
   root.innerHTML = shell();
   attachShellNav();
-  ensureNotifListener();
-  ensureEmpMsgListener();
-  updateNavBadge();
-  if(state.session.role==='employee') refreshEmpMsgBadge();
+  ensureNotifListener(); updateNavBadge();
   routeRender();
 }
 
@@ -596,7 +399,7 @@ function attachHeader(){
     const exs=A.exams.filter(x=>(x.name||'').toLowerCase().includes(q)).slice(0,5);
     const ds=[...new Set(A.empAll.map(e=>e.dept).filter(Boolean))].filter(d=>d.toLowerCase().includes(q)).slice(0,5);
     const sec=(t,a,k,f)=>a.length?`<div class="sh">${t}</div>`+a.map(x=>`<a href="#" data-sk="${k}" data-sv="${esc(f(x)[1])}">${esc(f(x)[0])}</a>`).join(''):'';
-    box.innerHTML=(sec(T('employees'),emps,'emp',e=>[e.name+(e.dept?' — '+e.dept:''),e.id])+sec(T('exams'),exs,'exam',x=>[x.name,x.id])+sec(T('departments'),ds,'dept',d=>[d,d]))||'<div class="sh">لا توجد نتائج</div>';
+    box.innerHTML=(sec('موظفون',emps,'emp',e=>[e.name+(e.dept?' — '+e.dept:''),e.id])+sec('اختبارات',exs,'exam',x=>[x.name,x.id])+sec('أقسام',ds,'dept',d=>[d,d]))||'<div class="sh">لا توجد نتائج</div>';
     box.style.display='block';
     box.querySelectorAll('[data-sk]').forEach(a=>a.onclick=ev=>{ev.preventDefault(); const k=a.dataset.sk; box.style.display='none'; inp.value='';
       if(k==='emp') state.view='employees-teams'; else if(k==='exam') state.view='review-exams'; else {rep.dept=a.dataset.sv; rep.tab='department'; state.view='reports';} routeRender();});
@@ -606,13 +409,12 @@ function attachHeader(){
 function shell(){
   const s=state.session;
   const adminLinks=[
-    ['dashboard',T('nav_dashboard')],['reports',T('nav_reports')],['questions',T('nav_questions')],
+    ['dashboard',T('nav_dashboard')],['reports','التقارير والتحليلات'],['questions',T('nav_questions')],
     ['employees-teams',T('nav_employees_teams')],['assign',T('nav_assign')],['results',T('nav_results')],['wrong-answers',T('nav_wrong')],
     ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['grading',T('nav_grading')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
   ];
   const empLinks=[['emp-home',T('nav_my_exams')],['emp-results',T('nav_my_results')],['emp-profile',T('nav_my_profile')],['emp-messages',T('nav_messages')],['suggest-question',T('nav_suggest_question')]];
-  // Leaders: same as admin except dashboard + settings
-  const leaderLinks=adminLinks.filter(l=>l[0]!=='dashboard' && l[0]!=='settings');
+  const leaderLinks=adminLinks.filter(l=>l[0]!=='dashboard');
   const links = s.role==='admin'?adminLinks:(s.role==='leader'?leaderLinks:empLinks);
   return `<div class="app">
     <div class="topbar">
@@ -627,14 +429,14 @@ function shell(){
       <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${NAVI[l[0]]||'•'} ${l[1]}</a>`).join('')}
       <a href="#" id="langBtnSide" style="color:var(--brand)">${T('toggle_lang')}</a>
       <a href="#logout" style="color:var(--bad)">${T('logout')}</a></div>
-      ${s.role==='admin'?'<div class="owner">👑<b>'+T('owner_zone')+'</b><small>'+T('full_access')+'</small></div>':''}
+      ${s.role==='admin'?'<div class="owner">👑<b>منطقة المالك</b><small>وصول كامل</small></div>':''}
     </div>
     <div class="mainWrap">
       <header class="hdr">
-        <div class="hdr-t"><b>${T('system_title')}</b><small>${T('system_tagline')}</small></div>
-        ${s.role!=='employee'?`<div class="srch"><input id="gSearch" placeholder="${T('search_global')}" autocomplete="off"><div id="sRes" class="sres"></div></div>`:'<div style="flex:1"></div>'}
+        <div class="hdr-t"><b>نظام اختبارات الموظفين</b><small>قيّم • حلّل • طوّر</small></div>
+        ${s.role!=='employee'?'<div class="srch"><input id="gSearch" placeholder="ابحث عن موظف أو اختبار أو قسم..." autocomplete="off"><div id="sRes" class="sres"></div></div>':'<div style="flex:1"></div>'}
         ${s.role!=='employee'?'<button class="bell" id="bellBtn">🔔<span class="bb" id="bellBadge"></span></button>':''}
-        <div class="usr"><span class="av">${esc((s.name||'م').trim().charAt(0))}</span><div><b>${esc(s.role==='admin'?T('admin_label'):s.name)}</b><small>${s.role==='admin'?T('system_owner'):(s.role==='leader'?T('team_leader'):T('employee'))}</small></div></div>
+        <div class="usr"><span class="av">${esc((s.name||'م').trim().charAt(0))}</span><div><b>${esc(s.role==='admin'?T('admin_label'):s.name)}</b><small>${s.role==='admin'?'مالك النظام':(s.role==='leader'?'قائد فريق':'موظف')}</small></div></div>
       </header>
       <div class="main" id="main"></div>
     </div>
@@ -676,17 +478,17 @@ function loginView(){
         <circle cx="48" cy="46" r="9" fill="#fff"/><path d="M31 80c0-12 8-20 17-20s17 8 17 20z" fill="#fff"/>
         <path d="M48 8l4.2 8.6 9.4 1.4-6.8 6.6 1.6 9.4L48 29.6l-8.4 4.4 1.6-9.4-6.8-6.6 9.4-1.4z" fill="url(#lgGg)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
       </svg>
-      <h1>${T('system_title')}</h1>
+      <h1>نظام اختبارات الموظفين</h1>
       <div class="lg-en">EMPLOYEE EXAMINATION SYSTEM</div>
       <div class="lg-tagline">تطوير <i></i> تقييم <i></i> نجاح</div>
     </header>
     <div class="lg-sep"></div>
-    <div class="lg-welcome"><h2>${T('welcome')}</h2><p>${T('login_subtitle')}</p></div>
+    <div class="lg-welcome"><h2>مرحبًا بك</h2><p>سجل دخولك للمتابعة</p></div>
     <form id="lgForm" novalidate autocomplete="off">
       <label class="lg-lbl" for="lgId">ID</label>
       <div class="lg-field" id="lgField">
         <svg class="lg-i"><use href="#lg-user"/></svg>
-        <input id="lgId" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${T('id_placeholder')}" aria-describedby="lgErr">
+        <input id="lgId" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="أدخل الـ ID الخاص بك" aria-describedby="lgErr">
       </div>
       <div class="lg-error" id="lgErr" role="alert" aria-live="assertive"><svg class="lg-i"><use href="#lg-alert"/></svg><span id="lgErrTxt"></span></div>
       <button class="lg-btn" id="lgBtn" type="submit" disabled>
@@ -694,14 +496,14 @@ function loginView(){
       </button>
     </form>
     <section class="lg-who" aria-label="لمن هذا النظام">
-      <div class="lg-who-title">${T('for_whom')}</div>
+      <div class="lg-who-title">لمن هذا النظام؟</div>
       <div class="lg-who-grid">
-        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-crown"/></svg></div><h4>${T('role_admin')}</h4><p>${T('role_admin_desc')}</p></div>
+        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-crown"/></svg></div><h4>مالك النظام</h4><p>إدارة كاملة وصلاحيات شاملة.</p></div>
         <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-users"/></svg></div><h4>القادة والمديرون</h4><p>متابعة وإدارة نتائج الفرق.</p></div>
         <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-usercheck"/></svg></div><h4>الموظفون</h4><p>أداء الاختبارات ومعرفة النتائج.</p></div>
       </div>
     </section>
-    <footer class="lg-secure"><svg class="lg-i"><use href="#lg-shield"/></svg> ${T('secure_data')}</footer>
+    <footer class="lg-secure"><svg class="lg-i"><use href="#lg-shield"/></svg> بياناتك آمنة ومحمية</footer>
   </div>
   </div>`;
 }
@@ -735,22 +537,22 @@ function attachLogin(){
   const sync=()=>{ btn.disabled = busy || input.value.trim()===''; };
   const showErr=(m)=>{ errTxt.textContent=m; errBox.classList.remove('show'); void errBox.offsetWidth; errBox.classList.add('show'); field.classList.add('err'); };
   const clearErr=()=>{ errBox.classList.remove('show'); field.classList.remove('err'); };
-  const setLoading=(on)=>{ busy=on; btn.classList.toggle('loading',on); lbl.textContent=on?T('verifying'):T('login_btn'); input.readOnly=on; sync(); };
+  const setLoading=(on)=>{ busy=on; btn.classList.toggle('loading',on); lbl.textContent=on?'جارٍ التحقق...':'دخول'; input.readOnly=on; sync(); };
   input.addEventListener('input',()=>{ clearErr(); sync(); });
   form.addEventListener('submit',async(e)=>{
     e.preventDefault();
     const id=input.value.trim();
-    if(!id){ showErr(T('id_required')); return; }
+    if(!id){ showErr('من فضلك أدخل الـ ID الخاص بك.'); return; }
     if(busy) return;
     clearErr(); setLoading(true);
     try{
       const res=await authenticateId(id);
-      if(!res){ setLoading(false); showErr(T('id_invalid')); input.focus(); input.select(); return; }
-      btn.classList.remove('loading'); btn.classList.add('success'); lbl.textContent=T('login_success');
+      if(!res){ setLoading(false); showErr('الـ ID غير صحيح. تأكد من الرقم وحاول مرة أخرى.'); input.focus(); input.select(); return; }
+      btn.classList.remove('loading'); btn.classList.add('success'); lbl.textContent='تم تسجيل الدخول ✓';
       setTimeout(()=>{ state.session=res.user; state.view=res.view; render(); },450);
     }catch(err){
       console.error(err); setLoading(false);
-      showErr(T('conn_error'));
+      showErr('تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.');
     }
   });
   input.focus({preventScroll:true}); sync();
@@ -758,7 +560,7 @@ function attachLogin(){
 
 window.addEventListener('hashchange', ()=>{
   const v=(location.hash||'#').slice(1);
-  if(v==='logout'){ stopNotifListener(); stopEmpMsgListener(); clearSession(); state.session=null; state.view='login'; location.hash=''; render(); return; }
+  if(v==='logout'){ stopNotifListener(); clearSession(); state.session=null; state.view='login'; location.hash=''; render(); return; }
   if(v) state.view=v;
   render();
 });
@@ -784,7 +586,7 @@ async function restoreSession(){
 async function routeRender(){
   saveSession();
   const main=document.getElementById('main');
-  main.innerHTML='<p style="color:var(--muted)">'+T('loading')+'</p>';
+  main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
   if(state.session && state.session.role==='leader' && (state.view==='dashboard'||!state.view)) state.view='grading';
   const v=state.view;
   if(v==='dashboard'){ main.innerHTML=await dashboardView(); attachDashboard(); }
@@ -797,7 +599,7 @@ async function routeRender(){
   else if(v==='review-exams'){ main.innerHTML=await reviewExamsView(); attachReviewExams(); }
   else if(v==='grading'){ main.innerHTML=await gradingView(); attachGrading(); }
   else if(v==='review-results'){ main.innerHTML=await reviewResultsView(); attachReviewResults(); }
-  else if(v==='settings'){ if(state.session.role!=='admin'){ main.innerHTML='<p style="color:var(--muted)">'+T('unauthorized')+'</p>'; } else { main.innerHTML=settingsView(); attachSettings(); } }
+  else if(v==='settings'){ main.innerHTML=settingsView(); attachSettings(); }
   else if(v==='messages'){ main.innerHTML=await messagesView(); attachMessages(); }
   else if(v==='emp-messages'){ main.innerHTML=await empMessagesView(); attachEmpMessages(); }
   else if(v==='suggestions'){ main.innerHTML=await suggestionsView(); attachSuggestionsAdmin(); }
@@ -895,10 +697,10 @@ function questionStats(A,rs){
   const m={};
   rs.forEach(r=>{const ex=A.examAll.find(x=>x.id===r.examId); if(!ex) return; (ex.questionIds||[]).forEach(qid=>{const q=A.qs.find(z=>z.id===qid); if(!q) return; const v=r.answers?r.answers[qid]:undefined; if(v===undefined||v===null||v==='') return;
     const o=m[qid]=m[qid]||{id:qid,text:q.text,topic:q.category||'-',tot:0,ok:0}; o.tot++; if(!isAnswerWrong(q,v)) o.ok++;});});
-  return Object.values(m).map(o=>{const c=pct(o.ok,o.tot); return {...o,bad:o.tot-o.ok,c,w:100-c,diff:c<40?T('hard'):c<75?T('medium'):T('easy'),note:c===100?T('everyone_correct'):c<30?T('needs_review'):c<40?T('hard'):''};}).sort((a,b)=>a.c-b.c);
+  return Object.values(m).map(o=>{const c=pct(o.ok,o.tot); return {...o,bad:o.tot-o.ok,c,w:100-c,diff:c<40?'صعب':c<75?'متوسط':'سهل',note:c===100?'أجاب الجميع صحيحًا':c<30?'يحتاج مراجعة / قد يكون غير واضح':c<40?'صعب':''};}).sort((a,b)=>a.c-b.c);
 }
-function topTable(rows,N){return `<div class="table-wrap"><table><tr><th>#</th><th>ID</th><th>${T('col_employee')}</th><th>${T('col_dept')}</th><th>${T('col_team')}</th><th>${T('col_avg')}</th><th>${T('col_pass')}</th></tr>${rows.slice(0,N).map((e,i)=>`<tr><td>${i+1}</td><td>${esc(e.empId)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.team)}</td><td>${e.avg}%</td><td>${e.rate}%</td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">'+T('no_data_short')+'</td></tr>'}</table></div>`;}
-function periodBar(f,idp){return `<div class="no-print" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${[['7d',T('period_7d')],['30d',T('period_30d')],['3m',T('period_3m')],['6m',T('period_6m')],['12m',T('period_12m')],['custom',T('period_custom')]].map(([k,t])=>`<button class="pill ${f.p===k?'on':''}" data-${idp}="${k}">${t}</button>`).join('')}
+function topTable(rows,N){return `<div class="table-wrap"><table><tr><th>#</th><th>ID</th><th>الموظف</th><th>القسم</th><th>الفريق</th><th>المتوسط</th><th>النجاح</th></tr>${rows.slice(0,N).map((e,i)=>`<tr><td>${i+1}</td><td>${esc(e.empId)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.team)}</td><td>${e.avg}%</td><td>${e.rate}%</td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">لا توجد بيانات.</td></tr>'}</table></div>`;}
+function periodBar(f,idp){return `<div class="no-print" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${[['7d','7 أيام'],['30d','30 يومًا'],['3m','3 أشهر'],['6m','6 أشهر'],['12m','12 شهرًا'],['custom','مخصص']].map(([k,t])=>`<button class="pill ${f.p===k?'on':''}" data-${idp}="${k}">${t}</button>`).join('')}
   ${f.p==='custom'?`<input type="date" data-${idp}from value="${f.from}" style="padding:4px 8px"> <input type="date" data-${idp}to value="${f.to}" style="padding:4px 8px">`:''}</div>`;}
 
 // ================= Dashboard =================
@@ -907,12 +709,12 @@ async function dashboardView(){
   const es=examStats(A,K.fin,K.inR), ps=empStats(A,K.fin,K.inR).filter(e=>e.done).sort((a,b)=>b.avg-a.avg||b.rate-a.rate);
   const ongoing=es.filter(e=>e.active&&e.asg>e.done).length;
   const newEx=A.exams.filter(x=>x.createdAt>=from&&x.createdAt<=to).length, prevEx=A.exams.filter(x=>x.createdAt>=from-len-1&&x.createdAt<from).length;
- const T=Object.assign(k=>window.T(k), trendData(A,from,to)), D=deptStats(A,K.fin), pal=['#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444'];
+  const T=trendData(A,from,to), D=deptStats(A,K.fin), pal=['#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444'];
   const actE=T.edges.map(b0=>{const l=A.results.filter(r=>r.endTime>=b0&&r.endTime<b0+T.step); return l.length?new Set(l.map(r=>r.employeeId)).size:null;});
   const exC=T.edges.map(b0=>A.exams.filter(x=>x.createdAt<b0+T.step).length);
   const kb=(c,ic,n,t,d,sp)=>`<div class="kb" style="--c:${c}"><div class="ci">${ic}</div><div class="tx"><div class="n">${n}</div><div class="t">${t}</div><div class="dd">${d}</div></div><div class="sp2">${sp}</div></div>`;
-  const cmp=' <span class="dl">'+T('cmp_prev')+'</span>';
-  const cat={}; A.exams.forEach(x=>(x.questionIds||[]).forEach(id=>{const q=A.qs.find(z=>z.id===id); const k=(q&&q.category)||T('uncategorized'); cat[k]=(cat[k]||0)+1;}));
+  const cmp=' <span class="dl">مقارنة بالسابقة</span>';
+  const cat={}; A.exams.forEach(x=>(x.questionIds||[]).forEach(id=>{const q=A.qs.find(z=>z.id===id); const k=(q&&q.category)||'غير مصنف'; cat[k]=(cat[k]||0)+1;}));
   const cats=Object.entries(cat).sort((a,b)=>b[1]-a[1]).slice(0,5), ctot=cats.reduce((a,c)=>a+c[1],0);
   const attn=ps.filter(e=>e.avg<60).length, diff=P.n?K.avg-P.avg:null;
   const lst=(t,a,f)=>`<div class="card"><h3>${t}</h3>${a.map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${esc(e.name)}</span><strong style="color:var(--brand)">${f(e)}</strong></div>`).join('')||'<span style="color:var(--muted)">لا توجد بيانات.</span>'}</div>`;
@@ -926,16 +728,16 @@ async function dashboardView(){
   <div class="kg4">
     ${kb('#3b82f6','👥',A.emps.length,'إجمالي الموظفين','<span class="dl">'+ps.length+' لديهم نتائج</span>',spark(actE,'#3b82f6'))}
     ${kb('#14b8a6','📝',A.exams.length,'إجمالي الاختبارات',delta(newEx,prevEx)+' <span class="dl">في الفترة</span>',spark(exC,'#14b8a6'))}
-    ${kb('#8b5cf6','✅',K.rate+'%',T('kpi_pass_rate'),delta(K.rate,P.rate)+cmp,spark(T.series[1].v,'#8b5cf6'))}
-    ${kb('#f59e0b','🏆',K.avg+'%',T('kpi_avg_score'),delta(K.avg,P.avg)+cmp,spark(T.series[0].v,'#f59e0b'))}
+    ${kb('#8b5cf6','✅',K.rate+'%','نسبة النجاح',delta(K.rate,P.rate)+cmp,spark(T.series[1].v,'#8b5cf6'))}
+    ${kb('#f59e0b','🏆',K.avg+'%','متوسط الدرجات',delta(K.avg,P.avg)+cmp,spark(T.series[0].v,'#f59e0b'))}
   </div>
   <div class="kg">
     ${sm('✅','الاختبارات المكتملة',K.n,delta(K.n,P.n)+cmp)}${sm('⏳','الاختبارات الجارية',ongoing,'<span class="dl">نشطة وفيها معلّقون</span>')}${sm('🏅','الموظفون الناجحون',K.pe,delta(K.pe,P.pe)+cmp)}${sm('⚠️','الموظفون الراسبون',K.fe,delta(K.fe,P.fe)+cmp)}
   </div>
   <div class="gr">
-    <div class="panel"><div class="ph"><h3>📈 ${T('overview_perf')}</h3><small><span style="color:#3b82f6">●</span> المتوسط &nbsp;<span style="color:#f59e0b">●</span> نسبة النجاح</small></div>${K.n?lineChart(T.series,T.lbls):'<p style="color:var(--muted)">لا توجد نتائج في هذه الفترة.</p>'}</div>
-    <div class="panel"><div class="ph"><h3>👥 ${T('dept_performance')}</h3></div>${D.length&&K.n?`<div style="text-align:center">${donut(D.slice(0,6).map((d,i)=>({v:Math.max(d.avg,1),c:pal[i]})),K.avg+'%','الأداء العام')}</div>`+D.slice(0,6).map((d,i)=>`<div class="lg"><span><i style="background:${pal[i]}"></i>${esc(d.dept)} <small style="color:var(--muted)">(${d.emps} موظف · ${d.exams} اختبار)</small></span><b>${d.avg}%</b></div>`).join(''):'<p style="color:var(--muted)">لا توجد بيانات.</p>'}</div>
-    <div class="panel"><div class="ph"><h3>🏆 ${T('top_employees')}</h3><span>${[5,10,20].map(n=>`<button class="pill ${dash.top===n?'on':''}" data-top="${n}">${n}</button>`).join(' ')} <a href="#" data-vall style="color:#4f9dff;font-size:13px">عرض الكل ←</a></span></div>
+    <div class="panel"><div class="ph"><h3>📈 نظرة عامة على الأداء</h3><small><span style="color:#3b82f6">●</span> المتوسط &nbsp;<span style="color:#f59e0b">●</span> نسبة النجاح</small></div>${K.n?lineChart(T.series,T.lbls):'<p style="color:var(--muted)">لا توجد نتائج في هذه الفترة.</p>'}</div>
+    <div class="panel"><div class="ph"><h3>👥 أداء الأقسام</h3></div>${D.length&&K.n?`<div style="text-align:center">${donut(D.slice(0,6).map((d,i)=>({v:Math.max(d.avg,1),c:pal[i]})),K.avg+'%','الأداء العام')}</div>`+D.slice(0,6).map((d,i)=>`<div class="lg"><span><i style="background:${pal[i]}"></i>${esc(d.dept)} <small style="color:var(--muted)">(${d.emps} موظف · ${d.exams} اختبار)</small></span><b>${d.avg}%</b></div>`).join(''):'<p style="color:var(--muted)">لا توجد بيانات.</p>'}</div>
+    <div class="panel"><div class="ph"><h3>🏆 أفضل الموظفين</h3><span>${[5,10,20].map(n=>`<button class="pill ${dash.top===n?'on':''}" data-top="${n}">${n}</button>`).join(' ')} <a href="#" data-vall style="color:#4f9dff;font-size:13px">عرض الكل ←</a></span></div>
       <div style="max-height:330px;overflow-y:auto">${ps.slice(0,dash.top).map((e,i)=>`<div class="tp"><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="av" style="width:34px;height:34px;font-size:14px">${esc(e.name.charAt(0))}</span><div class="nm">${esc(e.name)}<small>${esc(e.dept)} · ${esc(e.team)}</small></div><span class="sp ${e.avg>=90?'g':''}">${e.avg}%</span></div>`).join('')||'<span style="color:var(--muted)">لا توجد بيانات.</span>'}</div></div>
   </div>
   <div class="gr">
@@ -944,7 +746,7 @@ async function dashboardView(){
       <div class="ir"><div class="ii">📈</div><div>${diff==null?'لا توجد فترة سابقة للمقارنة':diff>=0?'تحسّن الأداء':'انخفض الأداء'}<small>${diff==null?'':'متوسط الدرجات '+(diff>=0?'ارتفع':'انخفض')+' بمقدار '+Math.abs(diff)+' نقطة'}</small></div>${diff==null?'':`<span class="ip" style="background:${diff>=0?'#15803d':'#b91c1c'}">${diff>=0?'+':''}${diff}%</span>`}</div>
       <div class="ir"><div class="ii">👥</div><div>نسبة النجاح<small>${K.pass} من ${K.n} نتيجة نهائية ناجحة</small></div><span class="ip" style="background:#1d4ed8">${K.rate}%</span></div>
       <div class="ir"><div class="ii">⚠️</div><div>يحتاجون انتباهًا<small>${attn} موظف متوسطهم أقل من 60%</small></div><span class="ip" style="background:#d97706">${attn}</span></div></div>
-    <div class="panel"><div class="ph"><h3>📄 ${T('quick_reports')}</h3><a href="#" data-rep="employee" style="color:#4f9dff;font-size:13px">عرض الكل ←</a></div>
+    <div class="panel"><div class="ph"><h3>📄 تقارير سريعة</h3><a href="#" data-rep="employee" style="color:#4f9dff;font-size:13px">عرض الكل ←</a></div>
       <div class="qg"><button class="qb" style="--c:#14b8a6" data-qx="xXlsx">📗 تصدير Excel<small>تقرير مفصل</small></button><button class="qb" style="--c:#ef4444" data-qx="xPdf">📕 تصدير PDF<small>تقرير رسمي</small></button><button class="qb" style="--c:#8b5cf6" data-qx="xPrint">🖨️ طباعة<small>صيغة قابلة للطباعة</small></button><button class="qb" style="--c:#3b82f6" data-qx="xPrint" data-tab="monthly">📊 التقرير الشهري<small>تحليلات</small></button></div></div>
   </div>
   <div class="g3">${lst('الأصعب (أقل متوسط)',hard,e=>e.avg+'%')}${lst('الأسهل (أعلى متوسط)',easy,e=>e.avg+'%')}${lst('الأكثر محاولات',most,e=>e.att)}${lst('أقل نسبة نجاح',low,e=>e.rate+'%')}
@@ -960,9 +762,9 @@ function drawHist(){
   let rows=K.inR.map(r=>({r,e:emp(r.employeeId),x:A.examAll.find(x=>x.id===r.examId)||{}})).filter(o=>!q||[o.x.name,o.e.name,o.e.dept].join(' ').toLowerCase().includes(q));
   rows.sort((a,b)=>(dash.sort==='score'?(a.r.percent||0)-(b.r.percent||0):(a.r.endTime||0)-(b.r.endTime||0))*(dash.asc?1:-1));
   const per=8, pages=Math.max(1,Math.ceil(rows.length/per)); dash.page=Math.min(dash.page,pages-1);
-  document.getElementById('histBox').innerHTML=`<div class="table-wrap"><table><tr><th>${T('col_exam')}</th><th>${T('col_employee')}</th><th>${T('col_dept')}</th><th><a href="#" data-hs="date">${T('col_date')} ⇅</a></th><th><a href="#" data-hs="score">${T('col_score')} ⇅</a></th><th>${T('col_status')}</th><th></th></tr>
-  ${rows.slice(dash.page*per,dash.page*per+per).map(o=>`<tr><td>${esc(o.x.name||'-')}</td><td>${esc(o.e.name||'-')}</td><td>${esc(o.e.dept||'-')}</td><td>${fdate(o.r.endTime)}</td><td>${o.r.percent}%</td><td><span class="badge ${o.r.passed?'ok':'bad'}">${o.r.passed?T('pass_lbl'):T('fail_lbl')}</span></td><td><button class="btn sec" data-goto="review-results" style="padding:2px 8px">${T('details')}</button></td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">'+T('no_results_rows')+'</td></tr>'}</table></div>
-  <div class="pgr"><button class="pill" data-pg="-1" ${dash.page<=0?'disabled':''}>${T('prev')}</button> ${dash.page+1} / ${pages} <button class="pill" data-pg="1" ${dash.page>=pages-1?'disabled':''}>${T('next')}</button></div>`;
+  document.getElementById('histBox').innerHTML=`<div class="table-wrap"><table><tr><th>الاختبار</th><th>الموظف</th><th>القسم</th><th><a href="#" data-hs="date">التاريخ ⇅</a></th><th><a href="#" data-hs="score">الدرجة ⇅</a></th><th>الحالة</th><th></th></tr>
+  ${rows.slice(dash.page*per,dash.page*per+per).map(o=>`<tr><td>${esc(o.x.name||'-')}</td><td>${esc(o.e.name||'-')}</td><td>${esc(o.e.dept||'-')}</td><td>${fdate(o.r.endTime)}</td><td>${o.r.percent}%</td><td><span class="badge ${o.r.passed?'ok':'bad'}">${o.r.passed?'ناجح':'راسب'}</span></td><td><button class="btn sec" data-goto="review-results" style="padding:2px 8px">التفاصيل</button></td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">لا توجد نتائج.</td></tr>'}</table></div>
+  <div class="pgr"><button class="pill" data-pg="-1" ${dash.page<=0?'disabled':''}>السابق</button> ${dash.page+1} / ${pages} <button class="pill" data-pg="1" ${dash.page>=pages-1?'disabled':''}>التالي</button></div>`;
   const hb=document.getElementById('histBox');
   hb.querySelectorAll('[data-hs]').forEach(a=>a.onclick=e=>{e.preventDefault(); dash.asc=dash.sort===a.dataset.hs?!dash.asc:false; dash.sort=a.dataset.hs; drawHist();});
   hb.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{dash.page+=+b.dataset.pg; drawHist();});
@@ -999,13 +801,13 @@ function buildReports(A,rs){
   const now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1).getTime(), m1=new Date(now.getFullYear(),now.getMonth()-1,1).getTime(), qs0=new Date(now.getFullYear(),Math.floor(now.getMonth()/3)*3,1).getTime(), qs1=new Date(now.getFullYear(),Math.floor(now.getMonth()/3)*3-3,1).getTime();
   const cmpRows=[['الشهر الحالي',...per(m0,Infinity)],['الشهر السابق',...per(m1,m0)],['الربع الحالي',...per(qs0,Infinity)],['الربع السابق',...per(qs1,qs0)]];
   const R={
-   employee:{t:T('tab_employee'),head:['Employee ID',T('name'),T('col_dept'),T('col_team'),T('head_assigned'),T('completed'),T('pass_lbl'),T('fail_lbl'),T('col_avg'),T('head_highest'),T('head_lowest'),T('kpi_pass_rate'),T('head_avg_duration'),T('head_note'),'%'],rows:es.map(e=>[e.empId,e.name,e.dept,e.team,e.asg,e.done,e.pass,e.fail,e.avg+'%',e.hi+'%',e.lo+'%',e.rate+'%',e.dur,e.imp==null?'-':e.imp>0?'▲':e.imp<0?'▼':'=',e.imp==null?'-':e.imp])},
-   department:{t:T('dept_performance'),head:[T('col_dept'),T('head_emps_count'),T('head_exams_count'),T('col_avg'),T('kpi_pass_rate'),T('head_fail_rate'),T('head_best'),T('head_worst')],rows:ds.map(d=>[d.dept,d.emps,d.exams,d.avg+'%',d.rate+'%',d.fail+'%',name(d.best),name(d.worst)])},
-   team:{t:T('team_performance'),head:[T('head_rank'),T('head_team_leader'),T('head_emps_count'),T('head_team_avg'),T('kpi_pass_rate'),T('head_failed_emps'),T('head_results')],rows:ts.map((t,i)=>[i+1,t.name,t.n,t.avg+'%',t.rate+'%',t.failedEmps,t.cnt])},
-   exam:{t:T('exam_performance'),head:[T('col_exam'),'ID',T('head_assigned'),T('head_completed'),T('head_not_started'),T('col_avg'),T('head_highest'),T('head_lowest'),T('kpi_pass_rate'),T('head_fail_rate'),T('head_avg_duration')],rows:xs.map(x=>[x.name,x.id,x.asg,x.done,x.ns,x.avg+'%',x.hi+'%',x.lo+'%',x.rate+'%',x.fail+'%',x.dur])},
-   question:{t:T('question_analysis'),head:['ID',T('head_question'),T('head_topic'),T('head_difficulty'),T('head_total_ans'),T('pass_lbl'),T('fail_lbl'),T('head_correct_pct'),T('head_wrong_pct'),T('head_note')],rows:qs.map(q=>[q.id.slice(0,6),q.text,q.topic,q.diff,q.tot,q.ok,q.bad,q.c+'%',q.w+'%',q.note])},
-   monthly:{t:T('monthly_report_t'),head:[T('head_month'),T('head_results'),T('col_avg'),T('kpi_pass_rate'),T('head_exams_count'),T('head_emps_count')],rows:ms.map(m=>[m.k,m.n,m.avg+'%',m.rate+'%',m.ex,m.emps])},
-   compare:{t:T('period_compare'),head:[T('head_period'),T('head_results'),T('head_avg_pct'),T('head_pass_pct')],rows:cmpRows}
+   employee:{t:'أداء الموظفين',head:['Employee ID','الاسم','القسم','الفريق','مُسند','مكتمل','ناجح','راسب','المتوسط','الأعلى','الأدنى','نسبة النجاح','متوسط المدة (د)','الاتجاه','التحسن %'],rows:es.map(e=>[e.empId,e.name,e.dept,e.team,e.asg,e.done,e.pass,e.fail,e.avg+'%',e.hi+'%',e.lo+'%',e.rate+'%',e.dur,e.imp==null?'-':e.imp>0?'▲ صاعد':e.imp<0?'▼ هابط':'ثابت',e.imp==null?'-':e.imp])},
+   department:{t:'أداء الأقسام',head:['القسم','عدد الموظفين','عدد الاختبارات','المتوسط','نسبة النجاح','نسبة الرسوب','الأفضل','الأدنى'],rows:ds.map(d=>[d.dept,d.emps,d.exams,d.avg+'%',d.rate+'%',d.fail+'%',name(d.best),name(d.worst)])},
+   team:{t:'أداء الفرق',head:['الترتيب','الفريق (القائد)','عدد الموظفين','متوسط الفريق','نسبة النجاح','موظفون راسبون','النتائج'],rows:ts.map((t,i)=>[i+1,t.name,t.n,t.avg+'%',t.rate+'%',t.failedEmps,t.cnt])},
+   exam:{t:'أداء الاختبارات',head:['الاختبار','ID','مُسند','أكمل','لم يبدأ','المتوسط','الأعلى','الأدنى','نسبة النجاح','نسبة الرسوب','متوسط المدة (د)'],rows:xs.map(x=>[x.name,x.id,x.asg,x.done,x.ns,x.avg+'%',x.hi+'%',x.lo+'%',x.rate+'%',x.fail+'%',x.dur])},
+   question:{t:'تحليل الأسئلة',head:['ID','السؤال','الموضوع','الصعوبة','إجمالي الإجابات','صحيحة','خاطئة','% صحيحة','% خاطئة','ملاحظة'],rows:qs.map(q=>[q.id.slice(0,6),q.text,q.topic,q.diff,q.tot,q.ok,q.bad,q.c+'%',q.w+'%',q.note])},
+   monthly:{t:'التقرير الشهري',head:['الشهر','النتائج','المتوسط','نسبة النجاح','عدد الاختبارات','عدد الموظفين'],rows:ms.map(m=>[m.k,m.n,m.avg+'%',m.rate+'%',m.ex,m.emps])},
+   compare:{t:'مقارنة الفترات',head:['الفترة','النتائج','المتوسط %','نسبة النجاح %'],rows:cmpRows}
   };
   const ins=[], withData=es.filter(e=>e.done);
   if(ds.length&&ds[0].n) ins.push(`أفضل قسم أداءً: ${ds[0].dept} (متوسط ${ds[0].avg}%)`);
@@ -1014,7 +816,7 @@ function buildReports(A,rs){
   const imp=withData.filter(e=>e.imp!=null).sort((a,b)=>b.imp-a.imp); if(imp.length&&imp[0].imp>0) ins.push(`أعلى موظف تحسنًا: ${imp[0].name} (+${imp[0].imp} نقطة)`); if(imp.length&&imp[imp.length-1].imp<0) ins.push(`أكثر موظف انخفاضًا: ${imp[imp.length-1].name} (${imp[imp.length-1].imp} نقطة)`);
   const xd=xs.filter(x=>x.n).sort((a,b)=>b.rate-a.rate); if(xd.length){ ins.push(`أعلى اختبار نجاحًا: ${xd[0].name} (${xd[0].rate}%)`); if(xd.length>1) ins.push(`اختبار يحتاج مراجعة: ${xd[xd.length-1].name} (نجاح ${xd[xd.length-1].rate}%)`); }
   const tp={}; qs.forEach(q=>{const o=tp[q.topic]=tp[q.topic]||{t:q.topic,tot:0,ok:0}; o.tot+=q.tot; o.ok+=q.ok;}); const tl=Object.values(tp).filter(o=>o.tot).sort((a,b)=>a.ok/a.tot-b.ok/b.tot); if(tl.length&&tl[0].t!=='-') ins.push(`أكثر موضوع يعاني فيه الموظفون: ${tl[0].t} (صحيح ${pct(tl[0].ok,tl[0].tot)}%)`);
-  return {R,ins,fin,rs,summary:[[T('sum_final_results'),fin.length],[T('sum_attempts'),rs.length],[T('sum_avg'),avgOf(fin.map(r=>r.percent||0))+'%'],[T('sum_pass_rate'),pct(fin.filter(r=>r.passed).length,fin.length)+'%'],[T('sum_emps'),new Set(fin.map(r=>r.employeeId)).size]]};
+  return {R,ins,fin,rs,summary:[['عدد النتائج النهائية',fin.length],['عدد المحاولات',rs.length],['المتوسط',avgOf(fin.map(r=>r.percent||0))+'%'],['نسبة النجاح',pct(fin.filter(r=>r.passed).length,fin.length)+'%'],['عدد الموظفين',new Set(fin.map(r=>r.employeeId)).size]]};
 }
 async function reportsView(){
   const A=await loadA(), [from,to]=rangeOf(rep), emp=id=>A.empAll.find(e=>e.id===id)||{};
@@ -1022,20 +824,20 @@ async function reportsView(){
     &&(!rep.status||(rep.status==='pass')===!!r.passed)&&(rep.min===''||r.percent>=+rep.min)&&(rep.max===''||r.percent<=+rep.max)&&(!rep.att||r.attemptNum==rep.att));
   const B=buildReports(A,rs); repCtx={A,B};
   const depts=[...new Set(A.empAll.map(e=>e.dept).filter(Boolean))];
-  const sel=(id,lab,opts,v)=>`<div><label>${lab}</label><select id="${id}" style="width:100%"><option value="">${T('all')}</option>${opts.map(o=>`<option value="${esc(o[0])}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
-  const tabs=[['employee',T('tab_employee')],['department',T('tab_department')],['team',T('tab_team')],['exam',T('tab_exam')],['question',T('tab_question')],['monthly',T('tab_monthly')],['insights',T('tab_insights')]];
-  const cur=B.R[rep.tab], filt=[rep.dept&&(T('filter_dept')+': '+rep.dept),rep.exam&&T('filter_exam'),rep.emp&&T('filter_emp'),rep.status&&(rep.status==='pass'?T('pass_only'):T('fail_only'))].filter(Boolean).join(' | ')||T('no_extra_filters');
-  return `<h1>${T('reports_title')}</h1>
-  <div class="card no-print"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><strong>${T('filters')}</strong>${periodBar(rep,'rp')}</div>
-   <div class="row">${sel('rDept',T('filter_dept'),depts.map(d=>[d,d]),rep.dept)}${sel('rTeam',T('filter_team'),A.leaders.map(l=>[l.id,l.name]),rep.team)}${sel('rEmp',T('filter_emp'),A.emps.map(e=>[e.id,e.name]),rep.emp)}${sel('rExam',T('filter_exam'),A.exams.map(x=>[x.id,x.name]),rep.exam)}
-   ${sel('rStatus',T('label_status'),[['pass',T('pass_lbl')],['fail',T('fail_lbl')]],rep.status)}<div><label>${T('label_score_from')}</label><input id="rMin" type="number" value="${rep.min}" style="width:100%"></div><div><label>${T('label_score_to')}</label><input id="rMax" type="number" value="${rep.max}" style="width:100%"></div><div><label>${T('label_attempt')}</label><input id="rAtt" type="number" value="${rep.att}" style="width:100%"></div></div>
-   <button class="btn sec" id="rReset" style="margin-top:8px">${T('reset_filters')}</button></div>
-  <div class="prn" style="margin-bottom:10px"><h2>🌟 ${T('report_of')}${esc(rep.tab==='insights'?T('tab_insights'):cur.t)}</h2><div>${T('report_date_lbl')}: ${new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US')} — ${esc(filt)}</div></div>
+  const sel=(id,lab,opts,v)=>`<div><label>${lab}</label><select id="${id}" style="width:100%"><option value="">الكل</option>${opts.map(o=>`<option value="${esc(o[0])}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+  const tabs=[['employee','الموظفون'],['department','الأقسام'],['team','الفرق'],['exam','الاختبارات'],['question','الأسئلة'],['monthly','شهري'],['insights','رؤى الأداء']];
+  const cur=B.R[rep.tab], filt=[rep.dept&&'القسم: '+rep.dept,rep.exam&&'اختبار محدد',rep.emp&&'موظف محدد',rep.status&&(rep.status==='pass'?'ناجح فقط':'راسب فقط')].filter(Boolean).join(' | ')||'بدون فلاتر إضافية';
+  return `<h1>التقارير والتحليلات</h1>
+  <div class="card no-print"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><strong>الفلاتر</strong>${periodBar(rep,'rp')}</div>
+   <div class="row">${sel('rDept','القسم',depts.map(d=>[d,d]),rep.dept)}${sel('rTeam','الفريق',A.leaders.map(l=>[l.id,l.name]),rep.team)}${sel('rEmp','الموظف',A.emps.map(e=>[e.id,e.name]),rep.emp)}${sel('rExam','الاختبار',A.exams.map(x=>[x.id,x.name]),rep.exam)}
+   ${sel('rStatus','الحالة',[['pass','ناجح'],['fail','راسب']],rep.status)}<div><label>الدرجة من</label><input id="rMin" type="number" value="${rep.min}" style="width:100%"></div><div><label>إلى</label><input id="rMax" type="number" value="${rep.max}" style="width:100%"></div><div><label>رقم المحاولة</label><input id="rAtt" type="number" value="${rep.att}" style="width:100%"></div></div>
+   <button class="btn sec" id="rReset" style="margin-top:8px">إعادة تعيين الفلاتر</button></div>
+  <div class="prn" style="margin-bottom:10px"><h2>🌟 نظام اختبارات الموظفين — ${esc(rep.tab==='insights'?'رؤى الأداء':cur.t)}</h2><div>تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')} — ${esc(filt)}</div></div>
   <div class="kg">${B.summary.map(([l,v])=>`<div class="kc"><div><div class="l">${l}</div><div class="v">${v}</div></div></div>`).join('')}</div>
   <div class="tabs no-print">${tabs.map(([k,t])=>`<button class="pill ${rep.tab===k?'on':''}" data-rtab="${k}">${t}</button>`).join('')}</div>
-  <div class="card">${rep.tab==='insights'?`<h3>${T('insights_from_data')}</h3>${B.ins.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">💡 ${esc(t)}</div>`).join('')||'<span style="color:var(--muted)">'+T('no_insights')+'</span>'}`
-   :`<h3>${cur.t}</h3><div class="table-wrap"><table><tr>${cur.head.map(h=>`<th>${h}</th>`).join('')}</tr>${cur.rows.map(r=>`<tr>${r.map(c=>`<td style="${/%$/.test(String(c))&&0?'':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cur.head.length}" style="color:var(--muted)">${T('no_filter_data')}</td></tr>`}</table></div>${rep.tab==='monthly'?`<h3 style="margin-top:14px">${B.R.compare.t}</h3><div class="table-wrap"><table><tr>${B.R.compare.head.map(h=>`<th>${h}</th>`).join('')}</tr>${B.R.compare.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`:''}`}</div>
-  <div class="card no-print"><h3>${T('export_center')}</h3><button class="btn" id="xXlsx">Excel</button> <button class="btn sec" id="xCsv">CSV</button> <button class="btn sec" id="xPdf">PDF</button> <button class="btn sec" id="xPrint">${T('print')}</button>
+  <div class="card">${rep.tab==='insights'?`<h3>رؤى الأداء (من البيانات الفعلية)</h3>${B.ins.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">💡 ${esc(t)}</div>`).join('')||'<span style="color:var(--muted)">لا توجد بيانات كافية لاستخلاص رؤى.</span>'}`
+   :`<h3>${cur.t}</h3><div class="table-wrap"><table><tr>${cur.head.map(h=>`<th>${h}</th>`).join('')}</tr>${cur.rows.map(r=>`<tr>${r.map(c=>`<td style="${/%$/.test(String(c))&&0?'':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cur.head.length}" style="color:var(--muted)">لا توجد بيانات مطابقة للفلاتر.</td></tr>`}</table></div>${rep.tab==='monthly'?`<h3 style="margin-top:14px">${B.R.compare.t}</h3><div class="table-wrap"><table><tr>${B.R.compare.head.map(h=>`<th>${h}</th>`).join('')}</tr>${B.R.compare.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`:''}`}</div>
+  <div class="card no-print"><h3>مركز التصدير</h3><button class="btn" id="xXlsx">Excel</button> <button class="btn sec" id="xCsv">CSV</button> <button class="btn sec" id="xPdf">PDF</button> <button class="btn sec" id="xPrint">طباعة</button>
    <p class="fnote">Excel يضم كل الجداول في أوراق منفصلة. PDF: اختاري "حفظ كـ PDF" من نافذة الطباعة. التصدير يحترم الفلاتر الحالية. النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار.</p></div>`;
 }
 function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),500);}
@@ -1051,9 +853,9 @@ function attachReports(){
     try{ if(!window.XLSX) await new Promise((ok,no)=>{const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s);});
       const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['ملخص التقرير'],...B.summary]),'Summary');
       tabs.forEach(k=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([B.R[k].head,...B.R[k].rows]),k)); XLSX.writeFile(wb,'exam-report.xlsx');
-    }catch(e){ alert(T('excel_fail')); }};
+    }catch(e){ alert('تعذر تحميل مكتبة Excel. تحقق من الاتصال بالإنترنت أو استخدم CSV.'); }};
   document.getElementById('xPrint').onclick=()=>window.print();
-  document.getElementById('xPdf').onclick=()=>{alert(T('pdf_hint')); window.print();};
+  document.getElementById('xPdf').onclick=()=>{alert('في نافذة الطباعة اختاري الوجهة: حفظ كـ PDF'); window.print();};
   if(pendingExport){ const id=pendingExport; pendingExport=null; setTimeout(()=>{const el=document.getElementById(id); if(el) el.click();},300); }
 }
 
@@ -1090,7 +892,7 @@ function resultsTable(results,emps,exams,withChk){
 // ---------- ADMIN: question bank ----------
 async function questionsView(){
   const qs = await listAll('questions');
-  return `<h1>${T('questions_title')}</h1>
+  return `<h1>بنك الأسئلة</h1>
   <div class="card">
     <div class="row">
       <div><label>نص السؤال</label><input id="qText" style="width:100%"></div>
@@ -1103,11 +905,11 @@ async function questionsView(){
     </div>
     <div id="qOptsWrap"></div>
     <label>شرح الإجابة (اختياري)</label><input id="qExpl" style="width:100%">
-    <button class="btn" id="addQ" style="margin-top:10px">${T('add_question')}</button>
+    <button class="btn" id="addQ" style="margin-top:10px">إضافة السؤال</button>
   </div>
-  <div class="card"><h3>${T('all_questions')} (${qs.length})</h3>
-  <input id="qSearch" placeholder="${T('search_q')}" style="width:100%;margin-bottom:8px">
-  <button class="btn danger" id="qBulkDelete" style="margin-bottom:8px">${T('bulk_delete')}</button>
+  <div class="card"><h3>كل الأسئلة (${qs.length})</h3>
+  <input id="qSearch" placeholder="بحث..." style="width:100%;margin-bottom:8px">
+  <button class="btn danger" id="qBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
   <div id="qList">${renderQList(qs)}</div></div>`;
 }
 function renderQList(qs){
@@ -1136,7 +938,7 @@ function attachQuestions(){
   typeSel.onchange=refresh; refresh();
   document.getElementById('addQ').onclick=async ()=>{
     const type=typeSel.value, text=document.getElementById('qText').value.trim();
-    if(!text) return alert(T('enter_q_text'));
+    if(!text) return alert('أدخل نص السؤال');
     let options=[], correct=null;
     if(type==='tf'){ correct=document.getElementById('qCorrectTF').value==='true'; }
     else if(type==='short'){ correct=document.getElementById('qShortAns').value.trim(); }
@@ -1169,55 +971,54 @@ async function employeesTeamsView(){
   const [emps, leaders] = await Promise.all([listAll('employees'), listAll('teamLeaders')]);
   const editingEmp = editingEmployeeId ? emps.find(e=>e.id===editingEmployeeId) : null;
   
-  const isL=isLeaderSession();
   const leaderCards = visibleLeaders(leaders).map(ld=>{
     const members = emps.filter(e=>e.teamLeaderId===ld.id);
     return `<div class="card" style="background:var(--bg)">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <strong>👑 ${T('leader_of')} ${ld.name}</strong>
-        ${isL?'':`<span style="font-size:12px;color:var(--muted)">${T('login_code')} ${ld.code?ld.code:'<em>'+T('not_set')+'</em>'} <button class="btn sec" data-setcode="${ld.id}" style="padding:2px 8px;font-size:11px">${ld.code?T('change'):T('set')}</button></span>`}
-        <div><span style="color:var(--muted);font-size:12px">${members.length} ${T('members_count')}</span>
-        ${isL?'':`<button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-inline-start:8px">${T('delete_leader')}</button>`}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>👑 قائد الفريق: ${ld.name}</strong>
+        <span style="font-size:12px;color:var(--muted)">كود الدخول: ${ld.code?ld.code:'<em>غير محدد</em>'} <button class="btn sec" data-setcode="${ld.id}" style="padding:2px 8px;font-size:11px">${ld.code?'تغيير':'تعيين'}</button></span>
+        <div><span style="color:var(--muted);font-size:12px">${members.length} عضو</span>
+        ${state.session.role==='leader'?'':`<button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-right:8px">حذف القائد</button>`}</div>
       </div>
-      <p style="color:var(--muted);font-size:13px;margin:8px 0">${T('select_members')}</p>
+      <p style="color:var(--muted);font-size:13px;margin:8px 0">حدد الموظفين التابعين لهذا القائد:</p>
       <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--surface)">
       ${emps.map(e=>`<div class="qopt" style="${e.teamLeaderId&&e.teamLeaderId!==ld.id?'display:none':''}"><input type="checkbox" data-teamchk="1" class="teamChk-${ld.id}" value="${e.id}" ${e.teamLeaderId===ld.id?'checked':''}><span>${e.name} ${e.dept?'('+e.dept+')':''}</span></div>`).join('') || '<p style="color:var(--muted)">لا يوجد موظفون.</p>'}
       </div>
-      <button class="btn" data-savemembers="${ld.id}" style="margin-top:8px">${T('save_members')}</button>
+      <button class="btn" data-savemembers="${ld.id}" style="margin-top:8px">حفظ أعضاء الفريق</button>
     </div>`;
   }).join('');
 
-  return `<h1>${T('emps_title')}</h1>
+  return `<h1>الموظفون والفرق</h1>
   
   <div class="card">
-    <h3 id="empFormTitle">${editingEmployeeId?T('edit_emp'):T('add_emp')}</h3>
+    <h3 id="empFormTitle">${editingEmployeeId?'تعديل بيانات الموظف':'إضافة موظف جديد'}</h3>
     <div class="row">
-      <div><label>${T('name')}</label><input id="pName" style="width:100%" value="${editingEmp?editingEmp.name||'':''}"></div>
-      <div><label>${T('emp_id')}</label><input id="pEmpId" style="width:100%" value="${editingEmp?editingEmp.empId||'':''}"></div>
-      <div><label>${T('email')}</label><input id="pEmail" style="width:100%" value="${editingEmp?editingEmp.email||'':''}"></div>
-      <div><label>${T('dept')}</label><input id="pDept" style="width:100%" value="${editingEmp?editingEmp.dept||'':''}"></div>
-      <div><label>${T('team')}</label><input id="pTeam" style="width:100%" value="${editingEmp?editingEmp.team||'':''}"></div>
-      <div><label>${T('position')}</label><input id="pPos" style="width:100%" value="${editingEmp?editingEmp.position||'':''}"></div>
-      <div><label>${T('team_leader_label')}</label><select id="pLeader" style="width:100%"><option value="">${T('none')}</option>${visibleLeaders(leaders).map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
+      <div><label>الاسم</label><input id="pName" style="width:100%" value="${editingEmp?editingEmp.name||'':''}"></div>
+      <div><label>Employee ID</label><input id="pEmpId" style="width:100%" value="${editingEmp?editingEmp.empId||'':''}"></div>
+      <div><label>البريد الإلكتروني</label><input id="pEmail" style="width:100%" value="${editingEmp?editingEmp.email||'':''}"></div>
+      <div><label>القسم</label><input id="pDept" style="width:100%" value="${editingEmp?editingEmp.dept||'':''}"></div>
+      <div><label>الفريق</label><input id="pTeam" style="width:100%" value="${editingEmp?editingEmp.team||'':''}"></div>
+      <div><label>الوظيفة</label><input id="pPos" style="width:100%" value="${editingEmp?editingEmp.position||'':''}"></div>
+      <div><label>قائد الفريق</label><select id="pLeader" style="width:100%"><option value="">-- بدون --</option>${visibleLeaders(leaders).map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
     </div>
-    <button class="btn" id="addEmp" style="margin-top:8px">${editingEmployeeId?T('save_changes'):T('add_emp')}</button>
-    ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-inline-start:6px">إلغاء التعديل</button>':''}
+    <button class="btn" id="addEmp" style="margin-top:8px">${editingEmployeeId?'حفظ التعديلات':'إضافة موظف'}</button>
+    ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-right:6px">إلغاء التعديل</button>':''}
   </div>
 
   <div class="card">
-    <h3>${isL?T('my_team_list'):T('manage_leaders')}</h3>
-    ${isL?'':`<div class="row">
-      <div><input id="tlName" placeholder="${T('new_leader_name')}" style="width:100%"></div>
-      <div><input id="tlCode" placeholder="${T('leader_code')}" style="width:100%"></div>
-      <div><button class="btn" id="addLeader" style="width:100%">${T('add_leader')}</button></div>
+    <h3>${isLeaderSession()?'قائمة فريقي':'إدارة قادة الفرق (Team Leaders)'}</h3>
+    ${isLeaderSession()?'':`<div class="row">
+      <div><input id="tlName" placeholder="اسم قائد الفريق الجديد" style="width:100%"></div>
+      <div><input id="tlCode" placeholder="كود دخول القائد (للتصحيح)" style="width:100%"></div>
+      <div><button class="btn" id="addLeader" style="width:100%">إضافة قائد فريق</button></div>
     </div>`}
     <div style="margin-top:14px">${leaderCards || '<p style="color:var(--muted)">لا يوجد قادة فرق بعد. أضف قائدًا أولًا.</p>'}</div>
   </div>
 
   <div class="card">
-    <h3>${T('all_emps_list')} (${emps.length})</h3>
-    <input id="eSearch" placeholder="${T('search_name_dept')}" style="width:100%;margin-bottom:8px">
-    <button class="btn danger" id="empBulkDelete" style="margin-bottom:8px">${T('bulk_delete')}</button>
+    <h3>قائمة الموظفين الكلية (${emps.length})</h3>
+    <input id="eSearch" placeholder="بحث بالاسم أو القسم..." style="width:100%;margin-bottom:8px">
+    <button class="btn danger" id="empBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
     <div id="empList">${renderEmpList(emps,leaders)}</div>
   </div>`;
 }
@@ -1236,14 +1037,13 @@ function renderEmpList(emps,leaders){
 }
 
 function attachEmployeesTeams(){
-  const addEmpBtn=document.getElementById('addEmp');
-  if(addEmpBtn) addEmpBtn.onclick=async ()=>{
+  document.getElementById('addEmp').onclick=async ()=>{
     const name=document.getElementById('pName').value.trim(), empId=document.getElementById('pEmpId').value.trim();
-    if(!name||!empId){ alert(T('enter_name_id')); return; }
+    if(!name||!empId){ alert('أدخل الاسم و Employee ID (الحقلان مطلوبان).'); return; }
     const existing = await listAll('employees');
     const dupExists = existing.some(e=>e.empId===empId && e.id!==editingEmployeeId);
-    if(dupExists){ alert(T('dup_empid')); return; }
-    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent=T('saving');
+    if(dupExists){ alert('يوجد موظف آخر بنفس Employee ID بالفعل.'); return; }
+    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent=editingEmployeeId?'جارٍ الحفظ...':'جارٍ الحفظ...';
     const data={name,empId,email:document.getElementById('pEmail').value.trim(),
       dept:document.getElementById('pDept').value.trim(),team:document.getElementById('pTeam').value.trim(),
       position:document.getElementById('pPos').value.trim(),
@@ -1251,7 +1051,7 @@ function attachEmployeesTeams(){
     if(!editingEmployeeId) data.status='نشط';
     const targetId = editingEmployeeId || uid();
     const ok = await setDoc('employees',targetId,data);
-    btn.disabled=false; btn.textContent=editingEmployeeId?T('save_changes'):T('add_emp');
+    btn.disabled=false; btn.textContent=editingEmployeeId?'حفظ التعديلات':'إضافة موظف';
     if(ok){ editingEmployeeId=null; state.view='employees-teams'; routeRender(); }
   };
   const cancelBtn=document.getElementById('cancelEditEmp');
@@ -1262,12 +1062,11 @@ function attachEmployeesTeams(){
     setTimeout(()=>document.getElementById('empFormTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
   });
 
-  const addLeaderBtn=document.getElementById('addLeader');
-  if(addLeaderBtn) addLeaderBtn.onclick=async()=>{
+  (document.getElementById('addLeader')||{}).onclick=async()=>{
     const name=document.getElementById('tlName').value.trim();
     const code=document.getElementById('tlCode').value.trim();
-    if(!name){ alert(T('enter_leader_name')); return; }
-    if(code){ const ex=await listAll('teamLeaders'); if(ex.some(l=>String(l.code)===code)){ alert(T('code_used')); return; } }
+    if(!name){ alert('أدخل اسم قائد الفريق.'); return; }
+    if(code){ const ex=await listAll('teamLeaders'); if(ex.some(l=>String(l.code)===code)){ alert('هذا الكود مستخدم لقائد آخر.'); return; } }
     await setDoc('teamLeaders',uid(),{name,code:code||null,createdAt:Date.now()});
     state.view='employees-teams'; routeRender();
   };
@@ -1278,16 +1077,16 @@ function attachEmployeesTeams(){
     });
   });
   document.querySelectorAll('[data-setcode]').forEach(b=>b.onclick=async()=>{
-    const code=(prompt(T('enter_new_code'))||'').trim();
+    const code=(prompt('أدخل كود الدخول الجديد للقائد:')||'').trim();
     if(!code) return;
     const ex=await listAll('teamLeaders');
-    if(ex.some(l=>String(l.code)===code && l.id!==b.dataset.setcode)){ alert(T('code_used')); return; }
+    if(ex.some(l=>String(l.code)===code && l.id!==b.dataset.setcode)){ alert('هذا الكود مستخدم لقائد آخر.'); return; }
     await setDoc('teamLeaders',b.dataset.setcode,{code});
     state.view='employees-teams'; routeRender();
   });
   document.querySelectorAll('[data-delleader]').forEach(b=>b.onclick=async()=>{
-    if(state.session.role==='leader'){ alert(T('delete_leader_admin_only')); return; }
-    if(!confirm(T('delete_leader_confirm'))) return;
+    if(state.session.role==='leader'){ alert('حذف القائد من صلاحيات المدير فقط.'); return; }
+    if(!confirm('حذف قائد الفريق؟ لن يتم حذف الموظفين، فقط ارتباطهم بهذا القائد.')) return;
     await delDoc('teamLeaders',b.dataset.delleader);
     state.view='employees-teams'; routeRender();
   });
@@ -1302,22 +1101,19 @@ function attachEmployeesTeams(){
       if(shouldBelong && !currentlyBelongs) await setDoc('employees',e.id,{teamLeaderId:ldId});
       else if(!shouldBelong && currentlyBelongs) await setDoc('employees',e.id,{teamLeaderId:null});
     }
-    alert(T('members_saved'));
+    alert('تم حفظ أعضاء الفريق.');
     state.view='employees-teams'; routeRender();
   });
 
   document.querySelectorAll('[data-delemp]').forEach(b=>b.onclick=async()=>{ await delDoc('employees',b.dataset.delemp); state.view='employees-teams'; routeRender(); });
   
-  const eSearch=document.getElementById('eSearch');
-  if(eSearch) eSearch.oninput=async(e)=>{
+  document.getElementById('eSearch').oninput=async(e)=>{
     const [emps,leaders]=await Promise.all([listAll('employees'),listAll('teamLeaders')]);
     const f=emps.filter(x=>x.name.includes(e.target.value)||(x.dept||'').includes(e.target.value));
-    const empList=document.getElementById('empList');
-    if(empList) empList.innerHTML=renderEmpList(f,leaders);
+    document.getElementById('empList').innerHTML=renderEmpList(f,leaders);
     attachSelectAll('empSelectAll','empChk');
   };
-  const bulkBtn=document.getElementById('empBulkDelete');
-  if(bulkBtn) bulkBtn.onclick=()=>bulkDeleteSelected('employees','empChk');
+  document.getElementById('empBulkDelete').onclick=()=>bulkDeleteSelected('employees','empChk');
   attachSelectAll('empSelectAll','empChk');
 }
 
@@ -1328,7 +1124,7 @@ async function assignView(){
   const assignments=isLeaderSession()? assignments0.filter(a=>exams.some(x=>x.id===a.examId)) : assignments0;
   const depts=[...new Set(emps.map(e=>e.dept).filter(Boolean))];
 
-  return `<h1>${T('assign_title')}</h1>
+  return `<h1>إسناد الاختبارات</h1>
   <div class="card">
     <div class="row">
       <div>
@@ -1336,7 +1132,7 @@ async function assignView(){
         <select id="aExam" style="width:100%">${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select>
       </div>
       <div>
-        <label>${T('dept')}</label>
+        <label>القسم</label>
         <select id="aDept" style="width:100%">
           <option value="">-- كل الأقسام --</option>
           ${depts.map(d=>`<option value="${d}">${d}</option>`).join('')}
@@ -1373,7 +1169,7 @@ async function assignView(){
   </div>
 
   <div class="card"><h3>الإسنادات الحالية</h3>
-  <button class="btn danger" id="aBulkDelete" style="margin-bottom:8px">${T('bulk_delete')}</button>
+  <button class="btn danger" id="aBulkDelete" style="margin-bottom:8px">حذف المحدد</button>
   <div class="table-wrap"><table><tr><th><input type="checkbox" id="aSelectAll"></th><th>الاختبار</th><th>الموظف</th><th>القسم</th><th>الفريق</th><th>الموعد النهائي</th><th>الحالة</th></tr>
   ${assignments.map(a=>{
     const ex=exams.find(x=>x.id===a.examId), em=emps.find(x=>x.id===a.employeeId);
@@ -1452,11 +1248,11 @@ function attachAssign(){
   document.getElementById('doAssign').onclick = async () => {
     const examId = document.getElementById('aExam').value;
     const deadline = document.getElementById('aDeadline').value;
-    if (!examId) return alert(T('assign_need_exam'));
+    if (!examId) return alert('اختر اختبارًا');
 
     const selectedEmpIds = [...document.querySelectorAll('.assignEmpChk:checked')].map(c => c.value);
     if (!selectedEmpIds.length) {
-      alert(T('assign_need_emp'));
+      alert('يرجى تحديد موظف واحد على الأقل لإسناد الاختبار إليه.');
       return;
     }
 
@@ -1534,9 +1330,9 @@ function renderWrongAnswerTable(rows){
 }
 async function wrongAnswersView(){
   const rows=await buildWrongAnswerRows();
-  return `<h1>${T('wrong_title')}</h1>
+  return `<h1>الإجابات الخاطئة</h1>
   <div class="card">
-    <p style="color:var(--muted);font-size:13px">${T('all_questions')} التي أجاب عليها الموظفون إجابة خاطئة بعد انتهاء اختباراتهم، مع توضيح من أجاب وبأي إجابة.</p>
+    <p style="color:var(--muted);font-size:13px">كل الأسئلة التي أجاب عليها الموظفون إجابة خاطئة بعد انتهاء اختباراتهم، مع توضيح من أجاب وبأي إجابة.</p>
     <div class="row">
       <div><input id="waSearch" placeholder="بحث باسم الموظف أو اسم الاختبار..." style="width:100%"></div>
       <div><button class="btn sec" id="waExport">تصدير CSV</button></div>
@@ -1573,7 +1369,7 @@ async function reviewExamsView(){
     const exam = isNew ? {} : exams.find(e => e.id === state.editingExamId);
     if (!exam) { state.editingExamId = null; return reviewExamsView(); }
     const selectedQs = exam.questionIds || [];
-    return `<h1>${isNew?T('create_exam'):(T('edit_exam')+': '+exam.name)}</h1>
+    return `<h1>${isNew?'إنشاء اختبار جديد':'تعديل الاختبار: '+exam.name}</h1>
     <div class="card">
       <div class="row">
         <div><label>اسم الاختبار</label><input id="editEName" style="width:100%" value="${exam.name||''}"></div>
@@ -1624,10 +1420,10 @@ async function reviewExamsView(){
     </td>
   </tr>`).join('');
 
-  return `<h1>${T('review_exams_title')}</h1>
+  return `<h1>إدارة الاختبارات</h1>
   <div class="card">
     <p style="color:var(--muted);font-size:13px">أنشئ اختبارات جديدة، وعدّل بيانات الاختبارات الحالية والأسئلة التابعة لها، أو فعّلها/أوقفها واحذفها — كل ذلك من هنا.</p>
-    <button class="btn" id="newExamBtn" style="margin-bottom:12px">+ ${T('create_exam')}</button>
+    <button class="btn" id="newExamBtn" style="margin-bottom:12px">+ إنشاء اختبار جديد</button>
     <div class="table-wrap"><table>
       <tr><th>اسم الاختبار</th><th>القسم</th><th>المدة</th><th>عدد الأسئلة</th><th>الحالة</th><th>الإجراءات</th></tr>
       ${rows || '<tr><td colspan="6" style="color:var(--muted)">لا توجد اختبارات منشأة بعد.</td></tr>'}
@@ -1657,9 +1453,9 @@ function attachReviewExams(){
     if(isNew){
       const saveNew=async(active)=>{
         const g=gather();
-        if(!g.ok) return alert(T('enter_exam_name'));
+        if(!g.ok) return alert('أدخل اسم الاختبار');
         await setDoc('exams',uid(),{...g.data, active, draft:!active, createdAt:Date.now(), createdBy:isLeaderSession()?state.session.id:'admin'});
-        alert(T('exam_created'));
+        alert('تم إنشاء الاختبار بنجاح');
         state.editingExamId=null; state.view='review-exams'; routeRender();
       };
       document.getElementById('saveExamDraft').onclick=()=>saveNew(false);
@@ -1667,9 +1463,9 @@ function attachReviewExams(){
     } else {
       document.getElementById('saveExamEdit').onclick=async ()=>{
         const g=gather();
-        if(!g.ok) return alert(T('enter_exam_name'));
+        if(!g.ok) return alert('أدخل اسم الاختبار');
         await setDoc('exams',state.editingExamId,g.data);
-        alert(T('exam_updated'));
+        alert('تم تحديث الاختبار بنجاح');
         state.editingExamId=null; state.view='review-exams'; routeRender();
       };
     }
@@ -1838,8 +1634,8 @@ async function gradingView(){
     }
   }
 
-  const adminPicker = isLeader ? '' : `<div><label>${T('team_leader_label')}</label><select id="gLeader" style="width:100%"><option value="">-- كل الفرق --</option>${leaders.map(l=>`<option value="${l.id}" ${l.id===gradingLeaderId?'selected':''}>${l.name}</option>`).join('')}</select></div>`;
-  return `<h1>${T('grading_title')}</h1>
+  const adminPicker = isLeader ? '' : `<div><label>قائد الفريق</label><select id="gLeader" style="width:100%"><option value="">-- كل الفرق --</option>${leaders.map(l=>`<option value="${l.id}" ${l.id===gradingLeaderId?'selected':''}>${l.name}</option>`).join('')}</select></div>`;
+  return `<h1>تصحيح الاختبار</h1>
   <div class="card">
     <p style="color:var(--muted);font-size:13px">${isLeader?'اختبارات موظفي فريقك فقط. ':''}قائد الفريق هو المسؤول عن تصحيح اختبارات فريقه ومنح الدرجات لكل سؤال، والنتيجة النهائية تُحدَّث للموظف تلقائيًا.</p>
     <div class="row">
@@ -1902,10 +1698,10 @@ function attachGrading(){
 async function resultsView(){
   const [results0,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
   const results=filterResultsForLeader(results0,emps,exams);
-  return `<h1>${T('results_title')}</h1>
+  return `<h1>النتائج</h1>
   <div class="card">
   <button class="btn sec" id="exportCsv">تصدير CSV</button>
-  <button class="btn danger" id="resBulkDelete">${T('bulk_delete')}</button>
+  <button class="btn danger" id="resBulkDelete">حذف المحدد</button>
   <div style="margin-top:10px">${resultsTable(results.reverse(),emps,exams,true)}</div>
   </div>`;
 }
@@ -1927,22 +1723,22 @@ document.addEventListener('click',async (e)=>{
 
 // ---------- ADMIN: settings ----------
 function settingsView(){
-  return `<h1>${T('settings_title')}</h1>
+  return `<h1>الإعدادات</h1>
   <div class="card">
-    <h3>${T('change_admin_pass')}</h3>
-    <label>${T('current_pass')}</label>
+    <h3>تغيير كلمة مرور المدير</h3>
+    <label>كلمة المرور الحالية</label>
     <input id="oldPass" type="password" style="width:100%">
-    <label>${T('new_pass')}</label>
+    <label>كلمة المرور الجديدة</label>
     <input id="newPass1" type="password" style="width:100%">
-    <label>${T('confirm_pass')}</label>
+    <label>تأكيد كلمة المرور الجديدة</label>
     <input id="newPass2" type="password" style="width:100%">
-    <button class="btn" id="changePassBtn" style="margin-top:10px">${T('update_pass')}</button>
+    <button class="btn" id="changePassBtn" style="margin-top:10px">تحديث كلمة المرور</button>
     <p id="passMsg" style="font-size:13px;margin-top:8px"></p>
   </div>
   <div class="card">
-    <h3 style="color:var(--bad)">${T('danger_zone')}</h3>
+    <h3 style="color:var(--bad)">منطقة الخطر</h3>
     <p style="color:var(--muted);font-size:13px">حذف جميع الاختبارات، الإسنادات، النتائج، والمراسلات نهائيًا. <strong>بنك الأسئلة وبيانات الموظفين لن يتأثرا.</strong> هذا الإجراء لا يمكن التراجع عنه.</p>
-    <button class="btn danger" id="wipeDataBtn">${T('wipe_btn')}</button>
+    <button class="btn danger" id="wipeDataBtn">حذف كل البيانات (عدا بنك الأسئلة وبيانات الموظفين)</button>
     <p id="wipeMsg" style="font-size:13px;margin-top:8px"></p>
   </div>`;
 }
@@ -2002,19 +1798,19 @@ async function messagesView(){
       ${isL?'':`<div class="table-wrap" id="seen-${m.id}" style="display:none;margin-top:8px"><table><tr><th>الموظف</th><th>الحالة</th></tr>${seenListHtml}</table></div>`}
     </div>`;
   }).join('');
-  return `<h1>${T('messages_title')}</h1>
+  return `<h1>مراسلات</h1>
   <div class="card" id="notifBox"></div>
   <div class="card">
     <h3>إرسال إرشادات للموظفين</h3>
     <div class="row">
       <div><label>المرسل إليه</label><select id="mTo"><option value="${isL?'team':'all'}">${isL?'-- كل أفراد فريقي --':'-- كل الموظفين --'}</option>${pickEmps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
-      <div><label>مرتبط باختبار (اختياري)</label><select id="mExam"><option value="">${T('none')}</option>${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
+      <div><label>مرتبط باختبار (اختياري)</label><select id="mExam"><option value="">-- بدون --</option>${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
     </div>
     <label>عنوان الرسالة</label><input id="mSubject" style="width:100%">
     <label>نص الإرشادات</label><textarea id="mBody" rows="4" style="width:100%"></textarea>
     <button class="btn" id="sendMsg" style="margin-top:8px">إرسال</button>
   </div>
-  <h3>${T('sent_messages')}</h3>
+  <h3>الرسائل المرسلة</h3>
   ${msgHtml || '<p style="color:var(--muted)">لا توجد رسائل مرسلة بعد.</p>'}`;
 }
 function attachMessages(){
@@ -2071,7 +1867,7 @@ async function suggestionsView(){
       </div>
     </div>`;
   }).join('');
-  return `<h1>${T('suggestions_title')}</h1>${html || '<p style="color:var(--muted)">لا توجد اقتراحات أسئلة من الموظفين حتى الآن.</p>'}`;
+  return `<h1>اقتراحات الأسئلة</h1>${html || '<p style="color:var(--muted)">لا توجد اقتراحات أسئلة من الموظفين حتى الآن.</p>'}`;
 }
 function attachSuggestionsAdmin(){
   document.querySelectorAll('[data-sendreply]').forEach(b=>b.onclick=async()=>{
@@ -2119,9 +1915,9 @@ async function suggestQuestionView(){
       <option value="multi">اختيار متعدد</option><option value="short">إجابة قصيرة</option>
     </select>
     <div id="sqOptsWrap"></div>
-    <button class="btn" id="sendSuggestion" style="margin-top:10px">${T('send_suggestion')}</button>
+    <button class="btn" id="sendSuggestion" style="margin-top:10px">إرسال الاقتراح</button>
   </div>
-  <h3>${T('my_suggestions')}</h3>
+  <h3>اقتراحاتي السابقة</h3>
   ${listHtml || '<p style="color:var(--muted)">لم ترسل أي اقتراحات بعد.</p>'}`;
 }
 function attachSuggestQuestion(){
@@ -2169,13 +1965,12 @@ async function empMessagesView(){
       <button class="btn danger" data-delmymsg="${m.id}" style="padding:5px 12px">حذف</button>
     </div>`;
   }).join('');
-  return `<h1>${T('messages_title')}</h1>${html || '<p style="color:var(--muted)">لا توجد رسائل لك حتى الآن.</p>'}`;
+  return `<h1>مراسلات</h1>${html || '<p style="color:var(--muted)">لا توجد رسائل لك حتى الآن.</p>'}`;
 }
 function attachEmpMessages(){
   document.querySelectorAll('[data-delmymsg]').forEach(b=>b.onclick=async()=>{
     if(!confirm('حذف هذه الرسالة من صندوقك؟')) return;
     await updDoc('messages',b.dataset.delmymsg,{['deletedBy.'+state.session.id]:true});
-    await refreshEmpMsgBadge();
     state.view='emp-messages'; routeRender();
   });
   document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=async()=>{
@@ -2185,7 +1980,6 @@ function attachEmpMessages(){
     await updDoc('messages',mid,{['seenBy.'+empId]:Date.now()});
     await setDoc('notifications',uid(),{type:'message_seen',toId:(m&&m.fromId)||'admin',employeeId:empId,employeeName:s.name,
       messageId:mid,subject:(m&&m.subject)||'',createdAt:Date.now(),read:false});
-    await refreshEmpMsgBadge();
     state.view='emp-messages'; routeRender();
   });
 }
@@ -2196,12 +1990,12 @@ async function empProfileView(){
   return `<h1>${T('nav_my_profile')}</h1>
   <div class="card">
     <div class="row">
-      <div><label>${T('name')}</label><input id="epName" style="width:100%" value="${s.name||''}"></div>
-      <div><label>${T('email')}</label><input id="epEmail" style="width:100%" value="${s.email||''}"></div>
+      <div><label>الاسم</label><input id="epName" style="width:100%" value="${s.name||''}"></div>
+      <div><label>البريد الإلكتروني</label><input id="epEmail" style="width:100%" value="${s.email||''}"></div>
     </div>
     <div class="row">
-      <div><label>${T('dept')}</label><input id="epDept" style="width:100%" value="${s.dept||''}"></div>
-      <div><label>${T('position')}</label><input id="epPos" style="width:100%" value="${s.position||''}"></div>
+      <div><label>القسم</label><input id="epDept" style="width:100%" value="${s.dept||''}"></div>
+      <div><label>الوظيفة</label><input id="epPos" style="width:100%" value="${s.position||''}"></div>
     </div>
     <p style="color:var(--muted);font-size:12px">Employee ID: ${s.empId} (ثابت، لا يمكن تعديله)</p>
     <button class="btn" id="saveProfile" style="margin-top:8px">${T('save')}</button>
@@ -2212,7 +2006,7 @@ function attachEmpProfile(){
   document.getElementById('saveProfile').onclick=async ()=>{
     const msg=document.getElementById('profileMsg');
     const name=document.getElementById('epName').value.trim();
-    if(!name){ msg.style.color='var(--bad)'; msg.textContent=T('name_required'); return; }
+    if(!name){ msg.style.color='var(--bad)'; msg.textContent='الاسم مطلوب.'; return; }
     const updated={name,email:document.getElementById('epEmail').value.trim(),
       dept:document.getElementById('epDept').value.trim(),position:document.getElementById('epPos').value.trim()};
     const ok=await setDoc('employees',state.session.id,updated);
@@ -2234,7 +2028,7 @@ async function empHomeView(){
     return {ex,a,done,late,attemptsUsed:myResults.length};
   }).filter(Boolean);
   return `<h1>مرحبًا، ${s.name}</h1>
-  <div class="card"><h3>${T('my_assigned')}</h3>
+  <div class="card"><h3>الاختبارات المسندة إليك</h3>
   <table><tr><th>الاختبار</th><th>الموعد النهائي</th><th>الحالة</th><th></th></tr>
   ${rows.map(r=>`<tr><td>${r.ex.name}</td><td>${r.a.deadline||'-'}</td>
     <td>${r.done?'<span class="badge ok">مكتمل</span>':r.late?'<span class="badge bad">متأخر</span>':'<span class="badge warn">قيد الانتظار</span>'}</td>
@@ -2327,7 +2121,7 @@ function attachTakeExam(){
   document.getElementById('prevQ').onclick=()=>{ saveCurrentAnswer(); ea.idx--; state.view='take-exam'; routeRender(); };
   document.getElementById('nextQ').onclick=()=>{ saveCurrentAnswer(); ea.idx++; state.view='take-exam'; routeRender(); };
   document.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{ saveCurrentAnswer(); ea.idx=parseInt(b.dataset.jump); state.view='take-exam'; routeRender(); });
-  document.getElementById('submitExam').onclick=()=>{ saveCurrentAnswer(); if(confirm(T('confirm_submit'))) finishExam(); };
+  document.getElementById('submitExam').onclick=()=>{ saveCurrentAnswer(); if(confirm('هل أنت متأكد من تسليم الاختبار؟')) finishExam(); };
 }
 async function finishExam(){
   clearInterval(timerInterval);
