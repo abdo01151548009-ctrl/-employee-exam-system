@@ -560,31 +560,12 @@ function attachLogin(){
 
 window.addEventListener('hashchange', ()=>{
   const v=(location.hash||'#').slice(1);
-  if(v==='logout'){ stopNotifListener(); clearSession(); state.session=null; state.view='login'; location.hash=''; render(); return; }
+  if(v==='logout'){ stopNotifListener(); state.session=null; state.view='login'; location.hash=''; render(); return; }
   if(v) state.view=v;
   render();
 });
 
-const SESS_KEY='eesSess', SESS_TTL=24*60*60*1000;
-function saveSession(){ try{ if(state.session) localStorage.setItem(SESS_KEY,JSON.stringify({s:state.session,v:state.view,t:Date.now()})); }catch(e){} }
-function clearSession(){ try{ localStorage.removeItem(SESS_KEY); sessionStorage.removeItem(SESS_KEY); }catch(e){} }
-async function restoreSession(){
-  try{
-    const raw=localStorage.getItem(SESS_KEY)||sessionStorage.getItem(SESS_KEY); if(!raw) return;
-    const {s:sess,v,t}=JSON.parse(raw); if(!sess||!sess.role) return;
-    if(t && Date.now()-t>SESS_TTL){ clearSession(); return; }
-    state.session=sess;
-    // refresh the stored profile from the database; on network errors keep the saved session (never log out because of a failed request)
-    try{
-      if(db && sess.role==='employee'){ const d=await db.collection('employees').doc(sess.id).get(); if(d.exists) state.session={role:'employee',id:sess.id,...d.data()}; else { clearSession(); state.session=null; return; } }
-      else if(db && sess.role==='leader'){ const d=await db.collection('teamLeaders').doc(sess.id).get(); if(d.exists) state.session={role:'leader',id:sess.id,name:d.data().name}; else { clearSession(); state.session=null; return; } }
-    }catch(e){ console.error(e); }
-    const first={admin:'dashboard',leader:'grading',employee:'emp-home'}[sess.role];
-    state.view=(!v||v==='login'||v==='take-exam')?first:v;
-  }catch(e){ console.error(e); }
-}
 async function routeRender(){
-  saveSession();
   const main=document.getElementById('main');
   main.innerHTML='<p style="color:var(--muted)">جارِ التحميل…</p>';
   if(state.session && state.session.role==='leader' && (state.view==='dashboard'||!state.view)) state.view='grading';
@@ -2146,7 +2127,7 @@ async function finishExam(){
 }
 
 // ---------- boot ----------
-(async function(){ applyLangToDocument(); await initCaps(); await restoreSession(); render(); })();
+(async function(){ applyLangToDocument(); await initCaps(); render(); })();
 </script>
 </body>
 </html>
