@@ -1,0 +1,2529 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Employee Exam System</title>
+<style>
+:root{
+  --bg:#f4f6f9; --surface:#fff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+  --brand:#2563eb; --brand-d:#1d4ed8; --ok:#16a34a; --bad:#dc2626; --warn:#d97706;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1420; --surface:#171d2b; --text:#e5e7eb; --muted:#9aa4b2; --border:#2a3242; }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:230px;background:var(--surface);border-inline-end:1px solid var(--border);padding:16px;flex-shrink:0}
+.sidebar h2{font-size:16px;color:var(--brand)}
+.sidebar .user{font-size:13px;color:var(--muted);margin-bottom:14px}
+.nav a{display:block;padding:9px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px;margin-bottom:3px}
+.nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+.main{flex:1;padding:20px;max-width:1100px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.card table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+.card table tr{display:table-row}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{font-size:26px;font-weight:700;color:var(--brand)}
+.stat-label{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid var(--border);text-align:start}
+th{color:var(--muted);font-weight:600}
+.btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px}
+.btn:hover{background:var(--brand-d)}
+.btn.sec{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+.btn.danger{background:var(--bad)}
+.badge{padding:2px 8px;border-radius:999px;font-size:11px}
+.badge.ok{background:#dcfce7;color:#166534}
+.badge.bad{background:#fee2e2;color:#991b1b}
+.badge.warn{background:#fef3c7;color:#92400e}
+label{font-size:12px;color:var(--muted);display:block;margin:8px 0 3px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>div{flex:1;min-width:150px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.menuBtn{display:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:16px;color:var(--text)}
+.topbar{display:none}
+@media (max-width:760px){
+  .app{flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);
+    border-bottom:1px solid var(--border);padding:10px 14px;position:sticky;top:0;z-index:20;
+    padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  .topbar h2{font-size:15px;margin:0;color:var(--brand)}
+  .menuBtn{display:block}
+  .sidebar{position:fixed;inset:0;z-index:30;width:100%;height:100%;transform:translateX(100%);
+    transition:transform .2s ease;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  [dir="ltr"] .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar .closeBtn{display:block;background:transparent;border:none;font-size:20px;color:var(--text);
+    position:absolute;top:calc(14px + env(safe-area-inset-top,0px));inset-inline-start:14px}
+  .nav a{font-size:16px;padding:12px 10px}
+  .main{padding:12px;max-width:100%}
+  h1{font-size:17px}
+  .grid{grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}
+  .stat{font-size:20px}
+  .card{padding:12px}
+  table{font-size:12px}
+  th,td{padding:6px}
+  .row>div{min-width:100%}
+  .login{margin:30px auto;max-width:100%;padding:20px}
+  .qnav button{width:30px;height:30px;margin:2px}
+  .timer{font-size:15px;padding:5px 10px}
+}
+.sidebar .closeBtn{display:none}
+h1{font-size:20px;margin:0 0 14px}
+.qopt{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.timer{font-size:18px;font-weight:700;color:var(--bad);background:var(--surface);padding:6px 14px;border-radius:8px;border:1px solid var(--border)}
+.login{max-width:380px;margin:60px auto;text-align:center}
+.qnav button{width:34px;height:34px;border-radius:6px;border:1px solid var(--border);background:var(--surface);margin:2px;color:var(--text)}
+.qnav button.answered{background:#dbeafe}
+.qnav button.current{outline:2px solid var(--brand)}
+
+/* ===== New login (ID only) ===== */
+.lg-wrap{min-height:100vh;display:grid;place-items:center;padding:32px 18px;position:relative;overflow:hidden;
+  font-family:"Cairo","Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+  background:radial-gradient(1000px 560px at 85% -10%,rgba(79,134,247,.55),transparent 60%),
+    radial-gradient(800px 560px at 0% 110%,rgba(245,179,1,.22),transparent 55%),
+    linear-gradient(155deg,#071433 0%,#0b1f4d 45%,#123a9c 100%);}
+.lg-wrap::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 25%,transparent 75%);mask-image:radial-gradient(circle at 50% 45%,#000 25%,transparent 75%)}
+.lg-wrap svg.lg-i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.lg-card{position:relative;width:100%;max-width:470px;background:rgba(255,255,255,.94);color:#0f1b3d;border:1px solid rgba(255,255,255,.9);border-radius:24px;
+  box-shadow:0 30px 80px -20px rgba(7,20,51,.6),0 8px 24px -8px rgba(7,20,51,.35);padding:34px 34px 26px;animation:lgRise .9s both cubic-bezier(.2,.8,.2,1)}
+@keyframes lgRise{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+.lg-brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:20px}
+.lg-logo{width:74px;height:74px;filter:drop-shadow(0 10px 18px rgba(29,78,216,.35));animation:lgPop .8s .2s both cubic-bezier(.3,1.5,.5,1)}
+@keyframes lgPop{from{opacity:0;transform:scale(.6) rotate(-8deg)}to{opacity:1;transform:none}}
+.lg-brand h1{font-size:23px;font-weight:800;color:#0b1f4d;margin:6px 0 0}
+.lg-en{font-size:11.5px;letter-spacing:1.6px;color:#5b6785;font-weight:600;direction:ltr}
+.lg-tagline{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:#1d4ed8}
+.lg-tagline i{width:5px;height:5px;border-radius:50%;background:#f5b301}
+.lg-sep{height:1px;background:linear-gradient(90deg,transparent,#e3e8f4,transparent);margin:4px 0 18px}
+.lg-welcome h2{font-size:22px;font-weight:800;color:#0b1f4d;margin:0}
+.lg-welcome p{color:#5b6785;font-size:14px;margin:2px 0 16px}
+.lg-lbl{display:block;font-size:13px;font-weight:700;color:#10296a;margin:0 0 7px}
+.lg-field{position:relative;display:flex;align-items:center;border:1.6px solid #e3e8f4;background:#fff;border-radius:14px;transition:border-color .2s,box-shadow .2s}
+.lg-field:focus-within{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.16)}
+.lg-field.err{border-color:#c62828;box-shadow:0 0 0 4px rgba(198,40,40,.12)}
+.lg-field .lg-i{position:absolute;right:15px;font-size:19px;color:#7d8bb0;pointer-events:none}
+.lg-field:focus-within .lg-i{color:#2563eb}
+.lg-field input{width:100%;border:0;outline:0;background:transparent;color:#0f1b3d;border-radius:14px;padding:15px 46px 15px 14px;font-size:15.5px;font-weight:600;font-family:inherit}
+.lg-field input::placeholder{color:#9aa6c4;font-weight:400}
+.lg-error{display:none;align-items:flex-start;gap:9px;margin-top:12px;padding:11px 13px;border-radius:12px;background:#fdecec;color:#c62828;font-size:13px;font-weight:600;line-height:1.7;border:1px solid rgba(198,40,40,.22)}
+.lg-error.show{display:flex;animation:lgShake .45s}
+.lg-error .lg-i{font-size:18px;margin-top:2px}
+@keyframes lgShake{20%{transform:translateX(7px)}40%{transform:translateX(-7px)}60%{transform:translateX(5px)}80%{transform:translateX(-4px)}}
+.lg-btn{width:100%;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:10px;border:0;cursor:pointer;color:#fff;font-weight:800;font-size:16px;font-family:inherit;
+  padding:15px 18px;border-radius:14px;background:linear-gradient(135deg,#2563eb,#1d4ed8 55%,#10296a);box-shadow:0 14px 28px -10px rgba(29,78,216,.7);
+  transition:transform .2s,box-shadow .2s,filter .2s,opacity .2s;position:relative;overflow:hidden}
+.lg-btn::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);transform:translateX(-120%);transition:transform .7s}
+.lg-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 20px 34px -12px rgba(29,78,216,.8);filter:brightness(1.06)}
+.lg-btn:hover:not(:disabled)::after{transform:translateX(120%)}
+.lg-btn:focus-visible{outline:3px solid #ffc933;outline-offset:3px}
+.lg-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.lg-btn .lg-i{font-size:19px}
+.lg-btn.success{background:linear-gradient(135deg,#1aa150,#12803c)}
+.lg-spin{width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:lgSpin .8s linear infinite;display:none}
+.lg-btn.loading .lg-spin{display:block}
+.lg-btn.loading .lg-arrow{display:none}
+@keyframes lgSpin{to{transform:rotate(360deg)}}
+.lg-who{margin-top:24px}
+.lg-who-title{display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:800;color:#0b1f4d;margin-bottom:12px}
+.lg-who-title::before,.lg-who-title::after{content:"";flex:1;height:1px;background:#e3e8f4}
+.lg-who-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lg-who-card{text-align:center;padding:13px 8px 12px;border-radius:14px;background:#fff;border:1px solid #e3e8f4;transition:transform .25s,box-shadow .25s,border-color .25s}
+.lg-who-card:hover{transform:translateY(-4px);border-color:#4f86f7;box-shadow:0 14px 26px -14px rgba(29,78,216,.5)}
+.lg-who-card .lg-ic{width:38px;height:38px;margin:0 auto 8px;border-radius:12px;display:grid;place-items:center;font-size:19px;color:#fff}
+.lg-who-card:nth-child(1) .lg-ic{background:linear-gradient(135deg,#ffc933,#e09b00);color:#071433}
+.lg-who-card:nth-child(2) .lg-ic{background:linear-gradient(135deg,#2563eb,#10296a)}
+.lg-who-card:nth-child(3) .lg-ic{background:linear-gradient(135deg,#2bb673,#17803d)}
+.lg-who-card h4{font-size:12.5px;font-weight:800;color:#0b1f4d;margin:0}
+.lg-who-card p{font-size:11px;line-height:1.6;color:#5b6785;margin:3px 0 0}
+.lg-secure{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #e3e8f4;font-size:12.5px;font-weight:600;color:#5b6785}
+.lg-secure .lg-i{color:#17803d;font-size:17px}
+@media (max-width:640px){
+  .lg-card{padding:26px 20px 22px}
+  .lg-who-grid{grid-template-columns:1fr}
+  .lg-who-card{display:flex;align-items:center;gap:12px;text-align:right;padding:11px 12px}
+  .lg-who-card .lg-ic{margin:0}
+}
+@media (prefers-reduced-motion:reduce){.lg-wrap *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ===== Premium dark theme ===== */
+:root{--bg:#0B1120;--surface:#172235;--text:#F8FAFC;--muted:#94A3B8;--border:#34445D;--brand:#F5B342;--brand-d:#e0a030;--ok:#22C55E;--bad:#EF4444;--warn:#F5B342;color-scheme:dark}
+body{background:var(--bg)}
+.sidebar{background:#111827}
+.card,.kc{border-color:var(--border);box-shadow:0 0 0 1px rgba(245,179,66,.07),0 10px 28px -14px rgba(245,179,66,.25)}
+.btn{color:#0B1120;font-weight:700}.btn.danger{color:#fff}.btn.sec{color:var(--brand)}
+.nav a.active,.nav a:hover{background:var(--brand);color:#0B1120}
+.badge.ok{background:rgba(34,197,94,.15);color:#4ade80}.badge.bad{background:rgba(239,68,68,.15);color:#f87171}.badge.warn{background:rgba(245,179,66,.15);color:#F5B342}
+.qnav button.answered{background:#1e3a5f}
+@media (min-width:761px){.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto}}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kc .v{font-size:26px;font-weight:800;color:var(--brand)}.kc .l{font-size:12px;color:var(--muted)}.kc .ic{font-size:20px}
+.dl{font-size:11px;font-weight:700;color:var(--muted)}.dl.up{color:#22C55E}.dl.dn{color:#EF4444}
+.g2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.bar{height:8px;border-radius:99px;background:#0B1120;overflow:hidden}.bar b{display:block;height:100%;background:linear-gradient(90deg,#F5B342,#fb923c)}
+.pill{padding:5px 12px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px}.pill.on{background:var(--brand);color:#0B1120;border-color:var(--brand)}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0}.fnote{font-size:11px;color:var(--muted);margin-top:8px}
+.qr{cursor:pointer;transition:transform .2s,border-color .2s}.qr:hover{transform:translateY(-3px);border-color:var(--brand)}
+.pgr{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:8px;font-size:12px}
+.prn{display:none}
+@media (max-width:900px){.kg{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}}
+@media print{.sidebar,.topbar,.no-print{display:none!important}body{background:#fff;color:#000}.app{display:block}.main{max-width:100%;padding:0}
+.card,.kc{background:#fff!important;color:#000;box-shadow:none;border:1px solid #bbb}.kc .v,.card h3{color:#000}.card table{display:table;white-space:normal}th,td{color:#000}.prn{display:block}
+@page{margin:14mm;@bottom-center{content:"Employee Exam System — صفحة " counter(page)}}}
+
+/* ===== Reference look ===== */
+body{background:radial-gradient(1100px 600px at 80% -10%,rgba(37,99,235,.25),transparent 60%),radial-gradient(900px 600px at 0% 100%,rgba(139,92,246,.14),transparent 60%),#070d24}
+.card,.panel{background:linear-gradient(160deg,#101b3c,#0b1330);border:1px solid #223463;border-radius:18px;box-shadow:0 0 24px -10px rgba(59,130,246,.45)}
+.sidebar{background:linear-gradient(180deg,#0c1533,#0a1028);border-inline-end:1px solid #1d2b4a;display:flex;flex-direction:column}
+.sidebar .nav{display:flex;flex-direction:column;gap:2px}
+.nav a{padding:11px 12px;border-radius:12px;color:#c7d2ee}
+.nav a.active{background:linear-gradient(90deg,#1d6ff2,#2b8cff);color:#fff;box-shadow:0 0 18px rgba(43,140,255,.55)}
+.nav a:hover:not(.active){background:rgba(255,255,255,.06);color:#fff}
+.owner{margin-top:auto;border:1.5px solid #b8860b;border-radius:14px;padding:12px;text-align:center;background:linear-gradient(160deg,rgba(245,179,66,.18),rgba(245,179,66,.04));box-shadow:0 0 18px -6px #f5b342;color:#F5B342}
+.owner b{display:block;font-size:14px}.owner small{color:#d9b25e}
+.sb-logo{display:flex;justify-content:center;margin:2px 0 10px}
+.mainWrap{flex:1;min-width:0}.mainWrap .main{max-width:1500px}
+.hdr{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid #1d2b4a;background:rgba(9,16,40,.8);backdrop-filter:blur(10px);position:sticky;top:0;z-index:15}
+.hdr-t b{display:block;font-size:19px;font-weight:800}.hdr-t small{color:var(--muted);font-size:12px}
+.srch{position:relative;flex:1;max-width:520px;margin:0 auto}
+.srch input{width:100%;border-radius:99px;padding:10px 18px;background:#0e1a3d;border:1px solid #223463}
+.sres{display:none;position:absolute;top:44px;right:0;left:0;background:#0e1a3d;border:1px solid #223463;border-radius:14px;padding:6px;z-index:30;box-shadow:0 14px 30px rgba(0,0,0,.5)}
+.sres a{display:block;padding:8px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:13px}.sres a:hover{background:#1b2c5c}.sres .sh{color:var(--muted);font-size:11px;padding:6px 10px 2px}
+.bell{position:relative;background:#0e1a3d;border:1px solid #223463;border-radius:99px;width:42px;height:42px;font-size:18px;color:#fff}
+.bb{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;display:none;align-items:center;justify-content:center}
+.usr{display:flex;align-items:center;gap:10px}.usr b{display:block;font-size:13px}.usr small{color:var(--muted);font-size:11px}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:linear-gradient(135deg,#2563eb,#8b5cf6);color:#fff}
+.kg4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.kb{position:relative;border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px;border:1.5px solid var(--c);background:linear-gradient(135deg,color-mix(in srgb,var(--c) 24%,#0c1531),#0c1531 75%);box-shadow:0 0 22px -6px var(--c)}
+.kb .ci{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:25px;background:color-mix(in srgb,var(--c) 30%,transparent);flex-shrink:0}
+.kb .n{font-size:30px;font-weight:800;line-height:1.1}.kb .t{font-size:13px;color:#cbd5e1}.kb .sp2{margin-right:auto}
+.gr{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.ph h3{margin:0;font-size:16px}
+.lg{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:5px 0}.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:8px}
+.tp{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px}.tp:first-child{background:rgba(255,255,255,.05)}.tp .rk{width:26px;text-align:center;font-weight:800;color:var(--muted)}
+.tp .nm{flex:1;font-size:13px;line-height:1.3}.tp .nm small{color:var(--muted);display:block;font-size:11px}
+.sp{padding:3px 12px;border-radius:99px;font-weight:700;font-size:13px;background:#1d4ed8;color:#fff}.sp.g{background:#15803d}
+.ir{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.04);margin-bottom:8px;font-size:13px}.ir small{display:block;color:var(--muted)}
+.ir .ii{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;background:rgba(255,255,255,.07)}.ir .ip{margin-right:auto;padding:3px 12px;border-radius:99px;font-weight:700;color:#fff}
+.qg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qb{border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 18%,#0b1330);color:#fff;font-family:inherit;font-weight:700;font-size:13px}.qb small{display:block;color:#94a3b8;font-weight:400;font-size:11px}.qb:hover{box-shadow:0 0 16px -4px var(--c)}
+.dsel{background:#0e1a3d;border:1px solid #223463;border-radius:12px;padding:8px 12px}
+@media (max-width:1200px){.gr{grid-template-columns:1fr 1fr}.kg4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:800px){.gr,.kg4{grid-template-columns:1fr}.hdr-t,.usr div{display:none}.hdr{padding:10px 12px}}
+
+/* KPI cards fit */
+.kg4{gap:14px}
+.kb{min-height:118px;padding:14px 16px;gap:12px;overflow:hidden}
+.kb .ci{width:48px;height:48px;font-size:23px}
+.kb .tx{flex:1 1 0;min-width:0}
+.kb .n{font-size:28px;white-space:nowrap}
+.kb .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kb .dd{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.kb .dl{display:inline;font-size:11px}
+.kb{position:relative}.kb .sp2{position:absolute;left:14px;top:16px;width:36%;max-width:130px;min-width:70px;margin:0;pointer-events:none}
+.kb .sp2 svg{width:100%;height:46px;display:block}
+@media (max-width:520px){.kb{flex-wrap:wrap}.kb .sp2{position:static;flex:1 1 100%;width:100%;max-width:none}.kb .sp2 svg{height:40px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBiJaBC-gIoBKOqXnXybOCf_pKiKyB6-EA",
+  authDomain: "employee-exam-system.firebaseapp.com",
+  projectId: "employee-exam-system",
+  storageBucket: "employee-exam-system.firebasestorage.app",
+  messagingSenderId: "524658380745",
+  appId: "1:524658380745:web:06145dff2b431c56bba218"
+};
+firebase.initializeApp(firebaseConfig);
+
+let db=null;
+let state={ session:null, view:'login', examAttempt:null, editingExamId:null };
+let lang='ar';
+try{ const saved=localStorage.getItem('eesLang'); if(saved==='ar'||saved==='en') lang=saved; }catch(e){}
+const DICT={
+  ar:{
+    nav_dashboard:'لوحة التحكم', nav_reports:'التقارير والتحليلات', nav_questions:'بنك الأسئلة', nav_employees_teams:'الموظفون والفرق',
+    nav_assign:'إسناد الاختبارات', nav_results:'النتائج', nav_wrong:'الإجابات الخاطئة', nav_review:'إدارة الاختبارات',
+    nav_review_results:'مراجعة الإجابات', nav_grading:'تصحيح الاختبار', nav_messages:'مراسلات', nav_suggestions:'اقتراحات الأسئلة', nav_settings:'الإعدادات',
+    nav_my_exams:'اختباراتي', nav_my_results:'نتائجي السابقة', nav_my_profile:'تعديل بياناتي', nav_suggest_question:'اقترح سؤال',
+    admin_label:'مدير النظام', logout:'تسجيل الخروج', toggle_lang:'English',
+    login_title:'تسجيل الدخول', save:'حفظ', cancel:'إلغاء', delete:'حذف', add:'إضافة', search_ph:'بحث...', send:'إرسال', edit:'تعديل',
+    loading:'جارِ التحميل…', system_title:'نظام اختبارات الموظفين', system_tagline:'قيّم • حلّل • طوّر',
+    owner_zone:'منطقة المالك', full_access:'وصول كامل', system_owner:'مالك النظام', team_leader:'قائد فريق', employee:'موظف',
+    search_global:'ابحث عن موظف أو اختبار أو قسم...', no_results:'لا توجد نتائج', employees:'موظفون', exams:'اختبارات', departments:'أقسام',
+    unauthorized:'غير مصرح.', all:'الكل', none:'-- بدون --', active:'نشط', draft:'مسودة', completed:'مكتمل', passed:'ناجح', failed:'راسب',
+    name:'الاسم', email:'البريد الإلكتروني', dept:'القسم', team:'الفريق', position:'الوظيفة', status:'الحالة',
+    confirm_delete:'هل أنت متأكد من الحذف؟', saved_ok:'تم الحفظ بنجاح', error_generic:'حدث خطأ', no_data:'لا توجد بيانات.',
+    welcome:'مرحبًا بك', login_subtitle:'سجّل دخولك للمتابعة', id_label:'ID', id_placeholder:'أدخل الـ ID الخاص بك', login_btn:'دخول',
+    verifying:'جارٍ التحقق...', login_success:'تم تسجيل الدخول ✓', id_invalid:'الـ ID غير صحيح. تأكد من الرقم وحاول مرة أخرى.',
+    id_required:'من فضلك أدخل الـ ID الخاص بك.', conn_error:'تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
+    for_whom:'لمن هذا النظام؟', role_emp:'الموظفون', role_emp_desc:'أداء الاختبارات ومعرفة النتائج', role_lead:'القادة والمديرون', role_lead_desc:'متابعة وإدارة نتائج الفرق', role_admin:'مالك النظام', role_admin_desc:'إدارة كاملة وصلاحيات شاملة', secure_data:'بياناتك آمنة ومحمية',
+    dash_welcome:'مرحبًا بعودتك. هذه نظرة عامة على النظام.', avg_score:'متوسط الدرجات', pass_rate:'نسبة النجاح', total_exams_period:'إجمالي الاختبارات في الفترة', total_emps:'إجمالي الموظفين',
+    failed_emps:'الموظفون الراسبون', passed_emps:'الموظفون الناجحون', active_exams:'الاختبارات الجارية', done_exams:'الاختبارات المكتملة',
+    top_emps:'أفضل الموظفين', dept_perf:'أداء الأقسام', overall_view:'نظرة عامة على الأداء', exam_analytics:'تحليلات الاختبارات',
+    quick_reports:'تقارير سريعة', export_pdf:'تصدير PDF', export_excel:'تصدير Excel', monthly_report:'التقرير الشهري', print:'طباعة',
+    key_insights:'رؤى رئيسية', no_prev_period:'لا توجد فترة سابقة للمقارنة', by_topic:'حسب موضوع الأسئلة',
+    last_7d:'آخر 7 أيام', last_30d:'آخر 30 يومًا', last_3m:'آخر 3 أشهر', last_6m:'آخر 6 أشهر', last_12m:'آخر 12 شهرًا', custom_range:'نطاق مخصص',
+    vs_prev:'مقارنة بالسابقة', good:'جيد', new:'جديد', show_all:'عرض الكل',
+    reports_title:'التقارير والتحليلات', filters:'الفلاتر', reset_filters:'إعادة تعيين الفلاتر', tab_employee:'الموظفون', tab_department:'الأقسام', tab_team:'الفرق', tab_exam:'الاختبارات', tab_question:'الأسئلة', tab_monthly:'شهري', tab_insights:'رؤى الأداء',
+    no_extra_filters:'بدون فلاتر إضافية', report_date:'تاريخ التقرير', pass_only:'ناجح فقط', fail_only:'راسب فقط',
+    score_from:'الدرجة من', score_to:'إلى', attempt_num:'رقم المحاولة', no_match_filters:'لا توجد بيانات مطابقة للفلاتر.',
+    questions_title:'بنك الأسئلة', q_text:'نص السؤال', q_type:'النوع', q_category:'التصنيف', q_points:'الدرجة',
+    type_mcq:'اختيار واحد', type_multi:'اختيار متعدد', type_tf:'صح/خطأ', type_short:'إجابة قصيرة',
+    options_mark:'الاختيارات (علّم الصحيح)', option_n:'اختيار', explain_opt:'شرح الإجابة (اختياري)', add_question:'إضافة السؤال',
+    all_questions:'كل الأسئلة', bulk_delete:'حذف المحدد', search_q:'بحث...', no_questions:'لا توجد أسئلة بعد.', enter_q_text:'أدخل نص السؤال',
+    emps_title:'الموظفون والفرق', add_emp:'إضافة موظف جديد', edit_emp:'تعديل بيانات الموظف', emp_id:'Employee ID', team_leader_label:'قائد الفريق',
+    save_changes:'حفظ التعديلات', cancel_edit:'إلغاء التعديل', manage_leaders:'إدارة قادة الفرق', my_team_list:'قائمة فريقي',
+    new_leader_name:'اسم قائد الفريق الجديد', leader_code:'كود دخول القائد', add_leader:'إضافة قائد فريق',
+    leader_of:'قائد الفريق:', login_code:'كود الدخول:', not_set:'غير محدد', change:'تغيير', set:'تعيين', members_count:'عضو',
+    delete_leader:'حذف القائد', select_members:'حدد الموظفين التابعين لهذا القائد:', save_members:'حفظ أعضاء الفريق',
+    no_leaders_yet:'لا يوجد قادة فرق بعد. أضف قائدًا أولًا.', all_emps_list:'قائمة الموظفين الكلية', search_name_dept:'بحث بالاسم أو القسم...',
+    no_emps:'لا يوجد موظفون.', members_saved:'تم حفظ أعضاء الفريق.', enter_name_id:'أدخل الاسم و Employee ID (الحقلان مطلوبان).',
+    dup_empid:'يوجد موظف آخر بنفس Employee ID بالفعل.', enter_leader_name:'أدخل اسم قائد الفريق.', code_used:'هذا الكود مستخدم لقائد آخر.',
+    delete_leader_admin_only:'حذف القائد من صلاحيات المدير فقط.', delete_leader_confirm:'حذف قائد الفريق؟ لن يتم حذف الموظفين، فقط ارتباطهم بهذا القائد.',
+    enter_new_code:'أدخل كود الدخول الجديد للقائد:', saving:'جارٍ الحفظ...',
+    assign_title:'إسناد الاختبارات', choose_exam:'اختر اختبارًا', select_emps_assign:'حدد الموظفين المسند إليهم الاختبار:', select_all_shown:'تحديد كل المعروضين',
+    assign_btn:'إسناد الاختبار', assign_need_exam:'اختر اختبارًا', assign_need_emp:'يرجى تحديد موظف واحد على الأقل لإسناد الاختبار إليه.',
+    assign_ok:'تم إسناد الاختبار بنجاح', deadline:'الموعد النهائي',
+    results_title:'النتائج', wrong_title:'الإجابات الخاطئة', review_exams_title:'إدارة الاختبارات', review_results_title:'مراجعة الإجابات',
+    create_exam:'إنشاء اختبار جديد', edit_exam:'تعديل الاختبار', exam_name:'اسم الاختبار', pass_score:'درجة النجاح %', time_limit:'المدة (دقائق)',
+    show_result_emp:'إظهار النتيجة للموظف', shuffle_q:'ترتيب عشوائي للأسئلة', shuffle_opt:'ترتيب عشوائي للاختيارات',
+    select_questions:'اختر الأسئلة', exam_created:'تم إنشاء الاختبار بنجاح', exam_updated:'تم تحديث الاختبار بنجاح', enter_exam_name:'أدخل اسم الاختبار',
+    activate:'تفعيل', deactivate:'إيقاف', no_exams:'لا توجد اختبارات.',
+    grading_title:'تصحيح الاختبار', grade_team_only:'اختبارات موظفي فريقك فقط. ', grade_help:'قائد الفريق هو المسؤول عن تصحيح اختبارات فريقه ومنح الدرجات لكل سؤال، والنتيجة النهائية تُحدَّث للموظف تلقائيًا.',
+    grade_exam:'تصحيح', regrade:'إعادة التصحيح', score:'الدرجة', percent:'النسبة', not_answered:'لم يُجب', correct_answer:'الإجابة الصحيحة', your_answer:'إجابتك',
+    settings_title:'الإعدادات', change_admin_pass:'تغيير كلمة مرور المدير', current_pass:'كلمة المرور الحالية', new_pass:'كلمة المرور الجديدة', confirm_pass:'تأكيد كلمة المرور الجديدة',
+    update_pass:'تحديث كلمة المرور', danger_zone:'منطقة الخطر', wipe_desc:'حذف جميع الاختبارات، الإسنادات، النتائج، والمراسلات نهائيًا. بنك الأسئلة وبيانات الموظفين لن يتأثرا. هذا الإجراء لا يمكن التراجع عنه.',
+    wipe_btn:'حذف كل البيانات (عدا بنك الأسئلة وبيانات الموظفين)',
+    messages_title:'مراسلات', to:'المرسل إليه', all_emps:'-- كل الموظفين --', all_my_team:'-- كل أفراد فريقي --', subject:'عنوان الرسالة', body:'نص الرسالة',
+    sent_messages:'الرسائل المرسلة', no_messages:'لا توجد رسائل.', seen:'رأيته', seen_at:'رأيته —', delete_msg:'حذف', mark_seen:'رأيته',
+    suggestions_title:'اقتراحات الأسئلة', suggest_title:'اقترح سؤال', my_suggestions:'اقتراحاتي السابقة', send_suggestion:'إرسال الاقتراح', no_suggestions:'لا توجد اقتراحات.',
+    my_assigned:'الاختبارات المسندة إليك', no_assigned:'لا توجد اختبارات مسندة.', start_exam:'بدء الاختبار', my_results:'نتائجي السابقة', no_my_results:'لا توجد نتائج سابقة.',
+    profile_title:'تعديل بياناتي', emp_id_fixed:'(ثابت، لا يمكن تعديله)', name_required:'الاسم مطلوب.',
+    submit_exam:'تسليم الاختبار', next:'التالي', prev:'السابق', confirm_submit:'هل أنت متأكد من تسليم الاختبار؟', exam_done_result:'انتهى الاختبار. النتيجة: ', passed_lbl:'ناجح', failed_lbl:'راسب', exam_submitted:'تم تسليم الاختبار بنجاح.',
+    notifications:'الإشعارات', mark_all_read:'تحديد الكل كمقروء', delete_all:'حذف الكل', no_notifs:'لا توجد إشعارات.', delete_all_notifs:'حذف كل الإشعارات؟',
+    true_lbl:'صح', false_lbl:'خطأ', points:'نقطة', attempt:'محاولة', duration:'المدة', filter_status:'الحالة',
+    leader_only_team:'فريقك فقط', db_error:'تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة وحاول مرة أخرى.',
+    save_error:'حدث خطأ أثناء الحفظ: ', select_one_delete:'اختر عنصرًا واحدًا على الأقل للحذف.',
+    excel_fail:'تعذر تحميل مكتبة Excel. تحقق من الاتصال بالإنترنت أو استخدم CSV.', pdf_hint:'في نافذة الطباعة اختاري الوجهة: حفظ كـ PDF',
+    // reports & charts
+    period_7d:'7 أيام', period_30d:'30 يومًا', period_3m:'3 أشهر', period_6m:'6 أشهر', period_12m:'12 شهرًا', period_custom:'مخصص',
+    col_employee:'الموظف', col_dept:'القسم', col_team:'الفريق', col_avg:'المتوسط', col_pass:'النجاح', col_exam:'الاختبار', col_date:'التاريخ', col_score:'الدرجة', col_status:'الحالة',
+    details:'التفاصيل', prev:'السابق', next:'التالي', open:'فتح',
+    kpi_pass_rate:'نسبة النجاح', kpi_avg_score:'متوسط الدرجات', kpi_exams_period:'إجمالي الاختبارات', kpi_total_emps:'إجمالي الموظفين',
+    cmp_prev:'مقارنة بالسابقة', overview_perf:'نظرة عامة على الأداء', top_employees:'أفضل الموظفين',
+    dept_performance:'أداء الأقسام', team_performance:'أداء الفرق', exam_performance:'أداء الاختبارات',
+    monthly_report_t:'التقرير الشهري', question_analysis:'تحليل الأسئلة', period_compare:'مقارنة الفترات',
+    insights_from_data:'رؤى الأداء (من البيانات الفعلية)', no_insights:'لا توجد بيانات كافية لاستخلاص رؤى.',
+    export_center:'مركز التصدير', export_note:'Excel يضم كل الجداول في أوراق منفصلة. PDF: اختاري "حفظ كـ PDF" من نافذة الطباعة. التصدير يحترم الفلاتر الحالية.',
+    report_of:'نظام اختبارات الموظفين — ', report_date_lbl:'تاريخ التقرير',
+    no_results_rows:'لا توجد نتائج.', no_filter_data:'لا توجد بيانات مطابقة للفلاتر.',
+    uncategorized:'غير مصنف', hard:'صعب', medium:'متوسط', easy:'سهل',
+    everyone_correct:'أجاب الجميع صحيحًا', needs_review:'يحتاج مراجعة / قد يكون غير واضح',
+    sum_final_results:'عدد النتائج النهائية', sum_attempts:'عدد المحاولات', sum_avg:'المتوسط', sum_pass_rate:'نسبة النجاح', sum_emps:'عدد الموظفين',
+    head_emps_count:'عدد الموظفين', head_exams_count:'عدد الاختبارات', head_fail_rate:'نسبة الرسوب', head_best:'الأفضل', head_worst:'الأدنى',
+    head_rank:'الترتيب', head_team_leader:'الفريق (القائد)', head_team_avg:'متوسط الفريق', head_failed_emps:'موظفون راسبون', head_results:'النتائج',
+    head_assigned:'مُسند', head_completed:'أكمل', head_not_started:'لم يبدأ', head_highest:'الأعلى', head_lowest:'الأدنى', head_avg_duration:'متوسط المدة (د)',
+    head_month:'الشهر', head_period:'الفترة', head_avg_pct:'المتوسط %', head_pass_pct:'نسبة النجاح %',
+    head_question:'السؤال', head_type:'النوع', head_category:'التصنيف', head_points:'الدرجة',
+    head_topic:'الموضوع', head_total_ans:'إجمالي الإجابات', head_correct_pct:'% صحيحة', head_wrong_pct:'% خاطئة', head_difficulty:'الصعوبة', head_note:'ملاحظة',
+    label_status:'الحالة', label_score_from:'الدرجة من', label_score_to:'إلى', label_attempt:'رقم المحاولة',
+    pass_lbl:'ناجح', fail_lbl:'راسب', filter_dept:'القسم', filter_team:'الفريق', filter_emp:'الموظف', filter_exam:'الاختبار',
+    no_data_short:'لا توجد بيانات.', show_all:'عرض الكل', calc_note:'طريقة الحساب: النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار.',
+    best_dept:'أفضل قسم أداءً', best_team:'أفضل فريق',
+    completed:'مكتمل', dashboard_title:'لوحة التحكم', welcome_back:'مرحبًا بعودتك', system_overview:'هذه نظرة عامة على النظام.',
+    no_dept:'بدون قسم', all_teams:'-- كل الفرق --', unknown:'غير معروف', admin_name:'المدير',
+    deleted_emp:'(موظف محذوف)', deleted_exam:'(اختبار محذوف)',
+    q_text_lbl:'نص السؤال', q_type_lbl:'النوع', q_cat_lbl:'التصنيف', q_points_lbl:'الدرجة',
+    correct_ans:'الإجابة الصحيحة', emp_answer:'إجابة الموظف',
+    export_lbl:'تصدير', deadline_lbl:'الموعد النهائي', submit_date:'تاريخ التسليم',
+    exam_name_lbl:'اسم الاختبار', ratio_lbl:'النسبة', score_lbl:'الدرجة',
+    delete_btn:'حذف', edit_btn:'تعديل', seen_btn:'رأيته',
+    no_results_yet:'لا توجد نتائج بعد.', no_wrong_yet:'لا توجد إجابات خاطئة مسجّلة حتى الآن.',
+    no_active_exams:'لا توجد اختبارات نشطة.', no_leaders:'لا يوجد قادة فرق بعد. أضف قائدًا أولًا.',
+    no_suggestions_yet:'لا توجد اقتراحات أسئلة من الموظفين حتى الآن.',
+    no_team_submissions:'لا توجد اختبارات مسلَّمة من موظفي هذا الفريق بعد.',
+    no_emps_match:'لا يوجد موظفون يطابقون خيارات البحث الحالية.',
+    search_exam_emp_dept:'بحث بالاختبار أو الموظف أو القسم...',
+    search_emp_exam:'بحث باسم الموظف أو اسم الاختبار...',
+    select_emps_for_exam:'حدد الموظفين المسند إليهم الاختبار:',
+    confirm_delete_exam:'هل أنت متأكد من حذف هذا الاختبار؟',
+    confirm_delete_suggestion:'هل تريد حذف هذا الاقتراح نهائيًا؟',
+    confirm_delete_msg:'حذف هذه الرسالة نهائيًا؟ ستختفي أيضًا عند الموظفين.',
+    confirm_wipe:'هل أنت متأكد من حذف كل الاختبارات والإسنادات والنتائج والمراسلات؟ لا يمكن التراجع عن هذا الإجراء.',
+    wipe_success:'تم حذف كل البيانات بنجاح، وبقي بنك الأسئلة وبيانات الموظفين كما هي.',
+    pass_mismatch:'كلمة المرور الجديدة وتأكيدها غير متطابقين.',
+    pass_short:'كلمة المرور الجديدة يجب ألا تقل عن 4 خانات.',
+    q_added:'تمت إضافة السؤال إلى بنك الأسئلة.',
+    suggestion_deleted:'حذف الاقتراح',
+    minute:'دقيقة', points_unit:'نقطة',
+    type_multi_alt:'اختيار من متعدد',
+    trend_up:'▲ صاعد', trend_down:'▼ هابط', trend_flat:'ثابت',
+    hardest:'الأصعب (أقل متوسط)', easiest:'الأسهل (أعلى متوسط)', most_attempts:'الأكثر محاولات', lowest_pass:'أقل نسبة نجاح',
+    exam_indicators:'مؤشرات الاختبارات', active_exams_title:'الاختبارات النشطة', last_exams:'آخر الاختبارات',
+    view_exam:'عرض الاختبار', results_btn:'النتائج',
+    assigned_n:'مُسند', completed_n:'أكمل', not_started_n:'لم يبدأ',
+    success_lbl:'النجاح', fail_rate_lbl:'الرسوب', completion_rate:'معدل الإكمال', avg_duration:'متوسط المدة',
+    total_emps_lbl:'إجمالي الموظفين', total_exams_lbl:'إجمالي الاختبارات',
+    need_attention:'يحتاجون انتباهًا', final_pass_of:'نتيجة نهائية ناجحة',
+    avg_below_60:'موظف متوسطهم أقل من 60%',
+    show_all_arrow:'عرض الكل ←', detailed_report:'تقرير مفصل', official_report:'تقرير رسمي', printable:'صيغة قابلة للطباعة',
+    analytics_lbl:'تحليلات', open_btn:'فتح',
+    report_emps:'تقرير الموظفين', report_exams:'تقرير الاختبارات',
+    no_data_period:'لا توجد نتائج في هذه الفترة.',
+    emp_results_title:'نتائج الموظفين', wrong_desc:'التي أجاب عليها الموظفون إجابة خاطئة بعد انتهاء اختباراتهم، مع توضيح من أجاب وبأي إجابة.',
+    review_desc:'أنشئ اختبارات جديدة، وعدّل بيانات الاختبارات الحالية والأسئلة التابعة لها، أو فعّلها.',
+    review_results_desc:'كل الاختبارات التي أنهاها الموظفون. يمكنك عرض إجابات كل اختبار بالتفصيل، ثم تحديد يدويًا.',
+    suggest_desc:'اقترح سؤالًا جديدًا ليراجعه المدير ويضيفه إلى بنك الأسئلة إن رغب، وسيصلك رد منه.',
+    save_error_prefix:'حدث خطأ أثناء الحفظ: ',
+    delete_n_items:'عنصر؟ لا يمكن التراجع عن هذا الإجراء.',
+    pass_changed:'تم تحديث كلمة المرور بنجاح.',
+    wrong_current_pass:'كلمة المرور الحالية غير صحيحة.',
+    mark_seen_lbl:'رآيه', toggle_seen:'رآيه',
+    related_exam:'مرتبط باختبار (اختياري)',
+    send_msg:'إرسال',
+    my_profile_save:'حفظ التعديلات',
+    start_btn:'بدء الاختبار',
+    submit_btn:'تسليم الاختبار',
+    true_opt:'صح', false_opt:'خطأ',
+    question_n:'السؤال',
+    of_total:'من',
+    time_left:'الوقت المتبقي',
+    auto_fail:'راسب تلقائيًا', auto_pass:'ناجح تلقائيًا',
+    pending_grade:'بانتظار التصحيح', graded:'تم التصحيح',
+    select_leader:'قائد الفريق',
+    grade_btn:'تصحيح',
+    save_grade:'حفظ التصحيح',
+    total_points:'المجموع',
+    percent_lbl:'النسبة',
+    activate_btn:'تفعيل', deactivate_btn:'إيقاف',
+    draft_lbl:'مسودة', active_lbl:'نشط',
+    shuffle_q_lbl:'ترتيب عشوائي للأسئلة', shuffle_opt_lbl:'ترتيب عشوائي للاختيارات',
+    show_result_lbl:'إظهار النتيجة للموظف',
+    select_qs_lbl:'اختر الأسئلة',
+    save_exam:'حفظ الاختبار',
+    assign_selected:'إسناد الاختبار',
+    bulk_delete_lbl:'حذف المحدد',
+    select_all_lbl:'تحديد الكل',
+    notifications_title:'الإشعارات',
+    no_notifs_lbl:'لا توجد إشعارات.',
+    mark_read_all:'تحديد الكل كمقروء',
+    delete_all_lbl:'حذف الكل',
+    owner_admin:'المدير',
+    team_avg_lbl:'متوسط الفريق',
+    improvement:'التحسن %', direction:'الاتجاه',
+    topic_lbl:'الموضوع', difficulty_lbl:'الصعوبة', note_lbl:'ملاحظة',
+    correct_count:'صحيحة', wrong_count:'خاطئة',
+    total_answers:'إجمالي الإجابات',
+
+
+  },
+  en:{
+    nav_dashboard:'Dashboard', nav_reports:'Reports & Analytics', nav_questions:'Question Bank', nav_employees_teams:'Employees & Teams',
+    nav_assign:'Assign Exams', nav_results:'Results', nav_wrong:'Wrong Answers', nav_review:'Manage Exams',
+    nav_review_results:'Review Answers', nav_grading:'Grade Exams', nav_messages:'Messages', nav_suggestions:'Question Suggestions', nav_settings:'Settings',
+    nav_my_exams:'My Exams', nav_my_results:'My Results', nav_my_profile:'Edit My Profile', nav_suggest_question:'Suggest a Question',
+    admin_label:'Admin', logout:'Log out', toggle_lang:'العربية',
+    login_title:'Sign In', save:'Save', cancel:'Cancel', delete:'Delete', add:'Add', search_ph:'Search...', send:'Send', edit:'Edit',
+    loading:'Loading…', system_title:'Employee Exam System', system_tagline:'Assess • Analyze • Improve',
+    owner_zone:'Owner Zone', full_access:'Full access', system_owner:'System owner', team_leader:'Team leader', employee:'Employee',
+    search_global:'Search employee, exam, or department...', no_results:'No results', employees:'Employees', exams:'Exams', departments:'Departments',
+    unauthorized:'Unauthorized.', all:'All', none:'-- None --', active:'Active', draft:'Draft', completed:'Completed', passed:'Passed', failed:'Failed',
+    name:'Name', email:'Email', dept:'Department', team:'Team', position:'Position', status:'Status',
+    confirm_delete:'Are you sure you want to delete?', saved_ok:'Saved successfully', error_generic:'An error occurred', no_data:'No data.',
+    welcome:'Welcome', login_subtitle:'Sign in to continue', id_label:'ID', id_placeholder:'Enter your ID', login_btn:'Sign in',
+    verifying:'Verifying...', login_success:'Signed in ✓', id_invalid:'Invalid ID. Check the number and try again.',
+    id_required:'Please enter your ID.', conn_error:'Could not reach the server. Check your internet connection and try again.',
+    for_whom:'Who is this system for?', role_emp:'Employees', role_emp_desc:'Take exams and view results', role_lead:'Leaders & managers', role_lead_desc:'Track and manage team results', role_admin:'System owner', role_admin_desc:'Full management and permissions', secure_data:'Your data is safe and protected',
+    dash_welcome:'Welcome back. Here is an overview of the system.', avg_score:'Average score', pass_rate:'Pass rate', total_exams_period:'Exams in period', total_emps:'Total employees',
+    failed_emps:'Failed employees', passed_emps:'Passed employees', active_exams:'Active exams', done_exams:'Completed exams',
+    top_emps:'Top employees', dept_perf:'Department performance', overall_view:'Overall performance', exam_analytics:'Exam analytics',
+    quick_reports:'Quick reports', export_pdf:'Export PDF', export_excel:'Export Excel', monthly_report:'Monthly report', print:'Print',
+    key_insights:'Key insights', no_prev_period:'No previous period to compare', by_topic:'By question topic',
+    last_7d:'Last 7 days', last_30d:'Last 30 days', last_3m:'Last 3 months', last_6m:'Last 6 months', last_12m:'Last 12 months', custom_range:'Custom range',
+    vs_prev:'vs previous', good:'Good', new:'New', show_all:'Show all',
+    reports_title:'Reports & Analytics', filters:'Filters', reset_filters:'Reset filters', tab_employee:'Employees', tab_department:'Departments', tab_team:'Teams', tab_exam:'Exams', tab_question:'Questions', tab_monthly:'Monthly', tab_insights:'Insights',
+    no_extra_filters:'No extra filters', report_date:'Report date', pass_only:'Passed only', fail_only:'Failed only',
+    score_from:'Score from', score_to:'to', attempt_num:'Attempt #', no_match_filters:'No data matching filters.',
+    questions_title:'Question Bank', q_text:'Question text', q_type:'Type', q_category:'Category', q_points:'Points',
+    type_mcq:'Single choice', type_multi:'Multiple choice', type_tf:'True/False', type_short:'Short answer',
+    options_mark:'Options (mark correct)', option_n:'Option', explain_opt:'Explanation (optional)', add_question:'Add question',
+    all_questions:'All questions', bulk_delete:'Delete selected', search_q:'Search...', no_questions:'No questions yet.', enter_q_text:'Enter question text',
+    emps_title:'Employees & Teams', add_emp:'Add new employee', edit_emp:'Edit employee', emp_id:'Employee ID', team_leader_label:'Team leader',
+    save_changes:'Save changes', cancel_edit:'Cancel edit', manage_leaders:'Manage Team Leaders', my_team_list:'My team',
+    new_leader_name:'New team leader name', leader_code:'Leader login code', add_leader:'Add team leader',
+    leader_of:'Team leader:', login_code:'Login code:', not_set:'Not set', change:'Change', set:'Set', members_count:'members',
+    delete_leader:'Delete leader', select_members:'Select employees for this leader:', save_members:'Save team members',
+    no_leaders_yet:'No team leaders yet. Add one first.', all_emps_list:'All employees', search_name_dept:'Search by name or department...',
+    no_emps:'No employees.', members_saved:'Team members saved.', enter_name_id:'Enter name and Employee ID (required).',
+    dup_empid:'Another employee already has this Employee ID.', enter_leader_name:'Enter team leader name.', code_used:'This code is already used by another leader.',
+    delete_leader_admin_only:'Only admin can delete a leader.', delete_leader_confirm:'Delete team leader? Employees will not be deleted, only unlinked.',
+    enter_new_code:'Enter new login code for the leader:', saving:'Saving...',
+    assign_title:'Assign Exams', choose_exam:'Choose exam', select_emps_assign:'Select employees to assign:', select_all_shown:'Select all shown',
+    assign_btn:'Assign exam', assign_need_exam:'Choose an exam', assign_need_emp:'Select at least one employee.',
+    assign_ok:'Exam assigned successfully', deadline:'Deadline',
+    results_title:'Results', wrong_title:'Wrong Answers', review_exams_title:'Manage Exams', review_results_title:'Review Answers',
+    create_exam:'Create new exam', edit_exam:'Edit exam', exam_name:'Exam name', pass_score:'Pass score %', time_limit:'Duration (minutes)',
+    show_result_emp:'Show result to employee', shuffle_q:'Shuffle questions', shuffle_opt:'Shuffle options',
+    select_questions:'Select questions', exam_created:'Exam created successfully', exam_updated:'Exam updated successfully', enter_exam_name:'Enter exam name',
+    activate:'Activate', deactivate:'Deactivate', no_exams:'No exams.',
+    grading_title:'Grade Exams', grade_team_only:'Your team exams only. ', grade_help:'The team leader grades their team exams and scores each question; the final result updates for the employee automatically.',
+    grade_exam:'Grade', regrade:'Re-grade', score:'Score', percent:'Percent', not_answered:'Not answered', correct_answer:'Correct answer', your_answer:'Your answer',
+    settings_title:'Settings', change_admin_pass:'Change admin password', current_pass:'Current password', new_pass:'New password', confirm_pass:'Confirm new password',
+    update_pass:'Update password', danger_zone:'Danger zone', wipe_desc:'Permanently delete all exams, assignments, results, and messages. Question bank and employees are kept. This cannot be undone.',
+    wipe_btn:'Delete all data (except question bank & employees)',
+    messages_title:'Messages', to:'Recipient', all_emps:'-- All employees --', all_my_team:'-- All my team --', subject:'Subject', body:'Message',
+    sent_messages:'Sent messages', no_messages:'No messages.', seen:'Seen', seen_at:'Seen —', delete_msg:'Delete', mark_seen:'Mark as seen',
+    suggestions_title:'Question Suggestions', suggest_title:'Suggest a question', my_suggestions:'My previous suggestions', send_suggestion:'Send suggestion', no_suggestions:'No suggestions.',
+    my_assigned:'Assigned exams', no_assigned:'No assigned exams.', start_exam:'Start exam', my_results:'My previous results', no_my_results:'No previous results.',
+    profile_title:'Edit my profile', emp_id_fixed:'(fixed, cannot be changed)', name_required:'Name is required.',
+    submit_exam:'Submit exam', next:'Next', prev:'Previous', confirm_submit:'Are you sure you want to submit the exam?', exam_done_result:'Exam finished. Score: ', passed_lbl:'Passed', failed_lbl:'Failed', exam_submitted:'Exam submitted successfully.',
+    notifications:'Notifications', mark_all_read:'Mark all as read', delete_all:'Delete all', no_notifs:'No notifications.', delete_all_notifs:'Delete all notifications?',
+    true_lbl:'True', false_lbl:'False', points:'pts', attempt:'Attempt', duration:'Duration', filter_status:'Status',
+    leader_only_team:'Your team only', db_error:'Could not connect to the database. Reload the page and try again.',
+    save_error:'Error while saving: ', select_one_delete:'Select at least one item to delete.',
+    excel_fail:'Could not load Excel library. Check your connection or use CSV.', pdf_hint:'In the print dialog choose destination: Save as PDF',
+    period_7d:'7 days', period_30d:'30 days', period_3m:'3 months', period_6m:'6 months', period_12m:'12 months', period_custom:'Custom',
+    col_employee:'Employee', col_dept:'Department', col_team:'Team', col_avg:'Average', col_pass:'Pass rate', col_exam:'Exam', col_date:'Date', col_score:'Score', col_status:'Status',
+    details:'Details', prev:'Previous', next:'Next', open:'Open',
+    kpi_pass_rate:'Pass rate', kpi_avg_score:'Average score', kpi_exams_period:'Total exams', kpi_total_emps:'Total employees',
+    cmp_prev:'vs previous', overview_perf:'Performance overview', top_employees:'Top employees',
+    dept_performance:'Department performance', team_performance:'Team performance', exam_performance:'Exam performance',
+    monthly_report_t:'Monthly report', question_analysis:'Question analysis', period_compare:'Period comparison',
+    insights_from_data:'Performance insights (from live data)', no_insights:'Not enough data for insights.',
+    export_center:'Export center', export_note:'Excel includes all tables on separate sheets. PDF: choose "Save as PDF" in the print dialog. Export respects current filters.',
+    report_of:'Employee Exam System — ', report_date_lbl:'Report date',
+    no_results_rows:'No results.', no_filter_data:'No data matching filters.',
+    uncategorized:'Uncategorized', hard:'Hard', medium:'Medium', easy:'Easy',
+    everyone_correct:'Everyone answered correctly', needs_review:'Needs review / may be unclear',
+    sum_final_results:'Final results', sum_attempts:'Attempts', sum_avg:'Average', sum_pass_rate:'Pass rate', sum_emps:'Employees',
+    head_emps_count:'Employees', head_exams_count:'Exams', head_fail_rate:'Fail rate', head_best:'Best', head_worst:'Worst',
+    head_rank:'Rank', head_team_leader:'Team (leader)', head_team_avg:'Team average', head_failed_emps:'Failed employees', head_results:'Results',
+    head_assigned:'Assigned', head_completed:'Completed', head_not_started:'Not started', head_highest:'Highest', head_lowest:'Lowest', head_avg_duration:'Avg duration (min)',
+    head_month:'Month', head_period:'Period', head_avg_pct:'Average %', head_pass_pct:'Pass rate %',
+    head_question:'Question', head_type:'Type', head_category:'Category', head_points:'Points',
+    head_topic:'Topic', head_total_ans:'Total answers', head_correct_pct:'% correct', head_wrong_pct:'% wrong', head_difficulty:'Difficulty', head_note:'Note',
+    label_status:'Status', label_score_from:'Score from', label_score_to:'to', label_attempt:'Attempt #',
+    pass_lbl:'Passed', fail_lbl:'Failed', filter_dept:'Department', filter_team:'Team', filter_emp:'Employee', filter_exam:'Exam',
+    no_data_short:'No data.', show_all:'Show all', calc_note:'Calculation: final result = last attempt per employee per exam.',
+    best_dept:'Best department', best_team:'Best team',
+    completed:'Completed', dashboard_title:'Dashboard', welcome_back:'Welcome back', system_overview:'Here is an overview of the system.',
+    no_dept:'No department', all_teams:'-- All teams --', unknown:'Unknown', admin_name:'Admin',
+    deleted_emp:'(deleted employee)', deleted_exam:'(deleted exam)',
+    q_text_lbl:'Question text', q_type_lbl:'Type', q_cat_lbl:'Category', q_points_lbl:'Points',
+    correct_ans:'Correct answer', emp_answer:'Employee answer',
+    export_lbl:'Export', deadline_lbl:'Deadline', submit_date:'Submit date',
+    exam_name_lbl:'Exam name', ratio_lbl:'Percent', score_lbl:'Score',
+    delete_btn:'Delete', edit_btn:'Edit', seen_btn:'Seen',
+    no_results_yet:'No results yet.', no_wrong_yet:'No wrong answers recorded yet.',
+    no_active_exams:'No active exams.', no_leaders:'No team leaders yet. Add one first.',
+    no_suggestions_yet:'No question suggestions from employees yet.',
+    no_team_submissions:'No submitted exams from this team yet.',
+    no_emps_match:'No employees match the current search.',
+    search_exam_emp_dept:'Search by exam, employee, or department...',
+    search_emp_exam:'Search by employee or exam name...',
+    select_emps_for_exam:'Select employees to assign the exam to:',
+    confirm_delete_exam:'Are you sure you want to delete this exam?',
+    confirm_delete_suggestion:'Delete this suggestion permanently?',
+    confirm_delete_msg:'Delete this message permanently? It will also disappear for employees.',
+    confirm_wipe:'Are you sure you want to delete all exams, assignments, results, and messages? This cannot be undone.',
+    wipe_success:'All data deleted successfully. Question bank and employees were kept.',
+    pass_mismatch:'New password and confirmation do not match.',
+    pass_short:'New password must be at least 4 characters.',
+    q_added:'Question added to the question bank.',
+    suggestion_deleted:'Delete suggestion',
+    minute:'min', points_unit:'pts',
+    type_multi_alt:'Multiple choice',
+    trend_up:'▲ Up', trend_down:'▼ Down', trend_flat:'Flat',
+    hardest:'Hardest (lowest avg)', easiest:'Easiest (highest avg)', most_attempts:'Most attempts', lowest_pass:'Lowest pass rate',
+    exam_indicators:'Exam indicators', active_exams_title:'Active exams', last_exams:'Recent exams',
+    view_exam:'View exam', results_btn:'Results',
+    assigned_n:'Assigned', completed_n:'Completed', not_started_n:'Not started',
+    success_lbl:'Pass', fail_rate_lbl:'Fail', completion_rate:'Completion rate', avg_duration:'Avg duration',
+    total_emps_lbl:'Total employees', total_exams_lbl:'Total exams',
+    need_attention:'Need attention', final_pass_of:'final results passed',
+    avg_below_60:'employees averaging below 60%',
+    show_all_arrow:'Show all ←', detailed_report:'Detailed report', official_report:'Official report', printable:'Printable format',
+    analytics_lbl:'Analytics', open_btn:'Open',
+    report_emps:'Employees report', report_exams:'Exams report',
+    no_data_period:'No results in this period.',
+    emp_results_title:'Employee results', wrong_desc:'Wrong answers after exams, with who answered and what they chose.',
+    review_desc:'Create new exams, edit existing exams and their questions, or activate them.',
+    review_results_desc:'All completed exams. View answers in detail and review manually.',
+    suggest_desc:'Suggest a new question for the admin to review and optionally add to the question bank.',
+    save_error_prefix:'Error while saving: ',
+    delete_n_items:'items? This cannot be undone.',
+    pass_changed:'Password updated successfully.',
+    wrong_current_pass:'Current password is incorrect.',
+    mark_seen_lbl:'Seen', toggle_seen:'Seen',
+    related_exam:'Related exam (optional)',
+    send_msg:'Send',
+    my_profile_save:'Save changes',
+    start_btn:'Start exam',
+    submit_btn:'Submit exam',
+    true_opt:'True', false_opt:'False',
+    question_n:'Question',
+    of_total:'of',
+    time_left:'Time left',
+    auto_fail:'Auto-fail', auto_pass:'Auto-pass',
+    pending_grade:'Pending grade', graded:'Graded',
+    select_leader:'Team leader',
+    grade_btn:'Grade',
+    save_grade:'Save grade',
+    total_points:'Total',
+    percent_lbl:'Percent',
+    activate_btn:'Activate', deactivate_btn:'Deactivate',
+    draft_lbl:'Draft', active_lbl:'Active',
+    shuffle_q_lbl:'Shuffle questions', shuffle_opt_lbl:'Shuffle options',
+    show_result_lbl:'Show result to employee',
+    select_qs_lbl:'Select questions',
+    save_exam:'Save exam',
+    assign_selected:'Assign exam',
+    bulk_delete_lbl:'Delete selected',
+    select_all_lbl:'Select all',
+    notifications_title:'Notifications',
+    no_notifs_lbl:'No notifications.',
+    mark_read_all:'Mark all as read',
+    delete_all_lbl:'Delete all',
+    owner_admin:'Admin',
+    team_avg_lbl:'Team average',
+    improvement:'Improvement %', direction:'Trend',
+    topic_lbl:'Topic', difficulty_lbl:'Difficulty', note_lbl:'Note',
+    correct_count:'Correct', wrong_count:'Wrong',
+    total_answers:'Total answers',
+
+
+  }
+};
+function T(key){ return (DICT[lang] && DICT[lang][key]) || (DICT.ar[key]) || key; }
+function applyLangToDocument(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
+  try{ document.title = T('system_title'); }catch(e){}
+  try{ localStorage.setItem('eesLang',lang); }catch(e){}
+}
+
+async function initCaps(){
+  try{ db = firebase.firestore(); }catch(e){ db=null; console.error(e); }
+}
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+async function col(name){ return db ? db.collection(name) : null; }
+
+async function listAll(name){
+  if(!db) return [];
+  try{
+    const c = db.collection(name);
+    const res = await c.get();
+    return res.docs ? res.docs.map(d=>({id:d.id,...(d.data()||{})})) : [];
+  }catch(e){ console.error(e); return []; }
+}
+async function setDoc(name,id,data){
+  if(!db){ alert(T('db_error')); return false; }
+  try{ await db.collection(name).doc(id).set(data,{merge:true}); return true; }
+  catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:T('unknown'))); return false; }
+}
+// update() understands dotted paths (nested fields); set(...,{merge:true}) does NOT
+async function updDoc(name,id,data){
+  if(!db){ alert(T('db_error')); return false; }
+  try{ await db.collection(name).doc(id).update(data); return true; }
+  catch(e){ console.error(e); alert('حدث خطأ أثناء الحفظ: '+(e&&e.message?e.message:T('unknown'))); return false; }
+}
+// read helpers that also honour legacy literal "seenBy.<id>" / "deletedBy.<id>" fields
+function seenAtOf(m,id){ return (m.seenBy&&m.seenBy[id]) || m['seenBy.'+id] || null; }
+function deletedByOf(m,id){ return !!((m.deletedBy&&m.deletedBy[id]) || m['deletedBy.'+id]); }
+async function delDoc(name,id){ if(!db) return; try{ await db.collection(name).doc(id).delete(); }catch(e){console.error(e);} }
+async function bulkDeleteSelected(collectionName,chkClass){
+  const ids=[...document.querySelectorAll('.'+chkClass+':checked')].map(c=>c.value);
+  if(!ids.length){ alert(T('select_one_delete')); return; }
+  if(!confirm(`هل أنت متأكد من حذف ${ids.length} عنصر؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+  for(const id of ids) await delDoc(collectionName,id);
+  routeRender();
+}
+function attachSelectAll(allId,chkClass){
+  const allBox=document.getElementById(allId); if(!allBox) return;
+  allBox.onchange=()=>{ document.querySelectorAll('.'+chkClass).forEach(c=>c.checked=allBox.checked); };
+}
+
+// ---------- render shell ----------
+
+// ---------- notifications (sender gets notified when employee sees a message) ----------
+let notifUnsub=null, notifKeyActive=null, notifList=[], notifUnread=0;
+let empMsgUnread=0, empMsgUnsub=null;
+function notifKey(){ const s=state.session; return s&&s.role==='leader'? s.id : 'admin'; }
+function showToast(msg){
+  const t=document.createElement('div'); t.textContent=msg;
+  t.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:10px 16px;border-radius:10px;z-index:200;box-shadow:0 4px 14px rgba(0,0,0,.25);max-width:90%;font-size:14px';
+  document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
+}
+function updateNavBadge(){
+  const bb=document.getElementById('bellBadge'); if(bb){ bb.textContent=notifUnread||''; bb.style.display=notifUnread?'flex':'none'; }
+  // Admin / leader messages badge
+  const a=document.querySelector('.nav a[href="#messages"]');
+  if(a){
+    const old=a.querySelector('#msgBadge'); if(old) old.remove();
+    if(notifUnread>0){ const sp=document.createElement('span'); sp.id='msgBadge'; sp.className='badge bad'; sp.style.marginInlineStart='6px'; sp.textContent=notifUnread; a.appendChild(sp); }
+  }
+  // Employee messages unread badge
+  const ea=document.querySelector('.nav a[href="#emp-messages"]');
+  if(ea){
+    const old=ea.querySelector('#empMsgBadge'); if(old) old.remove();
+    if(empMsgUnread>0){ const sp=document.createElement('span'); sp.id='empMsgBadge'; sp.className='badge bad'; sp.style.marginInlineStart='6px'; sp.textContent=empMsgUnread; ea.appendChild(sp); }
+  }
+}
+async function countEmpUnreadMessages(){
+  const s=state.session; if(!s||s.role!=='employee'||!db) return 0;
+  try{
+    const [messages, allEmps]=await Promise.all([listAll('messages'), listAll('employees')]);
+    const meNow=allEmps.find(e=>e.id===s.id)||s;
+    const mine=messages.filter(m=>!deletedByOf(m,s.id) && (m.toEmployeeId===s.id||m.toEmployeeId==='all'||(m.toEmployeeId==='team'&&m.toTeamId&&m.toTeamId===meNow.teamLeaderId)));
+    return mine.filter(m=>!seenAtOf(m,s.id)).length;
+  }catch(e){ console.error(e); return 0; }
+}
+async function refreshEmpMsgBadge(){
+  if(!state.session || state.session.role!=='employee'){ empMsgUnread=0; updateNavBadge(); return; }
+  empMsgUnread=await countEmpUnreadMessages();
+  updateNavBadge();
+}
+function stopEmpMsgListener(){ if(empMsgUnsub){ try{empMsgUnsub();}catch(e){} } empMsgUnsub=null; }
+function ensureEmpMsgListener(){
+  const s=state.session; if(!s||s.role!=='employee'||!db){ stopEmpMsgListener(); return; }
+  if(empMsgUnsub) return;
+  empMsgUnsub=db.collection('messages').onSnapshot(()=>{ refreshEmpMsgBadge(); }, err=>console.error(err));
+}
+function renderNotifBox(){
+  const box=document.getElementById('notifBox'); if(!box) return;
+  const items=notifList.slice(0,10).map(n=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);${n.read?'color:var(--muted)':'font-weight:600'}">${n.read?'':'🔔 '}<strong>${n.employeeName||'-'}</strong> اطّلع على رسالتك «${n.subject||''}» <small>— ${n.createdAt?new Date(n.createdAt).toLocaleString('ar-EG'):''}</small> <button class="btn danger" data-delnotif="${n.id}" style="padding:2px 8px;font-size:11px;margin-right:6px">${T('delete_btn')}</button></div>`).join('');
+  box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">${T('notifications_title')} ${notifUnread?`<span class="badge bad">${notifUnread}</span>`:''}</h3>
+    <div>${notifUnread?`<button class="btn sec" id="markAllNotif" style="padding:4px 10px">${T('mark_read_all')}</button> `:''}${notifList.length?`<button class="btn danger" id="delAllNotif" style="padding:4px 10px">${T('delete_all_lbl')}</button>`:''}</div></div>
+    ${items||`<p style="color:var(--muted);margin:8px 0 0">${T('no_notifs_lbl')}</p>`}`;
+  const mb=document.getElementById('markAllNotif');
+  if(mb) mb.onclick=async()=>{ for(const n of notifList.filter(x=>!x.read)) await setDoc('notifications',n.id,{read:true}); };
+  box.querySelectorAll('[data-delnotif]').forEach(b=>b.onclick=async()=>{ await delDoc('notifications',b.dataset.delnotif); });
+  const da=document.getElementById('delAllNotif');
+  if(da) da.onclick=async()=>{ if(!confirm(T('delete_all_notifs'))) return; for(const n of [...notifList]) await delDoc('notifications',n.id); };
+}
+function stopNotifListener(){ if(notifUnsub){ try{notifUnsub();}catch(e){} } notifUnsub=null; notifKeyActive=null; notifList=[]; notifUnread=0; }
+function ensureNotifListener(){
+  const s=state.session; if(!s||s.role==='employee'||!db) return;
+  const key=notifKey(); if(notifUnsub && notifKeyActive===key) return;
+  stopNotifListener(); notifKeyActive=key; let first=true;
+  notifUnsub=db.collection('notifications').where('toId','==',key).onSnapshot(snap=>{
+    notifList=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    notifUnread=notifList.filter(n=>!n.read).length;
+    if(!first) snap.docChanges().forEach(ch=>{ if(ch.type==='added'){ const n=ch.doc.data(); if(!n.read) showToast('🔔 '+(n.employeeName||'')+' اطّلع على رسالتك: '+(n.subject||'')); } });
+    first=false; updateNavBadge(); renderNotifBox();
+  },err=>console.error(err));
+}
+
+function isLeaderSession(){ return !!(state.session && state.session.role==='leader'); }
+function visibleLeaders(leaders){ return isLeaderSession()? leaders.filter(l=>l.id===state.session.id) : leaders; }
+function ownExams(exams){ return isLeaderSession()? exams.filter(x=>x.createdBy===state.session.id) : exams; }
+function filterResultsForLeader(results,emps,exams){
+  if(!isLeaderSession()) return results;
+  const me=state.session.id;
+  return results.filter(r=>{
+    const ex=exams.find(x=>x.id===r.examId); const em=emps.find(e=>e.id===r.employeeId);
+    return (ex&&ex.createdBy===me) || (em&&em.teamLeaderId===me);
+  });
+}
+
+function render(){
+  const root=document.getElementById('root');
+  if(!state.session){ root.innerHTML=loginView(); attachLogin(); stopEmpMsgListener(); return; }
+  root.innerHTML = shell();
+  attachShellNav();
+  ensureNotifListener();
+  ensureEmpMsgListener();
+  updateNavBadge();
+  if(state.session.role==='employee') refreshEmpMsgBadge();
+  routeRender();
+}
+
+const NAVI={dashboard:'🏠',reports:'📄',questions:'❓','employees-teams':'👥',assign:'📌',results:'📊','wrong-answers':'❌','review-exams':'📝','review-results':'🔍',grading:'✍️',messages:'🔔',suggestions:'💡',settings:'⚙️','emp-home':'📝','emp-results':'📊','emp-profile':'👤','emp-messages':'🔔','suggest-question':'💡'};
+let searchA=null, pendingExport=null;
+function attachHeader(){
+  searchA=null;
+  const bell=document.getElementById('bellBtn'); if(bell) bell.onclick=()=>{state.view='messages'; routeRender();};
+  updateNavBadge();
+  const inp=document.getElementById('gSearch'), box=document.getElementById('sRes'); if(!inp) return;
+  inp.onfocus=async()=>{ if(!searchA) searchA=await loadA(); };
+  inp.oninput=async()=>{
+    const q=inp.value.trim().toLowerCase(); if(!q){box.style.display='none';return;}
+    if(!searchA) searchA=await loadA(); const A=searchA;
+    const emps=A.emps.filter(e=>[e.name,e.empId,e.dept].join(' ').toLowerCase().includes(q)).slice(0,5);
+    const exs=A.exams.filter(x=>(x.name||'').toLowerCase().includes(q)).slice(0,5);
+    const ds=[...new Set(A.empAll.map(e=>e.dept).filter(Boolean))].filter(d=>d.toLowerCase().includes(q)).slice(0,5);
+    const sec=(t,a,k,f)=>a.length?`<div class="sh">${t}</div>`+a.map(x=>`<a href="#" data-sk="${k}" data-sv="${esc(f(x)[1])}">${esc(f(x)[0])}</a>`).join(''):'';
+    box.innerHTML=(sec(T('employees'),emps,'emp',e=>[e.name+(e.dept?' — '+e.dept:''),e.id])+sec(T('exams'),exs,'exam',x=>[x.name,x.id])+sec(T('departments'),ds,'dept',d=>[d,d]))||'<div class="sh">'+T('no_results')+'</div>';
+    box.style.display='block';
+    box.querySelectorAll('[data-sk]').forEach(a=>a.onclick=ev=>{ev.preventDefault(); const k=a.dataset.sk; box.style.display='none'; inp.value='';
+      if(k==='emp') state.view='employees-teams'; else if(k==='exam') state.view='review-exams'; else {rep.dept=a.dataset.sv; rep.tab='department'; state.view='reports';} routeRender();});
+  };
+  document.onclick=e=>{ if(box.isConnected && !e.target.closest('.srch')) box.style.display='none'; };
+}
+function shell(){
+  const s=state.session;
+  const adminLinks=[
+    ['dashboard',T('nav_dashboard')],['reports',T('nav_reports')],['questions',T('nav_questions')],
+    ['employees-teams',T('nav_employees_teams')],['assign',T('nav_assign')],['results',T('nav_results')],['wrong-answers',T('nav_wrong')],
+    ['review-exams',T('nav_review')],['review-results',T('nav_review_results')],['grading',T('nav_grading')],['messages',T('nav_messages')],['suggestions',T('nav_suggestions')],['settings',T('nav_settings')]
+  ];
+  const empLinks=[['emp-home',T('nav_my_exams')],['emp-results',T('nav_my_results')],['emp-profile',T('nav_my_profile')],['emp-messages',T('nav_messages')],['suggest-question',T('nav_suggest_question')]];
+  // Leaders: same as admin except dashboard + settings
+  const leaderLinks=adminLinks.filter(l=>l[0]!=='dashboard' && l[0]!=='settings');
+  const links = s.role==='admin'?adminLinks:(s.role==='leader'?leaderLinks:empLinks);
+  return `<div class="app">
+    <div class="topbar">
+      <button class="menuBtn" id="openMenu">☰</button>
+      <h2>Employee Exam System</h2>
+      <button class="menuBtn" id="langBtnTop">${lang==='ar'?'EN':'AR'}</button>
+    </div>
+    <div class="sidebar" id="sidebar">
+      <button class="closeBtn" id="closeMenu">✕</button>
+      <div class="sb-logo"><svg width="64" height="52" viewBox="0 0 64 52"><path d="M32 4 4 18l28 14 28-14z" fill="#2b8cff"/><path d="M14 26v12c0 4 8 8 18 8s18-4 18-8V26l-18 9z" fill="#fff"/><path d="M58 20v18" stroke="#2b8cff" stroke-width="3"/></svg></div>
+      <div class="user">${s.role==='admin'?T('admin_label'):(s.role==='leader'?'👑 '+s.name:s.name)}</div>
+      <div class="nav">${links.map(l=>`<a href="#${l[0]}" class="${state.view===l[0]?'active':''}">${NAVI[l[0]]||'•'} ${l[1]}</a>`).join('')}
+      <a href="#" id="langBtnSide" style="color:var(--brand)">${T('toggle_lang')}</a>
+      <a href="#logout" style="color:var(--bad)">${T('logout')}</a></div>
+      ${s.role==='admin'?'<div class="owner">👑<b>'+T('owner_zone')+'</b><small>'+T('full_access')+'</small></div>':''}
+    </div>
+    <div class="mainWrap">
+      <header class="hdr">
+        <div class="hdr-t"><b>${T('system_title')}</b><small>${T('system_tagline')}</small></div>
+        ${s.role!=='employee'?`<div class="srch"><input id="gSearch" placeholder="${T('search_global')}" autocomplete="off"><div id="sRes" class="sres"></div></div>`:'<div style="flex:1"></div>'}
+        ${s.role!=='employee'?'<button class="bell" id="bellBtn">🔔<span class="bb" id="bellBadge"></span></button>':''}
+        <div class="usr"><span class="av">${esc((s.name||'م').trim().charAt(0))}</span><div><b>${esc(s.role==='admin'?T('admin_label'):s.name)}</b><small>${s.role==='admin'?T('system_owner'):(s.role==='leader'?T('team_leader'):T('employee'))}</small></div></div>
+      </header>
+      <div class="main" id="main"></div>
+    </div>
+  </div>`;
+}
+function attachShellNav(){
+  const sb=document.getElementById('sidebar');
+  const open=document.getElementById('openMenu'), close=document.getElementById('closeMenu');
+  if(open) open.onclick=()=>sb.classList.add('open');
+  if(close) close.onclick=()=>sb.classList.remove('open');
+  sb.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>sb.classList.remove('open')));
+  const toggleLang=(e)=>{ if(e) e.preventDefault(); lang = lang==='ar'?'en':'ar'; applyLangToDocument(); render(); };
+  const lb1=document.getElementById('langBtnTop'); if(lb1) lb1.onclick=toggleLang;
+  const lb2=document.getElementById('langBtnSide'); if(lb2) lb2.onclick=toggleLang;
+  attachHeader();
+}
+
+function loginView(){
+  return `<div class="lg-wrap">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="lg-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="lg-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="lg-usercheck" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></symbol>
+    <symbol id="lg-crown" viewBox="0 0 24 24"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></symbol>
+    <symbol id="lg-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="lg-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+    <symbol id="lg-arrow" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+  </svg>
+  <div class="lg-card">
+    <header class="lg-brand">
+      <svg class="lg-logo" viewBox="0 0 96 96" role="img" aria-label="شعار نظام اختبارات الموظفين">
+        <defs>
+          <linearGradient id="lgGb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f86f7"/><stop offset="1" stop-color="#0b1f4d"/></linearGradient>
+          <linearGradient id="lgGg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd75e"/><stop offset="1" stop-color="#e09b00"/></linearGradient>
+        </defs>
+        <rect x="4" y="4" width="88" height="88" rx="26" fill="url(#lgGb)"/>
+        <circle cx="29" cy="52" r="7" fill="#fff" opacity=".78"/><path d="M16 78c0-9 6-15 13-15s13 6 13 15z" fill="#fff" opacity=".78"/>
+        <circle cx="67" cy="52" r="7" fill="#fff" opacity=".78"/><path d="M54 78c0-9 6-15 13-15s13 6 13 15z" fill="#fff" opacity=".78"/>
+        <circle cx="48" cy="46" r="9" fill="#fff"/><path d="M31 80c0-12 8-20 17-20s17 8 17 20z" fill="#fff"/>
+        <path d="M48 8l4.2 8.6 9.4 1.4-6.8 6.6 1.6 9.4L48 29.6l-8.4 4.4 1.6-9.4-6.8-6.6 9.4-1.4z" fill="url(#lgGg)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <h1>${T('system_title')}</h1>
+      <div class="lg-en">EMPLOYEE EXAMINATION SYSTEM</div>
+      <div class="lg-tagline">تطوير <i></i> تقييم <i></i> نجاح</div>
+    </header>
+    <div class="lg-sep"></div>
+    <div class="lg-welcome"><h2>${T('welcome')}</h2><p>${T('login_subtitle')}</p></div>
+    <form id="lgForm" novalidate autocomplete="off">
+      <label class="lg-lbl" for="lgId">ID</label>
+      <div class="lg-field" id="lgField">
+        <svg class="lg-i"><use href="#lg-user"/></svg>
+        <input id="lgId" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${T('id_placeholder')}" aria-describedby="lgErr">
+      </div>
+      <div class="lg-error" id="lgErr" role="alert" aria-live="assertive"><svg class="lg-i"><use href="#lg-alert"/></svg><span id="lgErrTxt"></span></div>
+      <button class="lg-btn" id="lgBtn" type="submit" disabled>
+        <span class="lg-spin" aria-hidden="true"></span><span id="lgBtnLbl">دخول</span><svg class="lg-i lg-arrow"><use href="#lg-arrow"/></svg>
+      </button>
+    </form>
+    <section class="lg-who" aria-label="لمن هذا النظام">
+      <div class="lg-who-title">${T('for_whom')}</div>
+      <div class="lg-who-grid">
+        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-crown"/></svg></div><h4>${T('role_admin')}</h4><p>${T('role_admin_desc')}</p></div>
+        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-users"/></svg></div><h4>القادة والمديرون</h4><p>متابعة وإدارة نتائج الفرق.</p></div>
+        <div class="lg-who-card"><div class="lg-ic"><svg class="lg-i"><use href="#lg-usercheck"/></svg></div><h4>الموظفون</h4><p>أداء الاختبارات ومعرفة النتائج.</p></div>
+      </div>
+    </section>
+    <footer class="lg-secure"><svg class="lg-i"><use href="#lg-shield"/></svg> ${T('secure_data')}</footer>
+  </div>
+  </div>`;
+}
+
+const DEFAULT_ADMIN_PASSWORD='8520';
+async function getAdminPassword(){
+  if(!db) return DEFAULT_ADMIN_PASSWORD;
+  try{
+    const doc = await db.collection('settings').doc('admin').get();
+    if(!doc || !doc.exists) return DEFAULT_ADMIN_PASSWORD;
+    const data = doc.data();
+    return (data && data.password) ? data.password : DEFAULT_ADMIN_PASSWORD;
+  }catch(e){ return DEFAULT_ADMIN_PASSWORD; }
+}
+// ID-only login: owner code -> team leader code -> employee (Employee ID or email)
+async function authenticateId(id){
+  if(!db) throw new Error('no-db');
+  if(id===String(await getAdminPassword())) return {user:{role:'admin'},view:'dashboard'};
+  const lead=await db.collection('teamLeaders').where('code','==',id).limit(1).get();
+  if(!lead.empty){ const d=lead.docs[0]; return {user:{role:'leader',id:d.id,name:d.data().name},view:'grading'}; }
+  let emp=await db.collection('employees').where('empId','==',id).limit(1).get();
+  if(emp.empty) emp=await db.collection('employees').where('email','==',id).limit(1).get();
+  if(!emp.empty){ const d=emp.docs[0]; return {user:{role:'employee',id:d.id,...d.data()},view:'emp-home'}; }
+  return null;
+}
+function attachLogin(){
+  const form=document.getElementById('lgForm'), input=document.getElementById('lgId'), field=document.getElementById('lgField');
+  const btn=document.getElementById('lgBtn'), lbl=document.getElementById('lgBtnLbl');
+  const errBox=document.getElementById('lgErr'), errTxt=document.getElementById('lgErrTxt');
+  let busy=false;
+  const sync=()=>{ btn.disabled = busy || input.value.trim()===''; };
+  const showErr=(m)=>{ errTxt.textContent=m; errBox.classList.remove('show'); void errBox.offsetWidth; errBox.classList.add('show'); field.classList.add('err'); };
+  const clearErr=()=>{ errBox.classList.remove('show'); field.classList.remove('err'); };
+  const setLoading=(on)=>{ busy=on; btn.classList.toggle('loading',on); lbl.textContent=on?T('verifying'):T('login_btn'); input.readOnly=on; sync(); };
+  input.addEventListener('input',()=>{ clearErr(); sync(); });
+  form.addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    const id=input.value.trim();
+    if(!id){ showErr(T('id_required')); return; }
+    if(busy) return;
+    clearErr(); setLoading(true);
+    try{
+      const res=await authenticateId(id);
+      if(!res){ setLoading(false); showErr(T('id_invalid')); input.focus(); input.select(); return; }
+      btn.classList.remove('loading'); btn.classList.add('success'); lbl.textContent=T('login_success');
+      setTimeout(()=>{ state.session=res.user; state.view=res.view; render(); },450);
+    }catch(err){
+      console.error(err); setLoading(false);
+      showErr(T('conn_error'));
+    }
+  });
+  input.focus({preventScroll:true}); sync();
+}
+
+window.addEventListener('hashchange', ()=>{
+  const v=(location.hash||'#').slice(1);
+  if(v==='logout'){ stopNotifListener(); stopEmpMsgListener(); clearSession(); state.session=null; state.view='login'; location.hash=''; render(); return; }
+  if(v) state.view=v;
+  render();
+});
+
+const SESS_KEY='eesSess', SESS_TTL=24*60*60*1000;
+function saveSession(){ try{ if(state.session) localStorage.setItem(SESS_KEY,JSON.stringify({s:state.session,v:state.view,t:Date.now()})); }catch(e){} }
+function clearSession(){ try{ localStorage.removeItem(SESS_KEY); sessionStorage.removeItem(SESS_KEY); }catch(e){} }
+async function restoreSession(){
+  try{
+    const raw=localStorage.getItem(SESS_KEY)||sessionStorage.getItem(SESS_KEY); if(!raw) return;
+    const {s:sess,v,t}=JSON.parse(raw); if(!sess||!sess.role) return;
+    if(t && Date.now()-t>SESS_TTL){ clearSession(); return; }
+    state.session=sess;
+    // refresh the stored profile from the database; on network errors keep the saved session (never log out because of a failed request)
+    try{
+      if(db && sess.role==='employee'){ const d=await db.collection('employees').doc(sess.id).get(); if(d.exists) state.session={role:'employee',id:sess.id,...d.data()}; else { clearSession(); state.session=null; return; } }
+      else if(db && sess.role==='leader'){ const d=await db.collection('teamLeaders').doc(sess.id).get(); if(d.exists) state.session={role:'leader',id:sess.id,name:d.data().name}; else { clearSession(); state.session=null; return; } }
+    }catch(e){ console.error(e); }
+    const first={admin:'dashboard',leader:'grading',employee:'emp-home'}[sess.role];
+    state.view=(!v||v==='login'||v==='take-exam')?first:v;
+  }catch(e){ console.error(e); }
+}
+async function routeRender(){
+  saveSession();
+  const main=document.getElementById('main');
+  main.innerHTML='<p style="color:var(--muted)">'+T('loading')+'</p>';
+  if(state.session && state.session.role==='leader' && (state.view==='dashboard'||!state.view)) state.view='grading';
+  const v=state.view;
+  if(v==='dashboard'){ main.innerHTML=await dashboardView(); attachDashboard(); }
+  else if(v==='reports'){ main.innerHTML=await reportsView(); attachReports(); }
+  else if(v==='questions'){ main.innerHTML=await questionsView(); attachQuestions(); }
+  else if(v==='employees-teams'){ main.innerHTML=await employeesTeamsView(); attachEmployeesTeams(); }
+  else if(v==='assign'){ main.innerHTML=await assignView(); attachAssign(); }
+  else if(v==='results'){ main.innerHTML=await resultsView(); attachResults(); }
+  else if(v==='wrong-answers'){ main.innerHTML=await wrongAnswersView(); attachWrongAnswers(); }
+  else if(v==='review-exams'){ main.innerHTML=await reviewExamsView(); attachReviewExams(); }
+  else if(v==='grading'){ main.innerHTML=await gradingView(); attachGrading(); }
+  else if(v==='review-results'){ main.innerHTML=await reviewResultsView(); attachReviewResults(); }
+  else if(v==='settings'){ if(state.session.role!=='admin'){ main.innerHTML='<p style="color:var(--muted)">'+T('unauthorized')+'</p>'; } else { main.innerHTML=settingsView(); attachSettings(); } }
+  else if(v==='messages'){ main.innerHTML=await messagesView(); attachMessages(); }
+  else if(v==='emp-messages'){ main.innerHTML=await empMessagesView(); attachEmpMessages(); }
+  else if(v==='suggestions'){ main.innerHTML=await suggestionsView(); attachSuggestionsAdmin(); }
+  else if(v==='suggest-question'){ main.innerHTML=await suggestQuestionView(); attachSuggestQuestion(); }
+  else if(v==='emp-profile'){ main.innerHTML=await empProfileView(); attachEmpProfile(); }
+  else if(v==='emp-home'){ main.innerHTML=await empHomeView(); attachEmpHome(); }
+  else if(v==='emp-results'){ main.innerHTML=await empResultsView(); }
+  else if(v==='take-exam'){ main.innerHTML=await takeExamView(); attachTakeExam(); }
+  else main.innerHTML=await dashboardView();
+}
+
+
+// ================= Analytics engine =================
+const DAY=864e5;
+let dash={p:'30d',from:'',to:'',top:5,q:'',sort:'date',asc:false,page:0}, dashCtx=null;
+let rep={p:'30d',from:'',to:'',dept:'',team:'',emp:'',exam:'',status:'',min:'',max:'',att:'',tab:'employee'};
+const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const avgOf=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0;
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const fdate=t=>t?new Date(t).toLocaleDateString('ar-EG'):'-';
+function rangeOf(f){const now=Date.now(); if(f.p==='custom') return [f.from?new Date(f.from).getTime():0, f.to?new Date(f.to).getTime()+DAY-1:now]; return [now-({'7d':7,'30d':30,'3m':90,'6m':180,'12m':365}[f.p]||30)*DAY, now];}
+async function loadA(){
+  const [emps0,exams0,res0,asg0,qs,leaders]=await Promise.all(['employees','exams','results','assignments','questions','teamLeaders'].map(n=>listAll(n)));
+  const L=isLeaderSession(), me=L?state.session.id:null;
+  const emps=L?emps0.filter(e=>e.teamLeaderId===me):emps0;
+  const exams=ownExams(exams0);
+  const results=filterResultsForLeader(res0,emps0,exams0);
+  const asg=L?asg0.filter(a=>exams.some(x=>x.id===a.examId)||emps.some(e=>e.id===a.employeeId)):asg0;
+  return {emps,empAll:emps0,exams,examAll:exams0,results,asg,qs,leaders};
+}
+// final result = latest attempt per (employee, exam); employee counted once
+function finals(rs){const m={}; rs.forEach(r=>{const k=r.employeeId+'|'+r.examId; if(!m[k]||(r.endTime||0)>=(m[k].endTime||0)) m[k]=r;}); return Object.values(m);}
+function kpi(A,from,to){
+  const inR=A.results.filter(r=>r.endTime>=from&&r.endTime<=to), fin=finals(inR), pass=fin.filter(r=>r.passed).length;
+  const byE={}; fin.forEach(r=>(byE[r.employeeId]=byE[r.employeeId]||[]).push(r));
+  let pe=0,fe=0; Object.values(byE).forEach(l=>l.every(r=>r.passed)?pe++:fe++);
+  return {n:fin.length,pass,rate:pct(pass,fin.length),avg:avgOf(fin.map(r=>r.percent||0)),pe,fe,att:inR.length,fin,inR};
+}
+function delta(c,p){ if(!p&&!c) return '<span class="dl">—</span>'; if(!p) return '<span class="dl up">▲ جديد</span>'; const d=Math.round((c-p)/p*100); return `<span class="dl ${d>=0?'up':'dn'}">${d>=0?'▲':'▼'} ${Math.abs(d)}%</span>`; }
+function ring(v,c){const r=22,C=2*Math.PI*r; return `<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="${r}" fill="none" stroke="#0B1120" stroke-width="6"/><circle cx="28" cy="28" r="${r}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(C*v/100).toFixed(1)} ${C}" transform="rotate(-90 28 28)" style="filter:drop-shadow(0 0 4px ${c})"/><text x="28" y="32" text-anchor="middle" font-size="12" font-weight="700" fill="#F8FAFC">${v}%</text></svg>`;}
+function lineChart(series,lbls){
+  const W=600,H=220,P=30,n=lbls.length; if(!n) return '';
+  const x=i=>P+(n>1?i*(W-2*P-24)/(n-1):(W-2*P)/2), y=v=>H-P-(v/100)*(H-2*P), base=y(0);
+  let g='<defs>'+series.map((s,k)=>`<linearGradient id="ar${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s.c}" stop-opacity=".35"/><stop offset="1" stop-color="${s.c}" stop-opacity="0"/></linearGradient>`).join('')+'</defs>';
+  g+=[0,20,40,60,80,100].map(t=>`<line x1="${P}" x2="${W-P}" y1="${y(t)}" y2="${y(t)}" stroke="#1d2b4a"/><text x="2" y="${y(t)+4}" fill="#94A3B8" font-size="10">${t}%</text>`).join('');
+  series.forEach((s,k)=>{
+    let seg=[]; const segs=[]; s.v.forEach((v,i)=>{ if(v==null){ if(seg.length) segs.push(seg); seg=[]; } else seg.push([i,v]); }); if(seg.length) segs.push(seg);
+    segs.forEach(sg=>{ const d=sg.map((p,i)=>(i?'L':'M')+x(p[0]).toFixed(1)+' '+y(p[1]).toFixed(1)).join('');
+      g+=`<path d="${d} L${x(sg[sg.length-1][0])} ${base} L${x(sg[0][0])} ${base}Z" fill="url(#ar${k})"/><path d="${d}" fill="none" stroke="${s.c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px ${s.c})"/>`+sg.map(p=>`<circle cx="${x(p[0])}" cy="${y(p[1])}" r="3.5" fill="#0b1330" stroke="${s.c}" stroke-width="2"/>`).join(''); });
+    const last=[...s.v.keys()].reverse().find(i=>s.v[i]!=null); if(last!=null) g+=`<rect x="${x(last)-24}" y="${y(s.v[last])-30}" width="48" height="20" rx="10" fill="${s.c}"/><text x="${x(last)}" y="${y(s.v[last])-16}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${s.v[last]}%</text>`;
+  });
+  const st=Math.ceil(n/6); g+=lbls.map((l,i)=>i%st?'':`<text x="${x(i)}" y="${H-8}" fill="#94A3B8" font-size="10" text-anchor="middle">${l}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${g}</svg>`;
+}
+function donut(items,top,sub){
+  const r=62,C=2*Math.PI*r,t=items.reduce((a,i)=>a+i.v,0)||1; let off=0;
+  const segs=items.map(i=>{const len=C*i.v/t; const e=`<circle cx="80" cy="80" r="${r}" fill="none" stroke="${i.c}" stroke-width="22" stroke-dasharray="${len.toFixed(1)} ${(C-len).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 80 80)"/>`; off+=len; return e;}).join('');
+  return `<svg viewBox="0 0 160 160" width="100%" style="max-width:190px"><circle cx="80" cy="80" r="${r}" fill="none" stroke="#0B1120" stroke-width="22"/>${segs}<text x="80" y="82" text-anchor="middle" font-size="21" font-weight="800" fill="#F8FAFC">${top}</text><text x="80" y="98" text-anchor="middle" font-size="9" fill="#94A3B8">${sub}</text></svg>`;
+}
+function spark(v,c){
+  const ok=v.filter(x=>x!=null); if(ok.length<2) return ''; const mn=Math.min(...ok),mx=Math.max(...ok),W=110,H=44,n=v.length;
+  const pts=v.map((x,i)=>x==null?null:[i*(W/(n-1)),H-4-((x-mn)/((mx-mn)||1))*(H-8)]).filter(Boolean);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join('');
+  return `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${d} L${pts[pts.length-1][0].toFixed(1)} ${H} L${pts[0][0].toFixed(1)} ${H}Z" fill="${c}" opacity=".18"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" style="filter:drop-shadow(0 0 3px ${c})"/></svg>`;
+}
+function trendData(A,from,to){
+  const span=to-from, step=span<=31*DAY?DAY:span<=130*DAY?7*DAY:30*DAY, start=Math.max(from,to-366*DAY), nb=Math.min(60,Math.max(1,Math.ceil((to-start)/step)));
+  const a=[],r=[],l=[],ed=[];
+  for(let i=0;i<nb;i++){const b0=start+i*step,b1=b0+step; ed.push(b0); const fin=finals(A.results.filter(x=>x.endTime>=b0&&x.endTime<b1));
+    a.push(fin.length?avgOf(fin.map(x=>x.percent||0)):null); r.push(fin.length?pct(fin.filter(x=>x.passed).length,fin.length):null);
+    const d=new Date(b0); l.push(step>=30*DAY?(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2):d.getDate()+'/'+(d.getMonth()+1));}
+  return {series:[{c:'#3b82f6',v:a},{c:'#f59e0b',v:r}],lbls:l,edges:ed,step};
+}
+function deptStats(A,fin){
+  const emp=id=>A.empAll.find(e=>e.id===id)||{}, m={};
+  const get=d=>m[d]=m[d]||{dept:d,emps:new Set(),exams:new Set(),r:[]};
+  A.emps.forEach(e=>get(e.dept||T('no_dept')).emps.add(e.id));
+  fin.forEach(r=>{const o=get(emp(r.employeeId).dept||T('no_dept')); o.exams.add(r.examId); o.r.push(r);});
+  return Object.values(m).map(o=>({dept:o.dept,emps:o.emps.size,exams:o.exams.size,n:o.r.length,avg:avgOf(o.r.map(r=>r.percent||0)),rate:pct(o.r.filter(r=>r.passed).length,o.r.length),fail:o.r.length?100-pct(o.r.filter(r=>r.passed).length,o.r.length):0,
+    best:(o.r.slice().sort((a,b)=>b.percent-a.percent)[0]||{}).employeeId,worst:(o.r.slice().sort((a,b)=>a.percent-b.percent)[0]||{}).employeeId})).sort((a,b)=>b.avg-a.avg);
+}
+function empStats(A,fin,inR){
+  const eb={}; fin.forEach(r=>(eb[r.employeeId]=eb[r.employeeId]||[]).push(r));
+  return A.emps.map(e=>{const l=(eb[e.id]||[]).sort((a,b)=>a.endTime-b.endTime), sc=l.map(r=>r.percent||0), dur=inR.filter(r=>r.employeeId===e.id&&r.durationSec).map(r=>r.durationSec), ld=A.leaders.find(x=>x.id===e.teamLeaderId);
+    return {id:e.id,empId:e.empId,name:e.name,dept:e.dept||'-',team:ld?ld.name:(e.team||'-'),leaderId:e.teamLeaderId,asg:A.asg.filter(a=>a.employeeId===e.id).length,done:l.length,pass:l.filter(r=>r.passed).length,fail:l.filter(r=>!r.passed).length,
+      avg:avgOf(sc),hi:sc.length?Math.max(...sc):0,lo:sc.length?Math.min(...sc):0,rate:pct(l.filter(r=>r.passed).length,l.length),dur:dur.length?Math.round(avgOf(dur)/6)/10:0,imp:sc.length>1?sc[sc.length-1]-sc[0]:null};});
+}
+function examStats(A,fin,inR){
+  return A.exams.map(x=>{const l=fin.filter(r=>r.examId===x.id), sc=l.map(r=>r.percent||0), att=inR.filter(r=>r.examId===x.id), asg=new Set(A.asg.filter(a=>a.examId===x.id).map(a=>a.employeeId)), done=new Set(l.map(r=>r.employeeId)), dur=att.filter(r=>r.durationSec).map(r=>r.durationSec);
+    const pn=l.filter(r=>r.passed).length;
+    return {id:x.id,name:x.name,asg:asg.size,done:done.size,ns:Math.max(0,asg.size-done.size),n:l.length,att:att.length,avg:avgOf(sc),hi:sc.length?Math.max(...sc):0,lo:sc.length?Math.min(...sc):0,rate:pct(pn,l.length),fail:l.length?100-pct(pn,l.length):0,comp:pct(done.size,asg.size),dur:dur.length?Math.round(avgOf(dur)/6)/10:0,active:x.active,
+      deadline:A.asg.filter(a=>a.examId===x.id&&a.deadline).map(a=>a.deadline).sort()[0]||''};});
+}
+function questionStats(A,rs){
+  const m={};
+  rs.forEach(r=>{const ex=A.examAll.find(x=>x.id===r.examId); if(!ex) return; (ex.questionIds||[]).forEach(qid=>{const q=A.qs.find(z=>z.id===qid); if(!q) return; const v=r.answers?r.answers[qid]:undefined; if(v===undefined||v===null||v==='') return;
+    const o=m[qid]=m[qid]||{id:qid,text:q.text,topic:q.category||'-',tot:0,ok:0}; o.tot++; if(!isAnswerWrong(q,v)) o.ok++;});});
+  return Object.values(m).map(o=>{const c=pct(o.ok,o.tot); return {...o,bad:o.tot-o.ok,c,w:100-c,diff:c<40?T('hard'):c<75?T('medium'):T('easy'),note:c===100?T('everyone_correct'):c<30?T('needs_review'):c<40?T('hard'):''};}).sort((a,b)=>a.c-b.c);
+}
+function topTable(rows,N){return `<div class="table-wrap"><table><tr><th>#</th><th>ID</th><th>${T('col_employee')}</th><th>${T('col_dept')}</th><th>${T('col_team')}</th><th>${T('col_avg')}</th><th>${T('col_pass')}</th></tr>${rows.slice(0,N).map((e,i)=>`<tr><td>${i+1}</td><td>${esc(e.empId)}</td><td>${esc(e.name)}</td><td>${esc(e.dept)}</td><td>${esc(e.team)}</td><td>${e.avg}%</td><td>${e.rate}%</td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">'+T('no_data_short')+'</td></tr>'}</table></div>`;}
+function periodBar(f,idp){return `<div class="no-print" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${[['7d',T('period_7d')],['30d',T('period_30d')],['3m',T('period_3m')],['6m',T('period_6m')],['12m',T('period_12m')],['custom',T('period_custom')]].map(([k,t])=>`<button class="pill ${f.p===k?'on':''}" data-${idp}="${k}">${t}</button>`).join('')}
+  ${f.p==='custom'?`<input type="date" data-${idp}from value="${f.from}" style="padding:4px 8px"> <input type="date" data-${idp}to value="${f.to}" style="padding:4px 8px">`:''}</div>`;}
+
+// ================= Dashboard =================
+async function dashboardView(){
+  const A=await loadA(), [from,to]=rangeOf(dash), len=to-from, K=kpi(A,from,to), P=kpi(A,from-len-1,from-1);
+  const es=examStats(A,K.fin,K.inR), ps=empStats(A,K.fin,K.inR).filter(e=>e.done).sort((a,b)=>b.avg-a.avg||b.rate-a.rate);
+  const ongoing=es.filter(e=>e.active&&e.asg>e.done).length;
+  const newEx=A.exams.filter(x=>x.createdAt>=from&&x.createdAt<=to).length, prevEx=A.exams.filter(x=>x.createdAt>=from-len-1&&x.createdAt<from).length;
+  const Tr=trendData(A,from,to), D=deptStats(A,K.fin), pal=['#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444'];
+  const actE=Tr.edges.map(b0=>{const l=A.results.filter(r=>r.endTime>=b0&&r.endTime<b0+Tr.step); return l.length?new Set(l.map(r=>r.employeeId)).size:null;});
+  const exC=Tr.edges.map(b0=>A.exams.filter(x=>x.createdAt<b0+Tr.step).length);
+  const kb=(c,ic,n,t,d,sp)=>`<div class="kb" style="--c:${c}"><div class="ci">${ic}</div><div class="tx"><div class="n">${n}</div><div class="t">${t}</div><div class="dd">${d}</div></div><div class="sp2">${sp}</div></div>`;
+  const cmp=' <span class="dl">'+T('cmp_prev')+'</span>';
+  const cat={}; A.exams.forEach(x=>(x.questionIds||[]).forEach(id=>{const q=A.qs.find(z=>z.id===id); const k=(q&&q.category)||T('uncategorized'); cat[k]=(cat[k]||0)+1;}));
+  const cats=Object.entries(cat).sort((a,b)=>b[1]-a[1]).slice(0,5), ctot=cats.reduce((a,c)=>a+c[1],0);
+  const attn=ps.filter(e=>e.avg<60).length, diff=P.n?K.avg-P.avg:null;
+  const lst=(t,a,f)=>`<div class="card"><h3>${t}</h3>${a.map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${esc(e.name)}</span><strong style="color:var(--brand)">${f(e)}</strong></div>`).join('')||'<span style="color:var(--muted)">'+T('no_data_short')+'</span>'}</div>`;
+  const hard=[...es].filter(e=>e.n).sort((a,b)=>a.avg-b.avg).slice(0,3), easy=[...es].filter(e=>e.n).sort((a,b)=>b.avg-a.avg).slice(0,3), most=[...es].sort((a,b)=>b.att-a.att).slice(0,3), low=[...es].filter(e=>e.n).sort((a,b)=>a.rate-b.rate).slice(0,3);
+  const sm=(ic,l,v,d)=>`<div class="kc"><div><div class="l">${ic} ${l}</div><div class="v">${v}</div>${d}</div></div>`;
+  dashCtx={A,K,ps};
+  const opts=[['7d',T('last_7d')],['30d',T('last_30d')],['3m',T('last_3m')],['6m',T('last_6m')],['12m',T('last_12m')],['custom',T('custom_range')]];
+  return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div style="display:flex;gap:12px;align-items:center"><span style="font-size:34px">📊</span><div><h1 style="margin:0">${T('dashboard_title')}</h1><div style="color:var(--muted);font-size:13px">${T('welcome_back')}, ${esc(state.session.name||T('admin_name'))}! ${T('system_overview')}</div></div></div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><select id="dpSel" class="dsel">${opts.map(o=>`<option value="${o[0]}" ${dash.p===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>${dash.p==='custom'?`<input type="date" data-dpfrom value="${dash.from}" class="dsel"> <input type="date" data-dpto value="${dash.to}" class="dsel">`:''}</div></div>
+  <div class="kg4">
+    ${kb('#3b82f6','👥',A.emps.length,'إجمالي الموظفين','<span class="dl">'+ps.length+' لديهم نتائج</span>',spark(actE,'#3b82f6'))}
+    ${kb('#14b8a6','📝',A.exams.length,'إجمالي الاختبارات',delta(newEx,prevEx)+' <span class="dl">في الفترة</span>',spark(exC,'#14b8a6'))}
+    ${kb('#8b5cf6','✅',K.rate+'%',T('kpi_pass_rate'),delta(K.rate,P.rate)+cmp,spark(Tr.series[1].v,'#8b5cf6'))}
+    ${kb('#f59e0b','🏆',K.avg+'%',T('kpi_avg_score'),delta(K.avg,P.avg)+cmp,spark(Tr.series[0].v,'#f59e0b'))}
+  </div>
+  <div class="kg">
+    ${sm('✅','الاختبارات المكتملة',K.n,delta(K.n,P.n)+cmp)}${sm('⏳','الاختبارات الجارية',ongoing,'<span class="dl">نشطة وفيها معلّقون</span>')}${sm('🏅','الموظفون الناجحون',K.pe,delta(K.pe,P.pe)+cmp)}${sm('⚠️','الموظفون الراسبون',K.fe,delta(K.fe,P.fe)+cmp)}
+  </div>
+  <div class="gr">
+    <div class="panel"><div class="ph"><h3>📈 ${T('overview_perf')}</h3><small><span style="color:#3b82f6">●</span> المتوسط &nbsp;<span style="color:#f59e0b">●</span> نسبة النجاح</small></div>${K.n?lineChart(Tr.series,Tr.lbls):'<p style="color:var(--muted)">لا توجد نتائج في هذه الفترة.</p>'}</div>
+    <div class="panel"><div class="ph"><h3>👥 ${T('dept_performance')}</h3></div>${D.length&&K.n?`<div style="text-align:center">${donut(D.slice(0,6).map((d,i)=>({v:Math.max(d.avg,1),c:pal[i]})),K.avg+'%','الأداء العام')}</div>`+D.slice(0,6).map((d,i)=>`<div class="lg"><span><i style="background:${pal[i]}"></i>${esc(d.dept)} <small style="color:var(--muted)">(${d.emps} موظف · ${d.exams} اختبار)</small></span><b>${d.avg}%</b></div>`).join(''):'<p style="color:var(--muted)">'+T('no_data_short')+'</p>'}</div>
+    <div class="panel"><div class="ph"><h3>🏆 ${T('top_employees')}</h3><span>${[5,10,20].map(n=>`<button class="pill ${dash.top===n?'on':''}" data-top="${n}">${n}</button>`).join(' ')} <a href="#" data-vall style="color:#4f9dff;font-size:13px">${T('show_all_arrow')}</a></span></div>
+      <div style="max-height:330px;overflow-y:auto">${ps.slice(0,dash.top).map((e,i)=>`<div class="tp"><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="av" style="width:34px;height:34px;font-size:14px">${esc(e.name.charAt(0))}</span><div class="nm">${esc(e.name)}<small>${esc(e.dept)} · ${esc(e.team)}</small></div><span class="sp ${e.avg>=90?'g':''}">${e.avg}%</span></div>`).join('')||'<span style="color:var(--muted)">'+T('no_data_short')+'</span>'}</div></div>
+  </div>
+  <div class="gr">
+    <div class="panel"><div class="ph"><h3>🥧 تحليلات الاختبارات</h3><small style="color:var(--muted)">حسب موضوع الأسئلة</small></div>${cats.length?`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:150px;text-align:center">${donut(cats.map((c,i)=>({v:c[1],c:pal[i]})),A.exams.length,'إجمالي الاختبارات')}</div><div style="flex:1;min-width:150px">${cats.map((c,i)=>`<div class="lg"><span><i style="background:${pal[i]}"></i>${esc(c[0])}</span><b>${pct(c[1],ctot)}%</b></div>`).join('')}</div></div>`:'<p style="color:var(--muted)">لا توجد اختبارات بأسئلة مصنفة.</p>'}</div>
+    <div class="panel"><div class="ph"><h3>💡 رؤى رئيسية</h3><a href="#" data-rep="insights" style="color:#4f9dff;font-size:13px">كل الرؤى ←</a></div>
+      <div class="ir"><div class="ii">📈</div><div>${diff==null?'لا توجد فترة سابقة للمقارنة':diff>=0?'تحسّن الأداء':'انخفض الأداء'}<small>${diff==null?'':'متوسط الدرجات '+(diff>=0?'ارتفع':'انخفض')+' بمقدار '+Math.abs(diff)+' نقطة'}</small></div>${diff==null?'':`<span class="ip" style="background:${diff>=0?'#15803d':'#b91c1c'}">${diff>=0?'+':''}${diff}%</span>`}</div>
+      <div class="ir"><div class="ii">👥</div><div>نسبة النجاح<small>${K.pass} من ${K.n} نتيجة نهائية ناجحة</small></div><span class="ip" style="background:#1d4ed8">${K.rate}%</span></div>
+      <div class="ir"><div class="ii">⚠️</div><div>يحتاجون انتباهًا<small>${attn} موظف متوسطهم أقل من 60%</small></div><span class="ip" style="background:#d97706">${attn}</span></div></div>
+    <div class="panel"><div class="ph"><h3>📄 ${T('quick_reports')}</h3><a href="#" data-rep="employee" style="color:#4f9dff;font-size:13px">${T('show_all_arrow')}</a></div>
+      <div class="qg"><button class="qb" style="--c:#14b8a6" data-qx="xXlsx">📗 ${T('export_excel')}<small>تقرير مفصل</small></button><button class="qb" style="--c:#ef4444" data-qx="xPdf">📕 ${T('export_pdf')}<small>تقرير رسمي</small></button><button class="qb" style="--c:#8b5cf6" data-qx="xPrint">🖨️ ${T('print')}<small>صيغة قابلة للطباعة</small></button><button class="qb" style="--c:#3b82f6" data-qx="xPrint" data-tab="monthly">📊 ${T('monthly_report_t')}<small>تحليلات</small></button></div></div>
+  </div>
+  <div class="g3">${lst(T('hardest'),hard,e=>e.avg+'%')}${lst(T('easiest'),easy,e=>e.avg+'%')}${lst(T('most_attempts'),most,e=>e.att)}${lst(T('lowest_pass'),low,e=>e.rate+'%')}
+    <div class="card"><h3>${T('exam_indicators')}</h3><div style="font-size:13px;line-height:2">متوسط درجة الاختبار: <b>${K.avg}%</b><br>النجاح: <b>${K.rate}%</b> · الرسوب: <b>${K.n?100-K.rate:0}%</b><br>${T('completion_rate')}: <b>${pct(es.reduce((a,e)=>a+e.done,0),es.reduce((a,e)=>a+e.asg,0))}%</b><br>${T('avg_duration')}: <b>${avgOf(es.filter(e=>e.dur).map(e=>e.dur*10))/10||0} ${T('minute')}</b></div></div></div>
+  <div class="card" style="margin-top:14px"><h3>${T('active_exams_title')}</h3><div class="g3">${es.filter(e=>e.active).map(e=>`<div class="kc" style="display:block"><strong>${esc(e.name)}</strong> <span class="badge ok">${T('active_lbl')}</span><div class="l" style="margin:6px 0">${e.asg} مُسند · ${e.done} أكمل · ${e.ns} لم يبدأ${e.deadline?' · الموعد '+esc(e.deadline):''}</div><div class="bar"><b style="width:${e.comp}%"></b></div><div style="margin-top:8px"><button class="btn sec" data-goto="review-exams" style="padding:3px 10px">${T('view_exam')}</button> <button class="btn sec" data-goto="results" style="padding:3px 10px">${T('results_btn')}</button></div></div>`).join('')||'<span style="color:var(--muted)">'+T('no_active_exams')+'</span>'}</div></div>
+  <div class="card"><h3>${T('last_exams')}</h3><input id="histQ" placeholder="${T('search_exam_emp_dept')}" value="${esc(dash.q)}" style="width:100%;margin-bottom:8px"><div id="histBox"></div></div>
+  <div class="card"><h3>${T('quick_reports')}</h3><div class="g3">${[['employee',T('tab_employee')],['department',T('dept_performance')],['team',T('team_performance')],['exam',T('exam_performance')],['monthly',T('monthly_report_t')],['question',T('question_analysis')]].map(([k,t])=>`<div class="kc qr" data-rep="${k}"><strong>📄 ${t}</strong><span class="btn sec" style="padding:2px 10px">${T('open_btn')}</span></div>`).join('')}</div></div>
+  <div class="card" id="notifBox"></div>
+  <p class="fnote">طريقة الحساب: النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار. نسبة النجاح = الناجحة ÷ النهائية. المتوسط = متوسط نسب النتائج النهائية. الموظف ناجح إذا نجح في كل نتائجه النهائية، وراسب إن رسب في أي منها (يُحتسب مرة واحدة). المقارنة مع فترة سابقة بنفس الطول.</p>`;
+}
+function drawHist(){
+  const {A,K}=dashCtx, emp=id=>A.empAll.find(e=>e.id===id)||{}, q=dash.q.trim().toLowerCase();
+  let rows=K.inR.map(r=>({r,e:emp(r.employeeId),x:A.examAll.find(x=>x.id===r.examId)||{}})).filter(o=>!q||[o.x.name,o.e.name,o.e.dept].join(' ').toLowerCase().includes(q));
+  rows.sort((a,b)=>(dash.sort==='score'?(a.r.percent||0)-(b.r.percent||0):(a.r.endTime||0)-(b.r.endTime||0))*(dash.asc?1:-1));
+  const per=8, pages=Math.max(1,Math.ceil(rows.length/per)); dash.page=Math.min(dash.page,pages-1);
+  document.getElementById('histBox').innerHTML=`<div class="table-wrap"><table><tr><th>${T('col_exam')}</th><th>${T('col_employee')}</th><th>${T('col_dept')}</th><th><a href="#" data-hs="date">${T('col_date')} ⇅</a></th><th><a href="#" data-hs="score">${T('col_score')} ⇅</a></th><th>${T('col_status')}</th><th></th></tr>
+  ${rows.slice(dash.page*per,dash.page*per+per).map(o=>`<tr><td>${esc(o.x.name||'-')}</td><td>${esc(o.e.name||'-')}</td><td>${esc(o.e.dept||'-')}</td><td>${fdate(o.r.endTime)}</td><td>${o.r.percent}%</td><td><span class="badge ${o.r.passed?'ok':'bad'}">${o.r.passed?T('pass_lbl'):T('fail_lbl')}</span></td><td><button class="btn sec" data-goto="review-results" style="padding:2px 8px">${T('details')}</button></td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--muted)">'+T('no_results_rows')+'</td></tr>'}</table></div>
+  <div class="pgr"><button class="pill" data-pg="-1" ${dash.page<=0?'disabled':''}>${T('prev')}</button> ${dash.page+1} / ${pages} <button class="pill" data-pg="1" ${dash.page>=pages-1?'disabled':''}>${T('next')}</button></div>`;
+  const hb=document.getElementById('histBox');
+  hb.querySelectorAll('[data-hs]').forEach(a=>a.onclick=e=>{e.preventDefault(); dash.asc=dash.sort===a.dataset.hs?!dash.asc:false; dash.sort=a.dataset.hs; drawHist();});
+  hb.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{dash.page+=+b.dataset.pg; drawHist();});
+  hb.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{state.view=b.dataset.goto; routeRender();});
+}
+function bindPeriod(f,idp,again){
+  document.querySelectorAll(`[data-${idp}]`).forEach(b=>b.onclick=()=>{f.p=b.dataset[idp]; again();});
+  const a=document.querySelector(`[data-${idp}from]`), z=document.querySelector(`[data-${idp}to]`);
+  if(a) a.onchange=()=>{f.from=a.value; again();}; if(z) z.onchange=()=>{f.to=z.value; again();};
+}
+function attachDashboard(){
+  const again=()=>{state.view='dashboard'; routeRender();};
+  const sel=document.getElementById('dpSel'); if(sel) sel.onchange=()=>{dash.p=sel.value; again();};
+  bindPeriod(dash,'dp',again);
+  document.querySelectorAll('[data-top]').forEach(b=>b.onclick=()=>{dash.top=+b.dataset.top; again();});
+  document.querySelectorAll('[data-vall]').forEach(b=>b.onclick=e=>{e.preventDefault(); rep.tab='employee'; state.view='reports'; routeRender();});
+  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{state.view=b.dataset.goto; routeRender();});
+  document.querySelectorAll('[data-rep]').forEach(b=>b.onclick=e=>{e.preventDefault(); rep.tab=b.dataset.rep; state.view='reports'; routeRender();});
+  document.querySelectorAll('[data-qx]').forEach(b=>b.onclick=()=>{rep.tab=b.dataset.tab||'employee'; pendingExport=b.dataset.qx; state.view='reports'; routeRender();});
+  document.getElementById('histQ').oninput=e=>{dash.q=e.target.value; dash.page=0; drawHist();};
+  drawHist(); renderNotifBox();
+}
+
+// ================= Reports & Analytics =================
+let repCtx=null;
+function buildReports(A,rs){
+  const fin=finals(rs), emp=id=>A.empAll.find(e=>e.id===id)||{}, name=id=>emp(id).name||'-';
+  const es=empStats(A,fin,rs), xs=examStats(A,fin,rs), ds=deptStats(A,fin), qs=questionStats(A,rs);
+  const ts=A.leaders.map(ld=>{const m=es.filter(e=>e.leaderId===ld.id), l=fin.filter(r=>emp(r.employeeId).teamLeaderId===ld.id), pn=l.filter(r=>r.passed).length;
+    return {name:ld.name,n:m.length,avg:avgOf(l.map(r=>r.percent||0)),rate:pct(pn,l.length),failedEmps:m.filter(e=>e.fail>0).length,cnt:l.length};}).filter(t=>t.n).sort((a,b)=>b.avg-a.avg);
+  const mo={}; fin.forEach(r=>{const d=new Date(r.endTime||0), k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); (mo[k]=mo[k]||[]).push(r);});
+  const ms=Object.keys(mo).sort().map(k=>({k,n:mo[k].length,avg:avgOf(mo[k].map(r=>r.percent||0)),rate:pct(mo[k].filter(r=>r.passed).length,mo[k].length),ex:new Set(mo[k].map(r=>r.examId)).size,emps:new Set(mo[k].map(r=>r.employeeId)).size}));
+  const per=(a,b)=>{const l=fin.filter(r=>r.endTime>=a&&r.endTime<b); return [l.length,avgOf(l.map(r=>r.percent||0)),pct(l.filter(r=>r.passed).length,l.length)];};
+  const now=new Date(), m0=new Date(now.getFullYear(),now.getMonth(),1).getTime(), m1=new Date(now.getFullYear(),now.getMonth()-1,1).getTime(), qs0=new Date(now.getFullYear(),Math.floor(now.getMonth()/3)*3,1).getTime(), qs1=new Date(now.getFullYear(),Math.floor(now.getMonth()/3)*3-3,1).getTime();
+  const cmpRows=[['الشهر الحالي',...per(m0,Infinity)],['الشهر السابق',...per(m1,m0)],['الربع الحالي',...per(qs0,Infinity)],['الربع السابق',...per(qs1,qs0)]];
+  const R={
+   employee:{t:T('tab_employee'),head:['Employee ID',T('name'),T('col_dept'),T('col_team'),T('head_assigned'),T('completed'),T('pass_lbl'),T('fail_lbl'),T('col_avg'),T('head_highest'),T('head_lowest'),T('kpi_pass_rate'),T('head_avg_duration'),T('head_note'),'%'],rows:es.map(e=>[e.empId,e.name,e.dept,e.team,e.asg,e.done,e.pass,e.fail,e.avg+'%',e.hi+'%',e.lo+'%',e.rate+'%',e.dur,e.imp==null?'-':e.imp>0?'▲':e.imp<0?'▼':'=',e.imp==null?'-':e.imp])},
+   department:{t:T('dept_performance'),head:[T('col_dept'),T('head_emps_count'),T('head_exams_count'),T('col_avg'),T('kpi_pass_rate'),T('head_fail_rate'),T('head_best'),T('head_worst')],rows:ds.map(d=>[d.dept,d.emps,d.exams,d.avg+'%',d.rate+'%',d.fail+'%',name(d.best),name(d.worst)])},
+   team:{t:T('team_performance'),head:[T('head_rank'),T('head_team_leader'),T('head_emps_count'),T('head_team_avg'),T('kpi_pass_rate'),T('head_failed_emps'),T('head_results')],rows:ts.map((t,i)=>[i+1,t.name,t.n,t.avg+'%',t.rate+'%',t.failedEmps,t.cnt])},
+   exam:{t:T('exam_performance'),head:[T('col_exam'),'ID',T('head_assigned'),T('head_completed'),T('head_not_started'),T('col_avg'),T('head_highest'),T('head_lowest'),T('kpi_pass_rate'),T('head_fail_rate'),T('head_avg_duration')],rows:xs.map(x=>[x.name,x.id,x.asg,x.done,x.ns,x.avg+'%',x.hi+'%',x.lo+'%',x.rate+'%',x.fail+'%',x.dur])},
+   question:{t:T('question_analysis'),head:['ID',T('head_question'),T('head_topic'),T('head_difficulty'),T('head_total_ans'),T('pass_lbl'),T('fail_lbl'),T('head_correct_pct'),T('head_wrong_pct'),T('head_note')],rows:qs.map(q=>[q.id.slice(0,6),q.text,q.topic,q.diff,q.tot,q.ok,q.bad,q.c+'%',q.w+'%',q.note])},
+   monthly:{t:T('monthly_report_t'),head:[T('head_month'),T('head_results'),T('col_avg'),T('kpi_pass_rate'),T('head_exams_count'),T('head_emps_count')],rows:ms.map(m=>[m.k,m.n,m.avg+'%',m.rate+'%',m.ex,m.emps])},
+   compare:{t:T('period_compare'),head:[T('head_period'),T('head_results'),T('head_avg_pct'),T('head_pass_pct')],rows:cmpRows}
+  };
+  const ins=[], withData=es.filter(e=>e.done);
+  if(ds.length&&ds[0].n) ins.push(`أفضل قسم أداءً: ${ds[0].dept} (متوسط ${ds[0].avg}%)`);
+  if(ds.length>1) ds.filter(d=>d.n&&d.rate<60).forEach(d=>ins.push(`قسم يحتاج تدريبًا إضافيًا: ${d.dept} (نجاح ${d.rate}%)`));
+  if(ts.length) ins.push(`أفضل فريق: ${ts[0].name} (متوسط ${ts[0].avg}%)`);
+  const imp=withData.filter(e=>e.imp!=null).sort((a,b)=>b.imp-a.imp); if(imp.length&&imp[0].imp>0) ins.push(`أعلى موظف تحسنًا: ${imp[0].name} (+${imp[0].imp} نقطة)`); if(imp.length&&imp[imp.length-1].imp<0) ins.push(`أكثر موظف انخفاضًا: ${imp[imp.length-1].name} (${imp[imp.length-1].imp} نقطة)`);
+  const xd=xs.filter(x=>x.n).sort((a,b)=>b.rate-a.rate); if(xd.length){ ins.push(`أعلى اختبار نجاحًا: ${xd[0].name} (${xd[0].rate}%)`); if(xd.length>1) ins.push(`اختبار يحتاج مراجعة: ${xd[xd.length-1].name} (نجاح ${xd[xd.length-1].rate}%)`); }
+  const tp={}; qs.forEach(q=>{const o=tp[q.topic]=tp[q.topic]||{t:q.topic,tot:0,ok:0}; o.tot+=q.tot; o.ok+=q.ok;}); const tl=Object.values(tp).filter(o=>o.tot).sort((a,b)=>a.ok/a.tot-b.ok/b.tot); if(tl.length&&tl[0].t!=='-') ins.push(`أكثر موضوع يعاني فيه الموظفون: ${tl[0].t} (صحيح ${pct(tl[0].ok,tl[0].tot)}%)`);
+  return {R,ins,fin,rs,summary:[[T('sum_final_results'),fin.length],[T('sum_attempts'),rs.length],[T('sum_avg'),avgOf(fin.map(r=>r.percent||0))+'%'],[T('sum_pass_rate'),pct(fin.filter(r=>r.passed).length,fin.length)+'%'],[T('sum_emps'),new Set(fin.map(r=>r.employeeId)).size]]};
+}
+async function reportsView(){
+  const A=await loadA(), [from,to]=rangeOf(rep), emp=id=>A.empAll.find(e=>e.id===id)||{};
+  const rs=A.results.filter(r=>r.endTime>=from&&r.endTime<=to&&(!rep.dept||emp(r.employeeId).dept===rep.dept)&&(!rep.team||emp(r.employeeId).teamLeaderId===rep.team)&&(!rep.emp||r.employeeId===rep.emp)&&(!rep.exam||r.examId===rep.exam)
+    &&(!rep.status||(rep.status==='pass')===!!r.passed)&&(rep.min===''||r.percent>=+rep.min)&&(rep.max===''||r.percent<=+rep.max)&&(!rep.att||r.attemptNum==rep.att));
+  const B=buildReports(A,rs); repCtx={A,B};
+  const depts=[...new Set(A.empAll.map(e=>e.dept).filter(Boolean))];
+  const sel=(id,lab,opts,v)=>`<div><label>${lab}</label><select id="${id}" style="width:100%"><option value="">${T('all')}</option>${opts.map(o=>`<option value="${esc(o[0])}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+  const tabs=[['employee',T('tab_employee')],['department',T('tab_department')],['team',T('tab_team')],['exam',T('tab_exam')],['question',T('tab_question')],['monthly',T('tab_monthly')],['insights',T('tab_insights')]];
+  const cur=B.R[rep.tab], filt=[rep.dept&&(T('filter_dept')+': '+rep.dept),rep.exam&&T('filter_exam'),rep.emp&&T('filter_emp'),rep.status&&(rep.status==='pass'?T('pass_only'):T('fail_only'))].filter(Boolean).join(' | ')||T('no_extra_filters');
+  return `<h1>${T('reports_title')}</h1>
+  <div class="card no-print"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><strong>${T('filters')}</strong>${periodBar(rep,'rp')}</div>
+   <div class="row">${sel('rDept',T('filter_dept'),depts.map(d=>[d,d]),rep.dept)}${sel('rTeam',T('filter_team'),A.leaders.map(l=>[l.id,l.name]),rep.team)}${sel('rEmp',T('filter_emp'),A.emps.map(e=>[e.id,e.name]),rep.emp)}${sel('rExam',T('filter_exam'),A.exams.map(x=>[x.id,x.name]),rep.exam)}
+   ${sel('rStatus',T('label_status'),[['pass',T('pass_lbl')],['fail',T('fail_lbl')]],rep.status)}<div><label>${T('label_score_from')}</label><input id="rMin" type="number" value="${rep.min}" style="width:100%"></div><div><label>${T('label_score_to')}</label><input id="rMax" type="number" value="${rep.max}" style="width:100%"></div><div><label>${T('label_attempt')}</label><input id="rAtt" type="number" value="${rep.att}" style="width:100%"></div></div>
+   <button class="btn sec" id="rReset" style="margin-top:8px">${T('reset_filters')}</button></div>
+  <div class="prn" style="margin-bottom:10px"><h2>🌟 ${T('report_of')}${esc(rep.tab==='insights'?T('tab_insights'):cur.t)}</h2><div>${T('report_date_lbl')}: ${new Date().toLocaleDateString(lang==='ar'?'ar-EG':'en-US')} — ${esc(filt)}</div></div>
+  <div class="kg">${B.summary.map(([l,v])=>`<div class="kc"><div><div class="l">${l}</div><div class="v">${v}</div></div></div>`).join('')}</div>
+  <div class="tabs no-print">${tabs.map(([k,t])=>`<button class="pill ${rep.tab===k?'on':''}" data-rtab="${k}">${t}</button>`).join('')}</div>
+  <div class="card">${rep.tab==='insights'?`<h3>${T('insights_from_data')}</h3>${B.ins.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">💡 ${esc(t)}</div>`).join('')||'<span style="color:var(--muted)">'+T('no_insights')+'</span>'}`
+   :`<h3>${cur.t}</h3><div class="table-wrap"><table><tr>${cur.head.map(h=>`<th>${h}</th>`).join('')}</tr>${cur.rows.map(r=>`<tr>${r.map(c=>`<td style="${/%$/.test(String(c))&&0?'':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cur.head.length}" style="color:var(--muted)">'+T('no_filter_data')+'</td></tr>`}</table></div>${rep.tab==='monthly'?`<h3 style="margin-top:14px">${B.R.compare.t}</h3><div class="table-wrap"><table><tr>${B.R.compare.head.map(h=>`<th>${h}</th>`).join('')}</tr>${B.R.compare.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`:''}`}</div>
+  <div class="card no-print"><h3>${T('export_center')}</h3><button class="btn" id="xXlsx">Excel</button> <button class="btn sec" id="xCsv">CSV</button> <button class="btn sec" id="xPdf">PDF</button> <button class="btn sec" id="xPrint">${T('print')}</button>
+   <p class="fnote">Excel يضم كل الجداول في أوراق منفصلة. PDF: اختاري "حفظ كـ PDF" من نافذة الطباعة. التصدير يحترم الفلاتر الحالية. النتيجة النهائية = آخر محاولة لكل موظف في كل اختبار.</p></div>`;
+}
+function dl(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),500);}
+function attachReports(){
+  const again=()=>{state.view='reports'; routeRender();};
+  bindPeriod(rep,'rp',again);
+  document.querySelectorAll('[data-rtab]').forEach(b=>b.onclick=()=>{rep.tab=b.dataset.rtab; again();});
+  [['rDept','dept'],['rTeam','team'],['rEmp','emp'],['rExam','exam'],['rStatus','status'],['rMin','min'],['rMax','max'],['rAtt','att']].forEach(([id,k])=>{const el=document.getElementById(id); if(el) el.onchange=()=>{rep[k]=el.value; again();};});
+  document.getElementById('rReset').onclick=()=>{Object.assign(rep,{p:'30d',from:'',to:'',dept:'',team:'',emp:'',exam:'',status:'',min:'',max:'',att:''}); again();};
+  const {B}=repCtx, tabs=['employee','department','team','exam','question','monthly','compare'];
+  document.getElementById('xCsv').onclick=()=>{const t=B.R[rep.tab]||B.R.employee, q=v=>'"'+String(v).replace(/"/g,'""')+'"'; dl('report-'+rep.tab+'.csv',new Blob(['\ufeff'+[t.head,...t.rows].map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));};
+  document.getElementById('xXlsx').onclick=async()=>{
+    try{ if(!window.XLSX) await new Promise((ok,no)=>{const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload=ok; s.onerror=no; document.head.appendChild(s);});
+      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['ملخص التقرير'],...B.summary]),'Summary');
+      tabs.forEach(k=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([B.R[k].head,...B.R[k].rows]),k)); XLSX.writeFile(wb,'exam-report.xlsx');
+    }catch(e){ alert(T('excel_fail')); }};
+  document.getElementById('xPrint').onclick=()=>window.print();
+  document.getElementById('xPdf').onclick=()=>{alert(T('pdf_hint')); window.print();};
+  if(pendingExport){ const id=pendingExport; pendingExport=null; setTimeout(()=>{const el=document.getElementById(id); if(el) el.click();},300); }
+}
+
+// ---------- ADMIN: dashboard (legacy, unused) ----------
+async function dashboardViewLegacy(){
+  const [emps,exams,results] = await Promise.all([listAll('employees'),listAll('exams'),listAll('results')]);
+  const completed=results.length;
+  const avg = completed? Math.round(results.reduce((a,r)=>a+(r.percent||0),0)/completed):0;
+  const passRate = completed? Math.round(results.filter(r=>r.passed).length/completed*100):0;
+  const assignments = await listAll('assignments');
+  const pending = assignments.filter(a=>!results.some(r=>r.examId===a.examId && r.employeeId===a.employeeId)).length;
+  return `<h1>لوحة التحكم</h1>
+  <div class="grid">
+    <div class="card"><div class="stat">${emps.length}</div><div class="stat-label">إجمالي الموظفين</div></div>
+    <div class="card"><div class="stat">${exams.length}</div><div class="stat-label">إجمالي الاختبارات</div></div>
+    <div class="card"><div class="stat">${completed}</div><div class="stat-label">اختبارات مكتملة</div></div>
+    <div class="card"><div class="stat">${pending}</div><div class="stat-label">اختبارات معلقة</div></div>
+    <div class="card"><div class="stat">${avg}%</div><div class="stat-label">متوسط الدرجات</div></div>
+    <div class="card"><div class="stat">${passRate}%</div><div class="stat-label">نسبة النجاح</div></div>
+  </div>
+  <div class="card"><h3>آخر النتائج</h3>${resultsTable(results.slice(-8).reverse(),emps,exams)}</div>`;
+}
+
+function resultsTable(results,emps,exams,withChk){
+  if(!results.length) return '<p style="color:var(--muted)">'+T('no_results_yet')+'</p>';
+  return `<div class="table-wrap"><table><tr>${withChk?'<th><input type="checkbox" id="resSelectAll"></th>':''}<th>${T('col_employee')}</th><th>${T('col_exam')}</th><th>${T('percent_lbl')}</th><th>${T('col_status')}</th></tr>
+  ${results.map(r=>{
+    const e=emps.find(x=>x.id===r.employeeId); const ex=exams.find(x=>x.id===r.examId);
+    return `<tr>${withChk?`<td><input type="checkbox" class="resChk" value="${r.id}"></td>`:''}<td>${e?e.name:'-'}</td><td>${ex?ex.name:'-'}</td><td>${r.percent}%</td>
+    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?T('pass_lbl'):T('fail_lbl')}</span></td></tr>`;
+  }).join('')}</table></div>`;
+}
+
+// ---------- ADMIN: question bank ----------
+async function questionsView(){
+  const qs = await listAll('questions');
+  return `<h1>${T('questions_title')}</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>${T('q_text_lbl')}</label><input id="qText" style="width:100%"></div>
+      <div><label>${T('q_type_lbl')}</label><select id="qType" style="width:100%">
+        <option value="mcq">اختيار من متعدد</option><option value="tf">صح / خطأ</option>
+        <option value="multi">اختيار متعدد</option><option value="short">إجابة قصيرة</option>
+      </select></div>
+      <div><label>${T('q_cat_lbl')}</label><input id="qCat" style="width:100%"></div>
+      <div><label>${T('q_points_lbl')}</label><input id="qPoints" type="number" value="1" style="width:100%"></div>
+    </div>
+    <div id="qOptsWrap"></div>
+    <label>شرح الإجابة (اختياري)</label><input id="qExpl" style="width:100%">
+    <button class="btn" id="addQ" style="margin-top:10px">${T('add_question')}</button>
+  </div>
+  <div class="card"><h3>${T('all_questions')} (${qs.length})</h3>
+  <input id="qSearch" placeholder="${T('search_q')}" style="width:100%;margin-bottom:8px">
+  <button class="btn danger" id="qBulkDelete" style="margin-bottom:8px">${T('bulk_delete')}</button>
+  <div id="qList">${renderQList(qs)}</div></div>`;
+}
+function renderQList(qs){
+  if(!qs.length) return '<p style="color:var(--muted)">لا توجد أسئلة.</p>';
+  return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="qSelectAll"></th><th>${T('head_question')}</th><th>${T('head_type')}</th><th>${T('head_category')}</th><th>${T('head_points')}</th><th></th></tr>
+  ${qs.map(q=>`<tr><td><input type="checkbox" class="qChk" value="${q.id}"></td><td>${q.text}</td><td>${typeLabel(q.type)}</td><td>${q.category||'-'}</td><td>${q.points}</td>
+  <td><button class="btn danger" data-del="${q.id}" style="padding:4px 10px">${T('delete_btn')}</button></td></tr>`).join('')}</table></div>`;
+}
+function typeLabel(t){ return {mcq:T('type_mcq'),tf:T('type_tf'),multi:T('type_multi'),short:T('type_short')}[t]||t; }
+
+function optsEditor(type){
+  if(type==='tf') return `<label>${T('correct_ans')}</label><select id="qCorrectTF"><option value="true">${T('true_opt')}</option><option value="false">${T('false_opt')}</option></select>`;
+  if(type==='short') return `<label>${T('correct_ans')}</label><input id="qShortAns" style="width:100%">`;
+  let html='<label>'+T('options_mark')+'</label>';
+  for(let i=0;i<4;i++){
+    html+=`<div class="qopt"><input type="${type==='multi'?'checkbox':'radio'}" name="qc" value="${i}">
+    <input data-opt="${i}" placeholder="${T('option_n')} ${i+1}" style="flex:1"></div>`;
+  }
+  return html;
+}
+
+function attachQuestions(){
+  const typeSel=document.getElementById('qType');
+  const wrap=document.getElementById('qOptsWrap');
+  const refresh=()=>wrap.innerHTML=optsEditor(typeSel.value);
+  typeSel.onchange=refresh; refresh();
+  document.getElementById('addQ').onclick=async ()=>{
+    const type=typeSel.value, text=document.getElementById('qText').value.trim();
+    if(!text) return alert(T('enter_q_text'));
+    let options=[], correct=null;
+    if(type==='tf'){ correct=document.getElementById('qCorrectTF').value==='true'; }
+    else if(type==='short'){ correct=document.getElementById('qShortAns').value.trim(); }
+    else {
+      const opts=[...wrap.querySelectorAll('[data-opt]')].map(i=>i.value.trim());
+      options=opts;
+      if(type==='mcq'){ const r=wrap.querySelector('input[name=qc]:checked'); correct=r?parseInt(r.value):null; }
+      else { correct=[...wrap.querySelectorAll('input[name=qc]:checked')].map(c=>parseInt(c.value)); }
+    }
+    const q={text,type,options,correct,points:parseFloat(document.getElementById('qPoints').value)||1,
+      category:document.getElementById('qCat').value.trim(),explanation:document.getElementById('qExpl').value.trim()};
+    await setDoc('questions',uid(),q);
+    state.view='questions'; routeRender();
+  };
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ await delDoc('questions',b.dataset.del); state.view='questions'; routeRender(); });
+  document.getElementById('qSearch').oninput=async (e)=>{
+    const qs=await listAll('questions');
+    const f=qs.filter(q=>q.text.includes(e.target.value)||((q.category||'').includes(e.target.value)));
+    document.getElementById('qList').innerHTML=renderQList(f);
+    attachSelectAll('qSelectAll','qChk');
+  };
+  document.getElementById('qBulkDelete').onclick=()=>bulkDeleteSelected('questions','qChk');
+  attachSelectAll('qSelectAll','qChk');
+}
+
+// ---------- ADMIN: create exam ----------
+// ---------- ADMIN: employees & teams (Merged) ----------
+let editingEmployeeId=null;
+async function employeesTeamsView(){
+  const [emps, leaders] = await Promise.all([listAll('employees'), listAll('teamLeaders')]);
+  const editingEmp = editingEmployeeId ? emps.find(e=>e.id===editingEmployeeId) : null;
+  
+  const isL=isLeaderSession();
+  const leaderCards = visibleLeaders(leaders).map(ld=>{
+    const members = emps.filter(e=>e.teamLeaderId===ld.id);
+    return `<div class="card" style="background:var(--bg)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <strong>👑 ${T('leader_of')} ${ld.name}</strong>
+        ${isL?'':`<span style="font-size:12px;color:var(--muted)">${T('login_code')} ${ld.code?ld.code:'<em>'+T('not_set')+'</em>'} <button class="btn sec" data-setcode="${ld.id}" style="padding:2px 8px;font-size:11px">${ld.code?T('change'):T('set')}</button></span>`}
+        <div><span style="color:var(--muted);font-size:12px">${members.length} ${T('members_count')}</span>
+        ${isL?'':`<button class="btn danger" data-delleader="${ld.id}" style="padding:4px 10px;margin-inline-start:8px">${T('delete_leader')}</button>`}</div>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin:8px 0">${T('select_members')}</p>
+      <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--surface)">
+      ${emps.map(e=>`<div class="qopt" style="${e.teamLeaderId&&e.teamLeaderId!==ld.id?'display:none':''}"><input type="checkbox" data-teamchk="1" class="teamChk-${ld.id}" value="${e.id}" ${e.teamLeaderId===ld.id?'checked':''}><span>${e.name} ${e.dept?'('+e.dept+')':''}</span></div>`).join('') || '<p style="color:var(--muted)">لا يوجد موظفون.</p>'}
+      </div>
+      <button class="btn" data-savemembers="${ld.id}" style="margin-top:8px">${T('save_members')}</button>
+    </div>`;
+  }).join('');
+
+  return `<h1>${T('emps_title')}</h1>
+  
+  <div class="card">
+    <h3 id="empFormTitle">${editingEmployeeId?T('edit_emp'):T('add_emp')}</h3>
+    <div class="row">
+      <div><label>${T('name')}</label><input id="pName" style="width:100%" value="${editingEmp?editingEmp.name||'':''}"></div>
+      <div><label>${T('emp_id')}</label><input id="pEmpId" style="width:100%" value="${editingEmp?editingEmp.empId||'':''}"></div>
+      <div><label>${T('email')}</label><input id="pEmail" style="width:100%" value="${editingEmp?editingEmp.email||'':''}"></div>
+      <div><label>${T('dept')}</label><input id="pDept" style="width:100%" value="${editingEmp?editingEmp.dept||'':''}"></div>
+      <div><label>${T('team')}</label><input id="pTeam" style="width:100%" value="${editingEmp?editingEmp.team||'':''}"></div>
+      <div><label>${T('position')}</label><input id="pPos" style="width:100%" value="${editingEmp?editingEmp.position||'':''}"></div>
+      <div><label>${T('team_leader_label')}</label><select id="pLeader" style="width:100%"><option value="">${T('none')}</option>${visibleLeaders(leaders).map(l=>`<option value="${l.id}" ${editingEmp&&editingEmp.teamLeaderId===l.id?'selected':''}>${l.name}</option>`).join('')}</select></div>
+    </div>
+    <button class="btn" id="addEmp" style="margin-top:8px">${editingEmployeeId?T('save_changes'):T('add_emp')}</button>
+    ${editingEmployeeId?'<button class="btn sec" id="cancelEditEmp" style="margin-top:8px;margin-inline-start:6px">إلغاء التعديل</button>':''}
+  </div>
+
+  <div class="card">
+    <h3>${isL?T('my_team_list'):T('manage_leaders')}</h3>
+    ${isL?'':`<div class="row">
+      <div><input id="tlName" placeholder="${T('new_leader_name')}" style="width:100%"></div>
+      <div><input id="tlCode" placeholder="${T('leader_code')}" style="width:100%"></div>
+      <div><button class="btn" id="addLeader" style="width:100%">${T('add_leader')}</button></div>
+    </div>`}
+    <div style="margin-top:14px">${leaderCards || '<p style="color:var(--muted)">لا يوجد قادة فرق بعد. أضف قائدًا أولًا.</p>'}</div>
+  </div>
+
+  <div class="card">
+    <h3>${T('all_emps_list')} (${emps.length})</h3>
+    <input id="eSearch" placeholder="${T('search_name_dept')}" style="width:100%;margin-bottom:8px">
+    <button class="btn danger" id="empBulkDelete" style="margin-bottom:8px">${T('bulk_delete')}</button>
+    <div id="empList">${renderEmpList(emps,leaders)}</div>
+  </div>`;
+}
+
+function renderEmpList(emps,leaders){
+  leaders=leaders||[];
+  if(!emps.length) return '<p style="color:var(--muted)">لا يوجد موظفون.</p>';
+  return `<div class="table-wrap"><table><tr><th><input type="checkbox" id="empSelectAll"></th><th>الاسم</th><th>ID</th><th>${T('col_dept')}</th><th>${T('col_team')}</th><th>قائد الفريق</th><th>${T('col_status')}</th><th></th></tr>
+  ${emps.map(e=>{
+    const ld=leaders.find(l=>l.id===e.teamLeaderId);
+    return `<tr><td><input type="checkbox" class="empChk" value="${e.id}"></td><td>${e.name}</td><td>${e.empId}</td><td>${e.dept||'-'}</td><td>${e.team||'-'}</td><td>${ld?ld.name:'-'}</td>
+  <td><span class="badge ok">${e.status||'نشط'}</span></td>
+  <td style="white-space:nowrap"><button class="btn sec" data-editemp="${e.id}" style="padding:4px 10px">${T('edit_btn')}</button>
+  <button class="btn danger" data-delemp="${e.id}" style="padding:4px 10px;margin-right:4px">${T('delete_btn')}</button></td></tr>`;
+  }).join('')}</table></div>`;
+}
+
+function attachEmployeesTeams(){
+  const addEmpBtn=document.getElementById('addEmp');
+  if(addEmpBtn) addEmpBtn.onclick=async ()=>{
+    const name=document.getElementById('pName').value.trim(), empId=document.getElementById('pEmpId').value.trim();
+    if(!name||!empId){ alert(T('enter_name_id')); return; }
+    const existing = await listAll('employees');
+    const dupExists = existing.some(e=>e.empId===empId && e.id!==editingEmployeeId);
+    if(dupExists){ alert(T('dup_empid')); return; }
+    const btn=document.getElementById('addEmp'); btn.disabled=true; btn.textContent=T('saving');
+    const data={name,empId,email:document.getElementById('pEmail').value.trim(),
+      dept:document.getElementById('pDept').value.trim(),team:document.getElementById('pTeam').value.trim(),
+      position:document.getElementById('pPos').value.trim(),
+      teamLeaderId:document.getElementById('pLeader').value||null};
+    if(!editingEmployeeId) data.status='نشط';
+    const targetId = editingEmployeeId || uid();
+    const ok = await setDoc('employees',targetId,data);
+    btn.disabled=false; btn.textContent=editingEmployeeId?T('save_changes'):T('add_emp');
+    if(ok){ editingEmployeeId=null; state.view='employees-teams'; routeRender(); }
+  };
+  const cancelBtn=document.getElementById('cancelEditEmp');
+  if(cancelBtn) cancelBtn.onclick=()=>{ editingEmployeeId=null; state.view='employees-teams'; routeRender(); };
+  document.querySelectorAll('[data-editemp]').forEach(b=>b.onclick=()=>{
+    editingEmployeeId=b.dataset.editemp;
+    state.view='employees-teams'; routeRender();
+    setTimeout(()=>document.getElementById('empFormTitle')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  });
+
+  const addLeaderBtn=document.getElementById('addLeader');
+  if(addLeaderBtn) addLeaderBtn.onclick=async()=>{
+    const name=document.getElementById('tlName').value.trim();
+    const code=document.getElementById('tlCode').value.trim();
+    if(!name){ alert(T('enter_leader_name')); return; }
+    if(code){ const ex=await listAll('teamLeaders'); if(ex.some(l=>String(l.code)===code)){ alert(T('code_used')); return; } }
+    await setDoc('teamLeaders',uid(),{name,code:code||null,createdAt:Date.now()});
+    state.view='employees-teams'; routeRender();
+  };
+
+  document.querySelectorAll('input[data-teamchk]').forEach(cb=>cb.onchange=()=>{
+    document.querySelectorAll('input[data-teamchk][value="'+cb.value+'"]').forEach(o=>{
+      if(o!==cb) o.closest('.qopt').style.display = cb.checked ? 'none' : 'flex';
+    });
+  });
+  document.querySelectorAll('[data-setcode]').forEach(b=>b.onclick=async()=>{
+    const code=(prompt(T('enter_new_code'))||'').trim();
+    if(!code) return;
+    const ex=await listAll('teamLeaders');
+    if(ex.some(l=>String(l.code)===code && l.id!==b.dataset.setcode)){ alert(T('code_used')); return; }
+    await setDoc('teamLeaders',b.dataset.setcode,{code});
+    state.view='employees-teams'; routeRender();
+  });
+  document.querySelectorAll('[data-delleader]').forEach(b=>b.onclick=async()=>{
+    if(state.session.role==='leader'){ alert(T('delete_leader_admin_only')); return; }
+    if(!confirm(T('delete_leader_confirm'))) return;
+    await delDoc('teamLeaders',b.dataset.delleader);
+    state.view='employees-teams'; routeRender();
+  });
+
+  document.querySelectorAll('[data-savemembers]').forEach(b=>b.onclick=async()=>{
+    const ldId=b.dataset.savemembers;
+    const checked=[...document.querySelectorAll('.teamChk-'+ldId+':checked')].map(c=>c.value);
+    const emps=await listAll('employees');
+    for(const e of emps){
+      const shouldBelong=checked.includes(e.id);
+      const currentlyBelongs=e.teamLeaderId===ldId;
+      if(shouldBelong && !currentlyBelongs) await setDoc('employees',e.id,{teamLeaderId:ldId});
+      else if(!shouldBelong && currentlyBelongs) await setDoc('employees',e.id,{teamLeaderId:null});
+    }
+    alert(T('members_saved'));
+    state.view='employees-teams'; routeRender();
+  });
+
+  document.querySelectorAll('[data-delemp]').forEach(b=>b.onclick=async()=>{ await delDoc('employees',b.dataset.delemp); state.view='employees-teams'; routeRender(); });
+  
+  const eSearch=document.getElementById('eSearch');
+  if(eSearch) eSearch.oninput=async(e)=>{
+    const [emps,leaders]=await Promise.all([listAll('employees'),listAll('teamLeaders')]);
+    const f=emps.filter(x=>x.name.includes(e.target.value)||(x.dept||'').includes(e.target.value));
+    const empList=document.getElementById('empList');
+    if(empList) empList.innerHTML=renderEmpList(f,leaders);
+    attachSelectAll('empSelectAll','empChk');
+  };
+  const bulkBtn=document.getElementById('empBulkDelete');
+  if(bulkBtn) bulkBtn.onclick=()=>bulkDeleteSelected('employees','empChk');
+  attachSelectAll('empSelectAll','empChk');
+}
+
+// ---------- ADMIN: assign ----------
+async function assignView(){
+  const [exams0,emps,assignments0,leaders0] = await Promise.all([listAll('exams'),listAll('employees'),listAll('assignments'),listAll('teamLeaders')]);
+  const exams=ownExams(exams0); const leaders=visibleLeaders(leaders0);
+  const assignments=isLeaderSession()? assignments0.filter(a=>exams.some(x=>x.id===a.examId)) : assignments0;
+  const depts=[...new Set(emps.map(e=>e.dept).filter(Boolean))];
+
+  return `<h1>${T('assign_title')}</h1>
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>الاختبار</label>
+        <select id="aExam" style="width:100%">${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select>
+      </div>
+      <div>
+        <label>${T('dept')}</label>
+        <select id="aDept" style="width:100%">
+          <option value="">-- كل الأقسام --</option>
+          ${depts.map(d=>`<option value="${d}">${d}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label>الفريق (قائد الفريق)</label>
+        <select id="aTeam" style="width:100%">
+          <option value="">${T('all_teams')}</option>
+          ${leaders.map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label>آخر موعد (Deadline)</label>
+        <input id="aDeadline" type="date" style="width:100%">
+      </div>
+    </div>
+    
+    <div style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label style="margin:0;font-weight:600">${T('select_emps_for_exam')}</label>
+        <div>
+          <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:var(--brand)">
+            <input type="checkbox" id="aPickAllEmps"> تحديد كل المعروضين
+          </label>
+        </div>
+      </div>
+      <div id="assignEmpsContainer" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
+        <!-- يتم ملء الموظفين ديناميكياً -->
+      </div>
+    </div>
+    
+    <button class="btn" id="doAssign" style="margin-top:12px">إسناد الاختبار للمحددين</button>
+  </div>
+
+  <div class="card"><h3>الإسنادات الحالية</h3>
+  <button class="btn danger" id="aBulkDelete" style="margin-bottom:8px">${T('bulk_delete')}</button>
+  <div class="table-wrap"><table><tr><th><input type="checkbox" id="aSelectAll"></th><th>${T('col_exam')}</th><th>${T('col_employee')}</th><th>${T('col_dept')}</th><th>${T('col_team')}</th><th>الموعد النهائي</th><th>${T('col_status')}</th></tr>
+  ${assignments.map(a=>{
+    const ex=exams.find(x=>x.id===a.examId), em=emps.find(x=>x.id===a.employeeId);
+    const ld=em?leaders.find(l=>l.id===em.teamLeaderId):null;
+    return `<tr><td><input type="checkbox" class="aChk" value="${a.id}"></td><td>${ex?ex.name:'-'}</td><td>${em?em.name:'-'}</td><td>${em?(em.dept||'-'):'-'}</td><td>${ld?ld.name:'-'}</td><td>${a.deadline||'-'}</td><td><span class="badge warn">معلق</span></td></tr>`;
+  }).join('') || '<tr><td colspan=7 style="color:var(--muted)">لا توجد إسنادات بعد.</td></tr>'}
+  </table></div></div>`;
+}
+
+function attachAssign(){
+  let allEmps = [], allLeaders = [];
+
+  const updateEmpsList = () => {
+    const deptVal = document.getElementById('aDept').value;
+    const teamVal = document.getElementById('aTeam').value;
+    const container = document.getElementById('assignEmpsContainer');
+    
+    let filtered = allEmps;
+    if (deptVal) filtered = filtered.filter(e => e.dept === deptVal);
+    if (teamVal) filtered = filtered.filter(e => e.teamLeaderId === teamVal);
+
+    if(!filtered.length){
+      container.innerHTML = '<p style="color:var(--muted);margin:0;font-size:13px">لا يوجد موظفون يطابقون خيارات البحث الحالية.</p>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(e => {
+      const ld = allLeaders.find(l=>l.id===e.teamLeaderId);
+      return `<div class="qopt">
+        <input type="checkbox" class="assignEmpChk" value="${e.id}">
+        <span>${e.name} <small style="color:var(--muted)">(${e.dept || T('no_dept')}${ld ? ' - فريق: '+ld.name : ''})</small></span>
+      </div>`;
+    }).join('');
+
+    const pickAll = document.getElementById('aPickAllEmps');
+    if(pickAll) pickAll.checked = false;
+  };
+
+  const updateTeamsOptions = () => {
+    const deptVal = document.getElementById('aDept').value;
+    const teamSelect = document.getElementById('aTeam');
+    let validLeaders = allLeaders;
+    
+    if (deptVal) {
+      const deptsEmps = allEmps.filter(e => e.dept === deptVal);
+      const leaderIds = [...new Set(deptsEmps.map(e => e.teamLeaderId).filter(Boolean))];
+      validLeaders = allLeaders.filter(l => leaderIds.includes(l.id));
+    }
+    
+    teamSelect.innerHTML = `<option value="">${T('all_teams')}</option>` + 
+      validLeaders.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  };
+
+  Promise.all([listAll('employees'), listAll('teamLeaders')]).then(([emps, leaders]) => {
+    allEmps = emps;
+    allLeaders = leaders;
+    updateEmpsList();
+  });
+
+  document.getElementById('aDept').onchange = () => {
+    updateTeamsOptions();
+    updateEmpsList();
+  };
+  
+  document.getElementById('aTeam').onchange = () => {
+    updateEmpsList();
+  };
+
+  const pickAll = document.getElementById('aPickAllEmps');
+  if(pickAll) {
+    pickAll.onchange = () => {
+      document.querySelectorAll('.assignEmpChk').forEach(chk => chk.checked = pickAll.checked);
+    };
+  }
+
+  document.getElementById('doAssign').onclick = async () => {
+    const examId = document.getElementById('aExam').value;
+    const deadline = document.getElementById('aDeadline').value;
+    if (!examId) return alert(T('assign_need_exam'));
+
+    const selectedEmpIds = [...document.querySelectorAll('.assignEmpChk:checked')].map(c => c.value);
+    if (!selectedEmpIds.length) {
+      alert(T('assign_need_emp'));
+      return;
+    }
+
+    for (const id of selectedEmpIds) {
+      await setDoc('assignments', uid(), { examId, employeeId: id, deadline });
+    }
+
+    alert(`تم إسناد الاختبار بنجاح إلى ${selectedEmpIds.length} موظف.`);
+    state.view = 'assign';
+    routeRender();
+  };
+
+  const aBulk = document.getElementById('aBulkDelete');
+  if (aBulk) aBulk.onclick = () => bulkDeleteSelected('assignments', 'aChk');
+  attachSelectAll('aSelectAll', 'aChk');
+}
+
+// ---------- ADMIN: wrong answers ----------
+function formatAnswerText(q,val){
+  if(val===undefined||val===null||val==='') return '<span style="color:var(--muted)">لم يُجب</span>';
+  if(q.type==='mcq') return (q.options&&q.options[val]!==undefined)? q.options[val] : String(val);
+  if(q.type==='tf') return val===true?'صح':'خطأ';
+  if(q.type==='multi') return Array.isArray(val)? val.map(i=>(q.options&&q.options[i]!==undefined)?q.options[i]:i).join('، ') : String(val);
+  return String(val);
+}
+function formatCorrectText(q){
+  if(q.type==='mcq') return (q.options&&q.options[q.correct]!==undefined)? q.options[q.correct] : String(q.correct);
+  if(q.type==='tf') return q.correct===true?'صح':'خطأ';
+  if(q.type==='multi') return Array.isArray(q.correct)? q.correct.map(i=>(q.options&&q.options[i]!==undefined)?q.options[i]:i).join('، ') : String(q.correct);
+  return String(q.correct);
+}
+function isAnswerWrong(q,val){
+  if(val===undefined||val===null||val==='') return false;
+  if(q.type==='mcq') return val!==q.correct;
+  if(q.type==='tf') return val!==q.correct;
+  if(q.type==='multi'){
+    if(!Array.isArray(val)||!Array.isArray(q.correct)) return true;
+    return !(val.length===q.correct.length && val.every(v=>q.correct.includes(v)));
+  }
+  if(q.type==='short') return (String(val).trim().toLowerCase())!==(String(q.correct||'').trim().toLowerCase());
+  return false;
+}
+async function buildWrongAnswerRows(){
+  const [results0,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const results=filterResultsForLeader(results0,emps,exams);
+  const rows=[];
+  results.forEach(r=>{
+    const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+    if(!exam) return;
+    (exam.questionIds||[]).forEach(qid=>{
+      const q=questions.find(x=>x.id===qid); if(!q) return;
+      const val=r.answers?r.answers[q.id]:undefined;
+      if(isAnswerWrong(q,val)){
+        rows.push({
+          employeeName: emp?emp.name:T('deleted_emp'),
+          empId: emp?emp.empId:'-',
+          examName: exam.name,
+          questionText: q.text,
+          employeeAnswer: formatAnswerText(q,val),
+          correctAnswer: formatCorrectText(q),
+          when: r.endTime || r.startTime || 0
+        });
+      }
+    });
+  });
+  rows.sort((a,b)=>b.when-a.when);
+  return rows;
+}
+function renderWrongAnswerTable(rows){
+  if(!rows.length) return '<p style="color:var(--muted)">'+T('no_wrong_yet')+'</p>';
+  return `<div class="table-wrap"><table><tr><th>${T('col_employee')}</th><th>Employee ID</th><th>${T('col_exam')}</th><th>${T('head_question')}</th><th>إجابة الموظف</th><th>الإجابة الصحيحة</th><th>التاريخ</th></tr>
+  ${rows.map(r=>`<tr><td>${r.employeeName}</td><td>${r.empId}</td><td>${r.examName}</td><td>${r.questionText}</td>
+  <td style="color:var(--bad)">${r.employeeAnswer}</td><td style="color:var(--ok)">${r.correctAnswer}</td>
+  <td>${r.when?new Date(r.when).toLocaleString('ar-EG'):'-'}</td></tr>`).join('')}</table></div>`;
+}
+async function wrongAnswersView(){
+  const rows=await buildWrongAnswerRows();
+  return `<h1>${T('wrong_title')}</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">${T('all_questions')} التي أجاب عليها الموظفون إجابة خاطئة بعد انتهاء اختباراتهم، مع توضيح من أجاب وبأي إجابة.</p>
+    <div class="row">
+      <div><input id="waSearch" placeholder="${T('search_emp_exam')}" style="width:100%"></div>
+      <div><button class="btn sec" id="waExport">تصدير CSV</button></div>
+    </div>
+    <div id="waList" style="margin-top:10px">${renderWrongAnswerTable(rows)}</div>
+  </div>`;
+}
+function attachWrongAnswers(){
+  document.getElementById('waSearch').oninput=async (e)=>{
+    const rows=await buildWrongAnswerRows();
+    const term=e.target.value.trim();
+    const f=term? rows.filter(r=>r.employeeName.includes(term)||r.examName.includes(term)) : rows;
+    document.getElementById('waList').innerHTML=renderWrongAnswerTable(f);
+  };
+  document.getElementById('waExport').onclick=async ()=>{
+    const rows=await buildWrongAnswerRows();
+    let csv='Employee,Employee ID,Exam,Question,Employee Answer,Correct Answer,Date\n';
+    rows.forEach(r=>{
+      const esc=(s)=>'"'+String(s).replace(/<[^>]+>/g,'').replace(/"/g,'""')+'"';
+      csv+=`${esc(r.employeeName)},${esc(r.empId)},${esc(r.examName)},${esc(r.questionText)},${esc(r.employeeAnswer)},${esc(r.correctAnswer)},${esc(r.when?new Date(r.when).toLocaleString('ar-EG'):'-')}\n`;
+    });
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='wrong-answers.csv'; a.click(); URL.revokeObjectURL(url);
+  };
+}
+
+// ---------- ADMIN: create/edit/manage exams (merged) ----------
+async function reviewExamsView(){
+  const [exams0, qs] = await Promise.all([listAll('exams'), listAll('questions')]);
+  const exams = ownExams(exams0);
+
+  if (state.editingExamId) {
+    const isNew = state.editingExamId==='NEW';
+    const exam = isNew ? {} : exams.find(e => e.id === state.editingExamId);
+    if (!exam) { state.editingExamId = null; return reviewExamsView(); }
+    const selectedQs = exam.questionIds || [];
+    return `<h1>${isNew?T('create_exam'):(T('edit_exam')+': '+exam.name)}</h1>
+    <div class="card">
+      <div class="row">
+        <div><label>${T('exam_name_lbl')}</label><input id="editEName" style="width:100%" value="${exam.name||''}"></div>
+        <div><label>القسم / الفريق</label><input id="editEDept" style="width:100%" value="${exam.dept||''}"></div>
+      </div>
+      <label>الوصف</label><input id="editEDesc" style="width:100%" value="${exam.desc||''}">
+      <div class="row">
+        <div><label>المدة (دقائق)</label><input id="editEDur" type="number" value="${exam.duration||30}" style="width:100%"></div>
+        <div><label>درجة النجاح %</label><input id="editEPass" type="number" value="${exam.passScore||60}" style="width:100%"></div>
+        <div><label>عدد المحاولات</label><input id="editEAttempts" type="number" value="${exam.attempts||1}" style="width:100%"></div>
+      </div>
+      <div class="row">
+        <div><label>تاريخ البداية</label><input id="editEStart" type="date" value="${exam.startDate||''}" style="width:100%"></div>
+        <div><label>تاريخ النهاية</label><input id="editEEnd" type="date" value="${exam.endDate||''}" style="width:100%"></div>
+      </div>
+      <div class="row">
+        <div><label><input type="checkbox" id="editERandomQ" ${exam.randomQ?'checked':''}> ${T('shuffle_q_lbl')}</label></div>
+        <div><label><input type="checkbox" id="editERandomA" ${exam.randomA?'checked':''}> ${T('shuffle_opt_lbl')}</label></div>
+        <div><label><input type="checkbox" id="editEShowResult" ${exam.showResult!==false?'checked':''}> ${T('show_result_lbl')}</label></div>
+        <div><label><input type="checkbox" id="editEShowAns" ${exam.showAnswers?'checked':''}> إظهار الإجابات الصحيحة</label></div>
+      </div>
+      <h3>${T('select_qs_lbl')} (${qs.length} متاح)</h3>
+      <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px">
+      ${qs.map(q=>`<div class="qopt"><input type="checkbox" class="pickEditQ" value="${q.id}" ${selectedQs.includes(q.id)?'checked':''}><span>${q.text} <small style="color:var(--muted)">(${typeLabel(q.type)} - ${q.points}د)</small></span></div>`).join('') || '<p style="color:var(--muted)">أضف أسئلة من بنك الأسئلة أولًا.</p>'}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        ${isNew?`
+          <button class="btn sec" id="saveExamDraft">حفظ كمسودة</button>
+          <button class="btn" id="saveExamActive">حفظ وتفعيل</button>
+        `:`
+          <button class="btn" id="saveExamEdit">حفظ التغييرات</button>
+        `}
+        <button class="btn sec" id="cancelExamEdit">إلغاء</button>
+      </div>
+    </div>`;
+  }
+
+  const rows = exams.map(e => `<tr>
+    <td><strong>${e.name}</strong></td>
+    <td>${e.dept||'-'}</td>
+    <td>${e.duration||30} ${T('minute')}</td>
+    <td>${e.questionIds?e.questionIds.length:0} سؤال</td>
+    <td><span class="badge ${e.active?'ok':'warn'}">${e.active?T('active_lbl'):T('draft_lbl')}</span></td>
+    <td>
+      <button class="btn sec" data-editexam="${e.id}" style="padding:4px 8px">${T('edit_btn')}</button>
+      <button class="btn" data-toggleactive="${e.id}" style="padding:4px 8px">${e.active?'إيقاف':'تفعيل'}</button>
+      <button class="btn danger" data-delexam="${e.id}" style="padding:4px 8px">${T('delete_btn')}</button>
+    </td>
+  </tr>`).join('');
+
+  return `<h1>${T('review_exams_title')}</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">أنشئ اختبارات جديدة، وعدّل بيانات الاختبارات الحالية والأسئلة التابعة لها، أو فعّلها/أوقفها واحذفها — كل ذلك من هنا.</p>
+    <button class="btn" id="newExamBtn" style="margin-bottom:12px">+ ${T('create_exam')}</button>
+    <div class="table-wrap"><table>
+      <tr><th>اسم الاختبار</th><th>${T('col_dept')}</th><th>المدة</th><th>عدد الأسئلة</th><th>${T('col_status')}</th><th>الإجراءات</th></tr>
+      ${rows || '<tr><td colspan="6" style="color:var(--muted)">لا توجد اختبارات منشأة بعد.</td></tr>'}
+    </table></div>
+  </div>`;
+}
+
+function attachReviewExams(){
+  if (state.editingExamId) {
+    document.getElementById('cancelExamEdit').onclick=()=>{ state.editingExamId=null; state.view='review-exams'; routeRender(); };
+    const isNew = state.editingExamId==='NEW';
+    const gather=()=>{
+      const name=document.getElementById('editEName').value.trim();
+      const questionIds=[...document.querySelectorAll('.pickEditQ:checked')].map(c=>c.value);
+      return { ok: !!name, name,
+        data:{
+          name, dept:document.getElementById('editEDept').value.trim(), desc:document.getElementById('editEDesc').value.trim(),
+          duration:parseInt(document.getElementById('editEDur').value)||30, passScore:parseInt(document.getElementById('editEPass').value)||60,
+          attempts:parseInt(document.getElementById('editEAttempts').value)||1,
+          startDate:document.getElementById('editEStart').value, endDate:document.getElementById('editEEnd').value,
+          randomQ:document.getElementById('editERandomQ').checked, randomA:document.getElementById('editERandomA').checked,
+          showResult:document.getElementById('editEShowResult').checked, showAnswers:document.getElementById('editEShowAns').checked,
+          questionIds
+        }
+      };
+    };
+    if(isNew){
+      const saveNew=async(active)=>{
+        const g=gather();
+        if(!g.ok) return alert(T('enter_exam_name'));
+        await setDoc('exams',uid(),{...g.data, active, draft:!active, createdAt:Date.now(), createdBy:isLeaderSession()?state.session.id:'admin'});
+        alert(T('exam_created'));
+        state.editingExamId=null; state.view='review-exams'; routeRender();
+      };
+      document.getElementById('saveExamDraft').onclick=()=>saveNew(false);
+      document.getElementById('saveExamActive').onclick=()=>saveNew(true);
+    } else {
+      document.getElementById('saveExamEdit').onclick=async ()=>{
+        const g=gather();
+        if(!g.ok) return alert(T('enter_exam_name'));
+        await setDoc('exams',state.editingExamId,g.data);
+        alert(T('exam_updated'));
+        state.editingExamId=null; state.view='review-exams'; routeRender();
+      };
+    }
+    return;
+  }
+
+  const newBtn=document.getElementById('newExamBtn');
+  if(newBtn) newBtn.onclick=()=>{ state.editingExamId='NEW'; state.view='review-exams'; routeRender(); };
+  document.querySelectorAll('[data-editexam]').forEach(b=>b.onclick=()=>{
+    state.editingExamId=b.dataset.editexam;
+    state.view='review-exams';
+    routeRender();
+  });
+  document.querySelectorAll('[data-toggleactive]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.toggleactive;
+    const exams=await listAll('exams');
+    const exam=exams.find(x=>x.id===id);
+    if(exam) await setDoc('exams',id,{active:!exam.active, draft:exam.active});
+    state.view='review-exams'; routeRender();
+  });
+  document.querySelectorAll('[data-delexam]').forEach(b=>b.onclick=async()=>{
+    if(!confirm(T('confirm_delete_exam'))) return;
+    await delDoc('exams',b.dataset.delexam);
+    state.view='review-exams'; routeRender();
+  });
+}
+
+// ---------- ADMIN: review results ----------
+let reviewSelected=null;
+function reviewBadge(r){
+  if(r.reviewStatus==='accepted') return '<span class="badge ok">مقبول (مراجعة يدوية)</span>';
+  if(r.reviewStatus==='rejected') return '<span class="badge bad">غير مقبول (مراجعة يدوية)</span>';
+  return `<span class="badge ${r.passed?'ok':'bad'}">${r.passed?'ناجح تلقائيًا':'راسب تلقائيًا'} - لم تتم المراجعة</span>`;
+}
+async function reviewResultsView(){
+  const [results0,emps,exams,questions]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions')]);
+  const results=filterResultsForLeader(results0,emps,exams);
+  const sorted=[...results].sort((a,b)=>(b.endTime||0)-(a.endTime||0));
+  const rowsHtml = sorted.map(r=>{
+    const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+    return `<tr>
+      <td>${emp?emp.name:T('deleted_emp')}</td>
+      <td>${exam?exam.name:T('deleted_exam')}</td>
+      <td>${r.percent}%</td>
+      <td>${reviewBadge(r)}</td>
+      <td>${r.when_display||(r.endTime?new Date(r.endTime).toLocaleString('ar-EG'):'-')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sec" data-view="${r.id}" style="padding:4px 8px">عرض الإجابات</button>
+        <button class="btn" data-accept="${r.id}" style="padding:4px 8px;background:var(--ok)">قبول</button>
+        <button class="btn danger" data-reject="${r.id}" style="padding:4px 8px">رفض</button>
+      </td>
+    </tr>`;
+  }).join('');
+  let detailHtml='';
+  if(reviewSelected){
+    const r=results.find(x=>x.id===reviewSelected);
+    if(r){
+      const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+      const qRows=(exam?exam.questionIds:[]||[]).map(qid=>{
+        const q=questions.find(x=>x.id===qid); if(!q) return '';
+        const val=r.answers?r.answers[q.id]:undefined;
+        const wrong=isAnswerWrong(q,val);
+        return `<tr><td>${q.text}</td>
+          <td style="color:${wrong?'var(--bad)':'var(--ok)'}">${formatAnswerText(q,val)}</td>
+          <td style="color:var(--ok)">${formatCorrectText(q)}</td></tr>`;
+      }).join('');
+      detailHtml=`<div class="card">
+        <h3>تفاصيل إجابات: ${emp?emp.name:'-'} — ${exam?exam.name:'-'}</h3>
+        <p style="color:var(--muted);font-size:13px">الدرجة: ${r.score} — النسبة: ${r.percent}% — ${reviewBadge(r)}</p>
+        <div class="table-wrap"><table><tr><th>${T('head_question')}</th><th>إجابة الموظف</th><th>الإجابة الصحيحة</th></tr>${qRows}</table></div>
+        <button class="btn sec" id="closeDetail" style="margin-top:10px">إغلاق التفاصيل</button>
+      </div>`;
+    }
+  }
+  return `<h1>مراجعة إجابات النتائج</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">كل الاختبارات التي أنهاها الموظفون. يمكنك عرض إجابات كل اختبار بالتفصيل، ثم تحديد يدويًا هل هو مقبول أم غير مقبول (يتجاوز التصحيح التلقائي).</p>
+    <div class="table-wrap"><table><tr><th>${T('col_employee')}</th><th>${T('col_exam')}</th><th>${T('percent_lbl')}</th><th>${T('col_status')}</th><th>تاريخ التسليم</th><th>إجراء</th></tr>
+    ${rowsHtml || '<tr><td colspan=6 style="color:var(--muted)">لا توجد اختبارات مجاب عليها بعد.</td></tr>'}</table></div>
+  </div>
+  ${detailHtml}`;
+}
+function attachReviewResults(){
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{ reviewSelected=b.dataset.view; state.view='review-results'; routeRender(); });
+  const closeBtn=document.getElementById('closeDetail'); if(closeBtn) closeBtn.onclick=()=>{ reviewSelected=null; state.view='review-results'; routeRender(); };
+  document.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{
+    await setDoc('results',b.dataset.accept,{reviewStatus:'accepted',passed:true,reviewedAt:Date.now()});
+    state.view='review-results'; routeRender();
+  });
+  document.querySelectorAll('[data-reject]').forEach(b=>b.onclick=async()=>{
+    await setDoc('results',b.dataset.reject,{reviewStatus:'rejected',passed:false,reviewedAt:Date.now()});
+    state.view='review-results'; routeRender();
+  });
+}
+
+
+// ---------- LEADER/ADMIN: exam grading by team leader ----------
+let gradingSelected=null, gradingLeaderId='', gradingExamId='';
+function examTotalPoints(exam,questions){
+  return (exam.questionIds||[]).reduce((a,qid)=>{ const q=questions.find(x=>x.id===qid); return a+(q?Number(q.points)||0:0); },0);
+}
+function autoPoints(q,val){
+  if(val===undefined||val===null||val==='') return 0;
+  return isAnswerWrong(q,val)?0:(Number(q.points)||0);
+}
+async function gradingView(){
+  const s=state.session;
+  const isLeader=s.role==='leader';
+  const [results,emps,exams,questions,leaders]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams'),listAll('questions'),listAll('teamLeaders')]);
+  const leaderId = isLeader ? s.id : gradingLeaderId;
+  const teamEmps = emps.filter(e=> leaderId ? e.teamLeaderId===leaderId : !!e.teamLeaderId);
+  const teamIds = new Set(teamEmps.map(e=>e.id));
+  let teamResults = results.filter(r=>teamIds.has(r.employeeId));
+  const examOptions = exams.filter(x=>teamResults.some(r=>r.examId===x.id));
+  if(gradingExamId && !examOptions.some(x=>x.id===gradingExamId)) gradingExamId='';
+  if(gradingExamId) teamResults = teamResults.filter(r=>r.examId===gradingExamId);
+  teamResults.sort((a,b)=>(b.endTime||0)-(a.endTime||0));
+
+  const pendingCount = teamResults.filter(r=>r.gradeStatus!=='graded').length;
+  const rows = teamResults.map(r=>{
+    const emp=emps.find(e=>e.id===r.employeeId), exam=exams.find(x=>x.id===r.examId);
+    const total = exam?examTotalPoints(exam,questions):0;
+    const graded = r.gradeStatus==='graded';
+    return `<tr>
+      <td>${emp?emp.name:T('deleted_emp')}</td>
+      <td>${exam?exam.name:T('deleted_exam')}</td>
+      <td>${r.score} / ${total}</td>
+      <td>${r.percent}%</td>
+      <td>${graded?`<span class="badge ok">تم التصحيح${r.gradedByName?' — '+r.gradedByName:''}</span>`:'<span class="badge warn">بانتظار التصحيح</span>'}</td>
+      <td>${r.endTime?new Date(r.endTime).toLocaleString('ar-EG'):'-'}</td>
+      <td><button class="btn" data-grade="${r.id}" style="padding:4px 10px">${graded?'إعادة التصحيح':'تصحيح'}</button></td>
+    </tr>`;
+  }).join('');
+
+  let detail='';
+  if(gradingSelected){
+    const r=results.find(x=>x.id===gradingSelected);
+    const emp=r?emps.find(e=>e.id===r.employeeId):null;
+    const exam=r?exams.find(x=>x.id===r.examId):null;
+    if(r && exam && emp && (isLeader ? emp.teamLeaderId===s.id : true)){
+      const qRows=(exam.questionIds||[]).map(qid=>{
+        const q=questions.find(x=>x.id===qid); if(!q) return '';
+        const val=r.answers?r.answers[q.id]:undefined;
+        const max=Number(q.points)||0;
+        const cur=(r.manualGrades && r.manualGrades[q.id]!==undefined)? r.manualGrades[q.id] : autoPoints(q,val);
+        const wrong=isAnswerWrong(q,val);
+        return `<tr>
+          <td style="white-space:normal;min-width:180px">${q.text}</td>
+          <td style="color:${wrong||val===undefined?'var(--bad)':'var(--ok)'};white-space:normal">${formatAnswerText(q,val)}</td>
+          <td style="color:var(--ok);white-space:normal">${formatCorrectText(q)}</td>
+          <td>${max}</td>
+          <td><input type="number" class="gradeInp" data-qid="${q.id}" data-max="${max}" min="0" max="${max}" step="0.5" value="${cur}" style="width:80px"></td>
+        </tr>`;
+      }).join('');
+      detail=`<div class="card" id="gradeCard">
+        <h3>تصحيح: ${emp.name} — ${exam.name}</h3>
+        <div class="table-wrap"><table><tr><th>${T('head_question')}</th><th>إجابة الموظف</th><th>الإجابة الصحيحة</th><th>الدرجة الكاملة</th><th>الدرجة الممنوحة</th></tr>${qRows}</table></div>
+        <p style="margin-top:10px"><strong>المجموع: <span id="gradeSum">0</span> / ${examTotalPoints(exam,questions)}</strong> — النسبة: <span id="gradePct">0</span>% — <span id="gradeVerdict"></span></p>
+        <label>ملاحظات / إرشادات للموظف (اختياري)</label>
+        <textarea id="gradeFeedback" rows="3" style="width:100%">${r.gradeFeedback||''}</textarea>
+        <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="saveGrade" data-rid="${r.id}">${T('save_grade')}</button>
+          <button class="btn sec" id="closeGrade">إغلاق</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  const adminPicker = isLeader ? '' : `<div><label>${T('team_leader_label')}</label><select id="gLeader" style="width:100%"><option value="">${T('all_teams')}</option>${leaders.map(l=>`<option value="${l.id}" ${l.id===gradingLeaderId?'selected':''}>${l.name}</option>`).join('')}</select></div>`;
+  return `<h1>${T('grading_title')}</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">${isLeader?'اختبارات موظفي فريقك فقط. ':''}قائد الفريق هو المسؤول عن تصحيح اختبارات فريقه ومنح الدرجات لكل سؤال، والنتيجة النهائية تُحدَّث للموظف تلقائيًا.</p>
+    <div class="row">
+      ${adminPicker}
+      <div><label>الاختبار</label><select id="gExam" style="width:100%"><option value="">-- كل الاختبارات --</option>${examOptions.map(x=>`<option value="${x.id}" ${x.id===gradingExamId?'selected':''}>${x.name}</option>`).join('')}</select></div>
+    </div>
+    <p style="margin-top:10px">بانتظار التصحيح: <strong>${pendingCount}</strong> من ${teamResults.length}</p>
+    <div class="table-wrap"><table><tr><th>${T('col_employee')}</th><th>${T('col_exam')}</th><th>${T('head_points')}</th><th>${T('percent_lbl')}</th><th>${T('col_status')}</th><th>تاريخ التسليم</th><th></th></tr>
+    ${rows || '<tr><td colspan="7" style="color:var(--muted)">'+T('no_team_submissions')+'</td></tr>'}</table></div>
+  </div>
+  ${detail}`;
+}
+function attachGrading(){
+  const s=state.session;
+  const gl=document.getElementById('gLeader'); if(gl) gl.onchange=()=>{ gradingLeaderId=gl.value; gradingSelected=null; routeRender(); };
+  const ge=document.getElementById('gExam'); if(ge) ge.onchange=()=>{ gradingExamId=ge.value; gradingSelected=null; routeRender(); };
+  document.querySelectorAll('[data-grade]').forEach(b=>b.onclick=()=>{
+    gradingSelected=b.dataset.grade; routeRender();
+    setTimeout(()=>document.getElementById('gradeCard')?.scrollIntoView({behavior:'smooth',block:'start'}),150);
+  });
+  const card=document.getElementById('gradeCard'); if(!card) return;
+  document.getElementById('closeGrade').onclick=()=>{ gradingSelected=null; routeRender(); };
+  const inputs=[...card.querySelectorAll('.gradeInp')];
+  let passScore=60, total=0;
+  Promise.all([listAll('results'),listAll('exams'),listAll('questions')]).then(([results,exams,questions])=>{
+    const r=results.find(x=>x.id===gradingSelected); const exam=r&&exams.find(x=>x.id===r.examId);
+    if(exam){ passScore=exam.passScore||60; total=examTotalPoints(exam,questions); }
+    recalc();
+  });
+  function clampVal(inp){ let v=parseFloat(inp.value); const max=parseFloat(inp.dataset.max)||0; if(isNaN(v)||v<0) v=0; if(v>max) v=max; return v; }
+  function recalc(){
+    const sum=inputs.reduce((a,i)=>a+clampVal(i),0);
+    const pct= total? Math.round(sum/total*100):0;
+    document.getElementById('gradeSum').textContent=sum;
+    document.getElementById('gradePct').textContent=pct;
+    const v=document.getElementById('gradeVerdict');
+    v.innerHTML = pct>=passScore ? '<span class="badge ok">ناجح</span>' : '<span class="badge bad">راسب</span>';
+  }
+  inputs.forEach(i=>i.oninput=recalc);
+  document.getElementById('saveGrade').onclick=async()=>{
+    const rid=document.getElementById('saveGrade').dataset.rid;
+    const [results,exams,questions,emps]=await Promise.all([listAll('results'),listAll('exams'),listAll('questions'),listAll('employees')]);
+    const r=results.find(x=>x.id===rid); const exam=r&&exams.find(x=>x.id===r.examId); const emp=r&&emps.find(e=>e.id===r.employeeId);
+    if(!r||!exam||!emp){ alert('تعذر العثور على النتيجة.'); return; }
+    if(s.role==='leader' && emp.teamLeaderId!==s.id){ alert('هذا الموظف ليس من فريقك.'); return; }
+    const manualGrades={}; let sum=0;
+    inputs.forEach(i=>{ const v=clampVal(i); manualGrades[i.dataset.qid]=v; sum+=v; });
+    const tot=examTotalPoints(exam,questions);
+    const percent= tot? Math.round(sum/tot*100):0;
+    const leaders=await listAll('teamLeaders');
+    const gName = s.role==='leader' ? s.name : ((leaders.find(l=>l.id===emp.teamLeaderId)||{}).name || 'المدير');
+    const ok=await setDoc('results',rid,{manualGrades,score:sum,percent,passed:percent>=(exam.passScore||60),
+      reviewStatus:null,gradeStatus:'graded',gradedBy:s.role==='leader'?s.id:'admin',gradedByName:gName,
+      gradedAt:Date.now(),gradeFeedback:document.getElementById('gradeFeedback').value.trim()});
+    if(ok){ alert('تم حفظ التصحيح والدرجات.'); gradingSelected=null; routeRender(); }
+  };
+}
+
+// ---------- ADMIN: results ----------
+async function resultsView(){
+  const [results0,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+  const results=filterResultsForLeader(results0,emps,exams);
+  return `<h1>${T('results_title')}</h1>
+  <div class="card">
+  <button class="btn sec" id="exportCsv">تصدير CSV</button>
+  <button class="btn danger" id="resBulkDelete">${T('bulk_delete')}</button>
+  <div style="margin-top:10px">${resultsTable(results.reverse(),emps,exams,true)}</div>
+  </div>`;
+}
+function attachResults(){
+  const b=document.getElementById('resBulkDelete'); if(b) b.onclick=()=>bulkDeleteSelected('results','resChk');
+  attachSelectAll('resSelectAll','resChk');
+}
+document.addEventListener('click',async (e)=>{
+  if(e.target.id==='exportCsv'){
+    const [results0,emps,exams]=await Promise.all([listAll('results'),listAll('employees'),listAll('exams')]);
+    const results=filterResultsForLeader(results0,emps,exams);
+    let csv='Employee,Exam,Score,Percent,Status\n';
+    results.forEach(r=>{ const em=emps.find(x=>x.id===r.employeeId),ex=exams.find(x=>x.id===r.examId);
+      csv+=`${em?em.name:''},${ex?ex.name:''},${r.score},${r.percent}%,${r.passed?'Pass':'Fail'}\n`; });
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='results.csv'; a.click(); URL.revokeObjectURL(url);
+  }
+});
+
+// ---------- ADMIN: settings ----------
+function settingsView(){
+  return `<h1>${T('settings_title')}</h1>
+  <div class="card">
+    <h3>${T('change_admin_pass')}</h3>
+    <label>${T('current_pass')}</label>
+    <input id="oldPass" type="password" style="width:100%">
+    <label>${T('new_pass')}</label>
+    <input id="newPass1" type="password" style="width:100%">
+    <label>${T('confirm_pass')}</label>
+    <input id="newPass2" type="password" style="width:100%">
+    <button class="btn" id="changePassBtn" style="margin-top:10px">${T('update_pass')}</button>
+    <p id="passMsg" style="font-size:13px;margin-top:8px"></p>
+  </div>
+  <div class="card">
+    <h3 style="color:var(--bad)">${T('danger_zone')}</h3>
+    <p style="color:var(--muted);font-size:13px">حذف جميع الاختبارات، الإسنادات، النتائج، والمراسلات نهائيًا. <strong>بنك الأسئلة وبيانات الموظفين لن يتأثرا.</strong> هذا الإجراء لا يمكن التراجع عنه.</p>
+    <button class="btn danger" id="wipeDataBtn">${T('wipe_btn')}</button>
+    <p id="wipeMsg" style="font-size:13px;margin-top:8px"></p>
+  </div>`;
+}
+function attachSettings(){
+  document.getElementById('changePassBtn').onclick=async ()=>{
+    const msg=document.getElementById('passMsg');
+    msg.style.color='var(--bad)'; msg.textContent='';
+    const oldP=document.getElementById('oldPass').value;
+    const n1=document.getElementById('newPass1').value;
+    const n2=document.getElementById('newPass2').value;
+    const current=await getAdminPassword();
+    if(oldP!==current){ msg.textContent='كلمة المرور القديمة غير صحيحة.'; return; }
+    if(!n1 || n1.length<4){ msg.textContent=T('pass_short'); return; }
+    if(n1!==n2){ msg.textContent=T('pass_mismatch'); return; }
+    const ok = await setDoc('settings','admin',{password:n1});
+    if(ok){ msg.style.color='var(--ok)'; msg.textContent=T('pass_changed');
+      document.getElementById('oldPass').value=''; document.getElementById('newPass1').value=''; document.getElementById('newPass2').value=''; }
+  };
+  document.getElementById('wipeDataBtn').onclick=async ()=>{
+    const wmsg=document.getElementById('wipeMsg');
+    if(!confirm(T('confirm_wipe'))) return;
+    const typed=prompt('اكتب كلمة "حذف" للتأكيد النهائي:');
+    if(typed!=='حذف'){ wmsg.style.color='var(--bad)'; wmsg.textContent='تم إلغاء العملية.'; return; }
+    const btn=document.getElementById('wipeDataBtn'); btn.disabled=true; btn.textContent='جارٍ الحذف...';
+    for(const col of ['exams','assignments','results','messages']){
+      const docs=await listAll(col);
+      for(const d of docs) await delDoc(col,d.id);
+    }
+    btn.disabled=false; btn.textContent='حذف كل البيانات (عدا بنك الأسئلة وبيانات الموظفين)';
+    wmsg.style.color='var(--ok)'; wmsg.textContent='تم حذف كل البيانات بنجاح، وبقي بنك الأسئلة وبيانات الموظفين كما هي.';
+  };
+}
+
+// ---------- ADMIN: messages ----------
+async function messagesView(){
+  const [emps,exams0,messages]=await Promise.all([listAll('employees'),listAll('exams'),listAll('messages')]);
+  const exams=ownExams(exams0);
+  const isL=isLeaderSession(), me=state.session;
+  const pickEmps = isL ? emps.filter(e=>e.teamLeaderId===me.id) : emps;
+  const sorted=(isL? messages.filter(m=>m.fromId===me.id) : [...messages]).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const msgHtml = sorted.map(m=>{
+    const recipients = m.toEmployeeId==='all' ? emps : (m.toEmployeeId==='team' ? emps.filter(e=>e.teamLeaderId===m.toTeamId) : emps.filter(e=>e.id===m.toEmployeeId));
+    const seenCount = recipients.filter(e=>seenAtOf(m,e.id)).length;
+    const seenListHtml = recipients.map(e=>{
+      const seenAt=seenAtOf(m,e.id);
+      return `<tr><td>${e.name}</td><td>${seenAt? '<span class="badge ok">شاهدها في '+new Date(seenAt).toLocaleString('ar-EG')+'</span>' : '<span class="badge warn">لم تُشاهد بعد</span>'}</td></tr>`;
+    }).join('');
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+        <strong>${m.subject}</strong>
+        <small style="color:var(--muted)">${m.createdAt?new Date(m.createdAt).toLocaleString('ar-EG'):''}</small>
+      </div>
+      <p style="margin:8px 0">${m.body}</p>
+      <p style="font-size:12px;color:var(--muted)">إلى: ${m.toEmployeeId==='all'?'كل الموظفين':(m.toEmployeeId==='team'?'كل أفراد الفريق':(recipients[0]?recipients[0].name:T('deleted_emp')))} — شاهدها ${seenCount} من ${recipients.length}</p>
+      ${isL?'':`<button class="btn sec" data-toggleseen="${m.id}" style="padding:4px 10px">رآيه</button>`}
+      <button class="btn danger" data-delmsg="${m.id}" style="padding:4px 10px">${T('delete_btn')}</button>
+      ${isL?'':`<div class="table-wrap" id="seen-${m.id}" style="display:none;margin-top:8px"><table><tr><th>${T('col_employee')}</th><th>${T('col_status')}</th></tr>${seenListHtml}</table></div>`}
+    </div>`;
+  }).join('');
+  return `<h1>${T('messages_title')}</h1>
+  <div class="card" id="notifBox"></div>
+  <div class="card">
+    <h3>إرسال إرشادات للموظفين</h3>
+    <div class="row">
+      <div><label>المرسل إليه</label><select id="mTo"><option value="${isL?'team':'all'}">${isL?'-- كل أفراد فريقي --':'-- كل الموظفين --'}</option>${pickEmps.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div><label>مرتبط باختبار (اختياري)</label><select id="mExam"><option value="">${T('none')}</option>${exams.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
+    </div>
+    <label>عنوان الرسالة</label><input id="mSubject" style="width:100%">
+    <label>نص الإرشادات</label><textarea id="mBody" rows="4" style="width:100%"></textarea>
+    <button class="btn" id="sendMsg" style="margin-top:8px">${T('send_msg')}</button>
+  </div>
+  <h3>${T('sent_messages')}</h3>
+  ${msgHtml || '<p style="color:var(--muted)">لا توجد رسائل مرسلة بعد.</p>'}`;
+}
+function attachMessages(){
+  renderNotifBox();
+  document.getElementById('sendMsg').onclick=async ()=>{
+    const subject=document.getElementById('mSubject').value.trim();
+    const body=document.getElementById('mBody').value.trim();
+    if(!subject||!body){ alert('أدخل عنوان الرسالة ونصها.'); return; }
+    const toEmployeeId=document.getElementById('mTo').value;
+    const examId=document.getElementById('mExam').value;
+    const msg={toEmployeeId,examId:examId||null,subject,body,createdAt:Date.now(),seenBy:{},
+      fromId:state.session.role==='leader'?state.session.id:'admin'};
+    if(toEmployeeId==='team') msg.toTeamId=state.session.id;
+    await setDoc('messages',uid(),msg);
+    state.view='messages'; routeRender();
+  };
+  document.querySelectorAll('[data-delmsg]').forEach(b=>b.onclick=async()=>{
+    if(!confirm(T('confirm_delete_msg'))) return;
+    await delDoc('messages',b.dataset.delmsg);
+    state.view='messages'; routeRender();
+  });
+  document.querySelectorAll('[data-toggleseen]').forEach(b=>b.onclick=()=>{
+    const box=document.getElementById('seen-'+b.dataset.toggleseen);
+    box.style.display = box.style.display==='none'?'block':'none';
+  });
+}
+
+// ---------- ADMIN: question suggestions ----------
+function suggestionStatusBadge(s){
+  if(s.addedToBank) return '<span class="badge ok">تمت الإضافة لبنك الأسئلة</span>';
+  if(s.status==='replied') return '<span class="badge warn">تم الرد</span>';
+  return '<span class="badge bad">بانتظار الرد</span>';
+}
+async function suggestionsView(){
+  const [suggestions,emps]=await Promise.all([listAll('suggestions'),listAll('employees')]);
+  const sorted=[...suggestions].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const html=sorted.map(s=>{
+    const emp=emps.find(e=>e.id===s.employeeId);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+        <strong>${emp?emp.name:T('deleted_emp')}</strong>
+        <small style="color:var(--muted)">${s.createdAt?new Date(s.createdAt).toLocaleString('ar-EG'):''}</small>
+      </div>
+      <p style="margin:8px 0">${s.text}</p>
+      <p style="font-size:12px;color:var(--muted)">النوع: ${typeLabel(s.type)} ${s.type!=='short'?'— الإجابة المقترحة: '+formatCorrectText(s):''}</p>
+      <p>${suggestionStatusBadge(s)}</p>
+      ${s.reply?`<p style="font-size:13px;background:var(--bg);padding:8px;border-radius:8px"><strong>ردّك:</strong> ${s.reply}</p>`:''}
+      <label>الرد على الموظف</label>
+      <textarea class="replyBox" data-replyfor="${s.id}" rows="2" style="width:100%">${s.reply||''}</textarea>
+      <div style="margin-top:8px">
+        <button class="btn sec" data-sendreply="${s.id}" style="padding:5px 12px">إرسال الرد</button>
+        ${!s.addedToBank?`<button class="btn" data-addbank="${s.id}" style="padding:5px 12px">أضف السؤال إلى بنك الأسئلة</button>`:''}
+        <button class="btn danger" data-delsug="${s.id}" style="padding:5px 12px">حذف الاقتراح</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<h1>${T('suggestions_title')}</h1>${html || '<p style="color:var(--muted)">'+T('no_suggestions_yet')+'</p>'}`;
+}
+function attachSuggestionsAdmin(){
+  document.querySelectorAll('[data-sendreply]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.sendreply;
+    const box=document.querySelector(`.replyBox[data-replyfor="${id}"]`);
+    const reply=box.value.trim();
+    if(!reply){ alert('اكتب نص الرد أولًا.'); return; }
+    await setDoc('suggestions',id,{reply,status:'replied',repliedAt:Date.now()});
+    state.view='suggestions'; routeRender();
+  });
+  document.querySelectorAll('[data-addbank]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.addbank;
+    const all=await listAll('suggestions');
+    const s=all.find(x=>x.id===id); if(!s) return;
+    await setDoc('questions',uid(),{text:s.text,type:s.type,options:s.options||[],correct:s.correct,
+      points:s.points||1,category:'اقتراح موظف',explanation:''});
+    await setDoc('suggestions',id,{addedToBank:true});
+    alert(T('q_added'));
+    state.view='suggestions'; routeRender();
+  });
+  document.querySelectorAll('[data-delsug]').forEach(b=>b.onclick=async()=>{
+    if(!confirm(T('confirm_delete_suggestion'))) return;
+    await delDoc('suggestions',b.dataset.delsug);
+    state.view='suggestions'; routeRender();
+  });
+}
+
+// ---------- EMPLOYEE: suggest a question ----------
+async function suggestQuestionView(){
+  const s=state.session;
+  const all=await listAll('suggestions');
+  const mine=all.filter(x=>x.employeeId===s.id).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const listHtml=mine.map(x=>`<div class="card">
+    <p style="margin:0 0 6px">${x.text}</p>
+    <p>${suggestionStatusBadge(x)}</p>
+    ${x.reply?`<p style="font-size:13px;background:var(--bg);padding:8px;border-radius:8px;margin-top:6px"><strong>رد المدير:</strong> ${x.reply}</p>`:''}
+    <button class="btn danger" data-delmysug="${x.id}" style="padding:5px 12px;margin-top:8px">حذف الاقتراح</button>
+  </div>`).join('');
+  return `<h1>اقترح سؤال</h1>
+  <div class="card">
+    <p style="color:var(--muted);font-size:13px">اقترح سؤالًا جديدًا ليراجعه المدير ويضيفه إلى بنك الأسئلة إن رغب، وسيصلك رد منه.</p>
+    <label>${T('q_text_lbl')}</label><input id="sqText" style="width:100%">
+    <label>${T('q_type_lbl')}</label><select id="sqType" style="width:100%">
+      <option value="mcq">اختيار من متعدد</option><option value="tf">صح / خطأ</option>
+      <option value="multi">اختيار متعدد</option><option value="short">إجابة قصيرة</option>
+    </select>
+    <div id="sqOptsWrap"></div>
+    <button class="btn" id="sendSuggestion" style="margin-top:10px">${T('send_suggestion')}</button>
+  </div>
+  <h3>${T('my_suggestions')}</h3>
+  ${listHtml || '<p style="color:var(--muted)">لم ترسل أي اقتراحات بعد.</p>'}`;
+}
+function attachSuggestQuestion(){
+  const typeSel=document.getElementById('sqType');
+  const wrap=document.getElementById('sqOptsWrap');
+  const refresh=()=>wrap.innerHTML=optsEditor(typeSel.value);
+  typeSel.onchange=refresh; refresh();
+  document.getElementById('sendSuggestion').onclick=async ()=>{
+    const type=typeSel.value, text=document.getElementById('sqText').value.trim();
+    if(!text){ alert('أدخل نص السؤال.'); return; }
+    let options=[], correct=null;
+    if(type==='tf'){ const el=document.getElementById('qCorrectTF'); correct=el?el.value==='true':true; }
+    else if(type==='short'){ const el=document.getElementById('qShortAns'); correct=el?el.value.trim():''; }
+    else{
+      options=[...wrap.querySelectorAll('[data-opt]')].map(i=>i.value.trim());
+      if(type==='mcq'){ const r=wrap.querySelector('input[name=qc]:checked'); correct=r?parseInt(r.value):null; }
+      else{ correct=[...wrap.querySelectorAll('input[name=qc]:checked')].map(c=>parseInt(c.value)); }
+    }
+    await setDoc('suggestions',uid(),{employeeId:state.session.id,text,type,options,correct,points:1,
+      createdAt:Date.now(),status:'pending',addedToBank:false,reply:''});
+    state.view='suggest-question'; routeRender();
+  };
+  document.querySelectorAll('[data-delmysug]').forEach(b=>b.onclick=async()=>{
+    if(!confirm(T('confirm_delete_suggestion'))) return;
+    await delDoc('suggestions',b.dataset.delmysug);
+    state.view='suggest-question'; routeRender();
+  });
+}
+
+// ---------- EMPLOYEE: messages ----------
+async function empMessagesView(){
+  const s=state.session;
+  const [messages,allEmps]=await Promise.all([listAll('messages'),listAll('employees')]);
+  const meNow=allEmps.find(e=>e.id===s.id)||s;
+  const mine=messages.filter(m=>!deletedByOf(m,s.id) && (m.toEmployeeId===s.id||m.toEmployeeId==='all'||(m.toEmployeeId==='team'&&m.toTeamId&&m.toTeamId===meNow.teamLeaderId))).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const html=mine.map(m=>{
+    const seenAt=seenAtOf(m,s.id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+        <strong>${m.subject}</strong>
+        <small style="color:var(--muted)">${m.createdAt?new Date(m.createdAt).toLocaleString('ar-EG'):''}</small>
+      </div>
+      <p style="margin:8px 0">${m.body}</p>
+      ${seenAt? `<button class="btn" disabled style="padding:5px 12px;background:var(--ok);opacity:1;cursor:default">✓ رأيته — ${new Date(seenAt).toLocaleString('ar-EG')}</button>` : `<button class="btn sec" data-seen="${m.id}" style="padding:5px 12px">رأيته</button>`}
+      <button class="btn danger" data-delmymsg="${m.id}" style="padding:5px 12px">${T('delete_btn')}</button>
+    </div>`;
+  }).join('');
+  return `<h1>${T('messages_title')}</h1>${html || '<p style="color:var(--muted)">لا توجد رسائل لك حتى الآن.</p>'}`;
+}
+function attachEmpMessages(){
+  document.querySelectorAll('[data-delmymsg]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('حذف هذه الرسالة من صندوقك؟')) return;
+    await updDoc('messages',b.dataset.delmymsg,{['deletedBy.'+state.session.id]:true});
+    await refreshEmpMsgBadge();
+    state.view='emp-messages'; routeRender();
+  });
+  document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=async()=>{
+    const s=state.session, empId=s.id, mid=b.dataset.seen;
+    b.disabled=true; b.className='btn'; b.style.background='var(--ok)'; b.style.color='#fff'; b.style.opacity='1'; b.textContent='✓ رأيته';
+    let m=null; try{ const d=await db.collection('messages').doc(mid).get(); m=d.exists?d.data():null; }catch(e){}
+    await updDoc('messages',mid,{['seenBy.'+empId]:Date.now()});
+    await setDoc('notifications',uid(),{type:'message_seen',toId:(m&&m.fromId)||'admin',employeeId:empId,employeeName:s.name,
+      messageId:mid,subject:(m&&m.subject)||'',createdAt:Date.now(),read:false});
+    await refreshEmpMsgBadge();
+    state.view='emp-messages'; routeRender();
+  });
+}
+
+// ---------- EMPLOYEE: edit my profile ----------
+async function empProfileView(){
+  const s=state.session;
+  return `<h1>${T('nav_my_profile')}</h1>
+  <div class="card">
+    <div class="row">
+      <div><label>${T('name')}</label><input id="epName" style="width:100%" value="${s.name||''}"></div>
+      <div><label>${T('email')}</label><input id="epEmail" style="width:100%" value="${s.email||''}"></div>
+    </div>
+    <div class="row">
+      <div><label>${T('dept')}</label><input id="epDept" style="width:100%" value="${s.dept||''}"></div>
+      <div><label>${T('position')}</label><input id="epPos" style="width:100%" value="${s.position||''}"></div>
+    </div>
+    <p style="color:var(--muted);font-size:12px">Employee ID: ${s.empId} (ثابت، لا يمكن تعديله)</p>
+    <button class="btn" id="saveProfile" style="margin-top:8px">${T('save')}</button>
+    <p id="profileMsg" style="font-size:13px;margin-top:8px"></p>
+  </div>`;
+}
+function attachEmpProfile(){
+  document.getElementById('saveProfile').onclick=async ()=>{
+    const msg=document.getElementById('profileMsg');
+    const name=document.getElementById('epName').value.trim();
+    if(!name){ msg.style.color='var(--bad)'; msg.textContent=T('name_required'); return; }
+    const updated={name,email:document.getElementById('epEmail').value.trim(),
+      dept:document.getElementById('epDept').value.trim(),position:document.getElementById('epPos').value.trim()};
+    const ok=await setDoc('employees',state.session.id,updated);
+    if(ok){ state.session={...state.session,...updated}; msg.style.color='var(--ok)'; msg.textContent='تم حفظ بياناتك بنجاح.'; setTimeout(render,1200); }
+  };
+}
+
+// ---------- EMPLOYEE: home ----------
+async function empHomeView(){
+  const s=state.session;
+  const [assignments,results,exams]=await Promise.all([listAll('assignments'),listAll('results'),listAll('exams')]);
+  const mine=assignments.filter(a=>a.employeeId===s.id);
+  const now=Date.now();
+  const rows=mine.map(a=>{
+    const ex=exams.find(x=>x.id===a.examId); if(!ex) return null;
+    const myResults=results.filter(r=>r.examId===ex.id && r.employeeId===s.id);
+    const done=myResults.length>=(ex.attempts||1);
+    const late = a.deadline && new Date(a.deadline).getTime()<now && !done;
+    return {ex,a,done,late,attemptsUsed:myResults.length};
+  }).filter(Boolean);
+  return `<h1>مرحبًا، ${s.name}</h1>
+  <div class="card"><h3>${T('my_assigned')}</h3>
+  <table><tr><th>${T('col_exam')}</th><th>الموعد النهائي</th><th>${T('col_status')}</th><th></th></tr>
+  ${rows.map(r=>`<tr><td>${r.ex.name}</td><td>${r.a.deadline||'-'}</td>
+    <td>${r.done?'<span class="badge ok">مكتمل</span>':r.late?'<span class="badge bad">متأخر</span>':'<span class="badge warn">قيد الانتظار</span>'}</td>
+    <td>${!r.done?`<button class="btn" data-start="${r.ex.id}" style="padding:5px 10px">${T('start_btn')}</button>`:''}</td></tr>`).join('') || '<tr><td colspan=4 style="color:var(--muted)">لا توجد اختبارات مسندة.</td></tr>'}
+  </table></div>`;
+}
+function attachEmpHome(){
+  document.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{
+    state.examAttempt={examId:b.dataset.start, answers:{}, idx:0, startTime:Date.now()};
+    state.view='take-exam'; location.hash='take-exam'; routeRender();
+  });
+}
+
+async function empResultsView(){
+  const s=state.session;
+  const [results,exams]=await Promise.all([listAll('results'),listAll('exams')]);
+  const mine=results.filter(r=>r.employeeId===s.id);
+  return `<h1>نتائجي السابقة</h1><div class="card">
+  <table><tr><th>${T('col_exam')}</th><th>${T('head_points')}</th><th>${T('percent_lbl')}</th><th>${T('col_status')}</th><th>محاولة</th></tr>
+  ${mine.map(r=>{const ex=exams.find(x=>x.id===r.examId);
+    return `<tr><td>${ex?ex.name:'-'}</td><td>${r.score}</td><td>${r.percent}%</td>
+    <td><span class="badge ${r.passed?'ok':'bad'}">${r.passed?T('pass_lbl'):T('fail_lbl')}</span>${r.gradeStatus==='graded'?' <span class="badge ok">صحّحه '+(r.gradedByName||'القائد')+'</span>':''}</td><td>${r.attemptNum}</td></tr>${r.gradeFeedback?`<tr><td colspan="5" style="white-space:normal;color:var(--muted)">ملاحظات القائد: ${r.gradeFeedback}</td></tr>`:''}`;
+  }).join('') || '<tr><td colspan=5 style="color:var(--muted)">'+T('no_results_yet')+'</td></tr>'}
+  </table></div>`;
+}
+
+// ---------- EMPLOYEE: take exam ----------
+let timerInterval=null;
+async function takeExamView(){
+  const exams=await listAll('exams'); const exam=exams.find(e=>e.id===state.examAttempt.examId);
+  if(!exam) return '<p>الاختبار غير موجود.</p>';
+  const allQs=await listAll('questions');
+  let qs = exam.questionIds.map(id=>allQs.find(q=>q.id===id)).filter(Boolean);
+  if(!state.examAttempt.order){
+    let order=qs.map((_,i)=>i);
+    if(exam.randomQ) order.sort(()=>Math.random()-0.5);
+    state.examAttempt.order=order;
+    state.examAttempt.endAt=Date.now()+exam.duration*60000;
+  }
+  state.examAttempt.qs=qs;
+  const order=state.examAttempt.order;
+  const i=state.examAttempt.idx;
+  const q=qs[order[i]];
+  const answers=state.examAttempt.answers;
+  return `<h1>${exam.name}</h1>
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+    <div>السؤال ${i+1} من ${qs.length}</div><div class="timer" id="timerBox">--:--</div>
+  </div>
+  <div class="card">
+    <p style="font-size:15px">${q.text}</p>
+    <div id="answerArea">${answerInput(q,answers[q.id])}</div>
+  </div>
+  <div class="card">
+    <button class="btn sec" id="prevQ" ${i===0?'disabled':''}>السابق</button>
+    <button class="btn sec" id="nextQ" ${i===qs.length-1?'disabled':''}>التالي</button>
+    <button class="btn" id="submitExam" style="float:left">${T('submit_btn')}</button>
+  </div>
+  <div class="card qnav">${order.map((oi,pos)=>`<button class="${answers[qs[oi].id]!==undefined?'answered':''} ${pos===i?'current':''}" data-jump="${pos}">${pos+1}</button>`).join('')}</div>`;
+}
+function answerInput(q,val){
+  if(q.type==='mcq'||q.type==='tf'){
+    const opts = q.type==='tf'? ['صح','خطأ'] : q.options;
+    return opts.map((o,idx)=>{
+      const v=q.type==='tf'? (idx===0?'true':'false') : idx;
+      return `<div class="qopt"><input type="radio" name="ans" value="${v}" ${String(val)===String(v)?'checked':''}><span>${o}</span></div>`;
+    }).join('');
+  }
+  if(q.type==='multi'){
+    return q.options.map((o,idx)=>`<div class="qopt"><input type="checkbox" name="ansM" value="${idx}" ${Array.isArray(val)&&val.includes(idx)?'checked':''}><span>${o}</span></div>`).join('');
+  }
+  return `<input id="ansShort" style="width:100%" value="${val||''}">`;
+}
+function saveCurrentAnswer(){
+  const ea=state.examAttempt; const q=ea.qs[ea.order[ea.idx]];
+  if(q.type==='mcq'||q.type==='tf'){ const r=document.querySelector('input[name=ans]:checked'); if(r) ea.answers[q.id]= q.type==='tf'? r.value==='true' : parseInt(r.value); }
+  else if(q.type==='multi'){ const cs=[...document.querySelectorAll('input[name=ansM]:checked')].map(c=>parseInt(c.value)); if(cs.length) ea.answers[q.id]=cs; }
+  else { const el=document.getElementById('ansShort'); if(el) ea.answers[q.id]=el.value; }
+}
+function attachTakeExam(){
+  const ea=state.examAttempt;
+  clearInterval(timerInterval);
+  const tick=()=>{
+    const left=ea.endAt-Date.now();
+    const box=document.getElementById('timerBox'); if(!box) return;
+    if(left<=0){ clearInterval(timerInterval); finishExam(); return; }
+    const m=Math.floor(left/60000), s2=Math.floor((left%60000)/1000);
+    box.textContent=`${m}:${s2.toString().padStart(2,'0')}`;
+  };
+  tick(); timerInterval=setInterval(tick,1000);
+  document.getElementById('prevQ').onclick=()=>{ saveCurrentAnswer(); ea.idx--; state.view='take-exam'; routeRender(); };
+  document.getElementById('nextQ').onclick=()=>{ saveCurrentAnswer(); ea.idx++; state.view='take-exam'; routeRender(); };
+  document.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{ saveCurrentAnswer(); ea.idx=parseInt(b.dataset.jump); state.view='take-exam'; routeRender(); });
+  document.getElementById('submitExam').onclick=()=>{ saveCurrentAnswer(); if(confirm(T('confirm_submit'))) finishExam(); };
+}
+async function finishExam(){
+  clearInterval(timerInterval);
+  const ea=state.examAttempt; const exams=await listAll('exams'); const exam=exams.find(e=>e.id===ea.examId);
+  let score=0,total=0;
+  ea.qs.forEach(q=>{
+    total+=q.points; const a=ea.answers[q.id];
+    if(q.type==='mcq'){ if(a===q.correct) score+=q.points; }
+    else if(q.type==='tf'){ if(a===q.correct) score+=q.points; }
+    else if(q.type==='multi'){ if(Array.isArray(a)&&Array.isArray(q.correct)&&a.length===q.correct.length&&a.every(v=>q.correct.includes(v))) score+=q.points; }
+    else if(q.type==='short'){ if((a||'').trim().toLowerCase()===((q.correct||'').trim().toLowerCase())) score+=q.points; }
+  });
+  const percent = total? Math.round(score/total*100):0;
+  const passed = percent>=exam.passScore;
+  const prevResults=(await listAll('results')).filter(r=>r.examId===exam.id && r.employeeId===state.session.id);
+  await setDoc('results',uid(),{examId:exam.id,employeeId:state.session.id,score,percent,passed,
+    startTime:ea.startTime,endTime:Date.now(),durationSec:Math.round((Date.now()-ea.startTime)/1000),
+    attemptNum:prevResults.length+1, answers:ea.answers});
+  state.examAttempt=null;
+  alert(exam.showResult? `انتهى الاختبار. النتيجة: ${percent}% - ${passed?T('pass_lbl'):T('fail_lbl')}` : 'تم تسليم الاختبار بنجاح.');
+  state.view='emp-home'; location.hash='emp-home'; routeRender();
+}
+
+// ---------- boot ----------
+(async function(){ applyLangToDocument(); await initCaps(); await restoreSession(); render(); })();
+</script>
+</body>
+</html>
